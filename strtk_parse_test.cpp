@@ -75,6 +75,20 @@ struct data_block
    unsigned long  d12;
 };
 
+strtk_parse_begin(data_block)
+   strtk_parse_type(d1)
+   strtk_parse_type(d2)
+   strtk_parse_type(d3)
+   strtk_parse_type(d4)
+   strtk_parse_type(d5)
+   strtk_parse_type(d6)
+   strtk_parse_type(d7)
+   strtk_parse_type(d8)
+   strtk_parse_type(d9)
+   strtk_parse_type(d10)
+   strtk_parse_type(d11)
+   strtk_parse_type(d12)
+strtk_parse_end()
 
 void parse_test01()
 {
@@ -144,12 +158,7 @@ void parse_test01()
    {
       for (std::size_t j = 0; j < s_list.size(); ++j)
       {
-         strtk::parse(s_list[j],
-                      "|",
-                       db_list[j].d1,  db_list[j].d2,  db_list[j].d3,
-                       db_list[j].d4,  db_list[j].d5,  db_list[j].d6,
-                       db_list[j].d7,  db_list[j].d8,  db_list[j].d9,
-                       db_list[j].d10, db_list[j].d11, db_list[j].d12);
+         strtk::parse(s_list[j],"|",db_list[j]);
       }
    }
    t.stop();

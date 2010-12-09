@@ -47,9 +47,9 @@ private:
    std::string delimiters_;
 };
 
-int main(void)
+int main()
 {
-   std::string data = "int=-1|unsigned int=2345|double=6.789|string=a simple string";
+   const std::string data = "int=-1|unsigned int=2345|double=6.789|string=a simple string";
 
    typedef strtk::std_string::tokenizer<>::type tokenizer_type;
    typedef std::deque< std::pair<std::string,std::string> > pair_list_type;

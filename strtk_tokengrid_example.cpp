@@ -17,14 +17,14 @@
 
 
 /*
-   Description: This example aims to demonstrate the usage patterns
-                and functionality of the Token Grid class. The example
-                test cases construct a string that represents a token
-                grid - It should be noted the class can just as easily
-                use a text file as input. The examples range from
-                determining sums and averages of rows and columns of
-                numeric values, iterating down columns, outputting
-                rows/columns in specific orderings etc.
+   Description: This example aims to demonstrate the usage patterns and
+                functionality of the Token Grid class. The example test
+                cases construct a string that represents a token grid -
+                It should be noted the class can just as easily use a
+                text file as input. The examples range from determining
+                sums and averages of rows and columns of numeric values,
+                iterating down columns, outputting rows/columns in
+                specific orderings etc.
 */
 
 
@@ -582,6 +582,159 @@ void token_grid_test12()
    }
 }
 
+struct match_predicate
+{
+   inline bool operator()(const unsigned char* begin, const unsigned char* end)
+   {
+      return end != std::find(begin,end,'6');
+   }
+};
+
+void token_grid_test13()
+{
+   std::string data = "abc,123\n"
+                      "ijk,345\n"
+                      "mno,567\n"
+                      "rst,789\n"
+                      "xyz,901\n";
+
+   strtk::token_grid grid(data,data.size(),",");
+
+   std::cout << "Before Removal" << std::endl;
+   for (std::size_t r = 0; r < grid.row_count(); ++r)
+   {
+      std::cout << r << "[" << grid.row(r).as_string() << "]" << std::endl;
+   }
+
+   strtk::token_grid::row_range_type range(1,4);
+
+   grid.remove_row_if(range,match_predicate());
+
+   std::cout << "After Removal" << std::endl;
+   for (std::size_t r = 0; r < grid.row_count(); ++r)
+   {
+      std::cout << r << "[" << grid.row(r).as_string() << "]" << std::endl;
+   }
+}
+
+void token_grid_test14()
+{
+   const std::string data = ",0,,1,,,2,,3,,,4,,5,,,6,,7,,,8,,9,,,\n"
+                            ",0,,1,,,2,,3,,,4,,5,,,6,,7,,,8,,9,,,\n"
+                            ",0,,1,,,2,,3,,,4,,5,,,6,,7,,,8,,9,,,\n"
+                            ",0,,1,,,2,,3,,,4,,5,,,6,,7,,,8,,9,,,\n"
+                            ",0,,1,,,2,,3,,,4,,5,,,6,,7,,,8,,9,,,\n"
+                            ",0,,1,,,2,,3,,,4,,5,,,6,,7,,,8,,9,,,\n"
+                            ",0,,1,,,2,,3,,,4,,5,,,6,,7,,,8,,9,,,\n"
+                            ",0,,1,,,2,,3,,,4,,5,,,6,,7,,,8,,9,,,\n"
+                            ",0,,1,,,2,,3,,,4,,5,,,6,,7,,,8,,9,,,\n";
+
+   {
+      strtk::token_grid::options options;
+
+      options.set_column_delimiters(",")
+             .set_column_split_option(strtk::split_options::default_mode);
+
+      strtk::token_grid grid(data,data.size(),options);
+
+      std::cout << "Before Empty Token Removal" << std::endl;
+      for (std::size_t r = 0; r < grid.row_count(); ++r)
+      {
+         strtk::token_grid::row_type row = grid.row(r);
+         for (std::size_t c = 0; c < row.size(); ++c)
+         {
+            std::cout << "[" << row.get<std::string>(c) << "] ";
+         }
+         std::cout << std::endl;
+      }
+
+      grid.remove_empty_tokens();
+
+      std::cout << "After Empty Token Removal" << std::endl;
+      for (std::size_t r = 0; r < grid.row_count(); ++r)
+      {
+         strtk::token_grid::row_type row = grid.row(r);
+         for (std::size_t c = 0; c < row.size(); ++c)
+         {
+            std::cout << "[" << row.get<std::string>(c) << "] ";
+         }
+         std::cout << std::endl;
+      }
+      std::cout << std::endl;
+   }
+
+   {
+      strtk::token_grid::options options;
+
+      options.set_column_delimiters(",")
+             .set_column_split_option(strtk::split_options::default_mode);
+
+      strtk::token_grid grid(data,data.size(),options);
+
+      std::cout << "Before Empty Token Removal" << std::endl;
+      for (std::size_t r = 0; r < grid.row_count(); ++r)
+      {
+         strtk::token_grid::row_type row = grid.row(r);
+         for (std::size_t c = 0; c < row.size(); ++c)
+         {
+            std::cout << "[" << row.get<std::string>(c) << "] ";
+         }
+         std::cout << std::endl;
+      }
+
+      strtk::token_grid::row_range_type range(3,7);
+      grid.remove_empty_tokens(range);
+
+      std::cout << "After Empty Token Removal" << std::endl;
+      for (std::size_t r = 0; r < grid.row_count(); ++r)
+      {
+         strtk::token_grid::row_type row = grid.row(r);
+         for (std::size_t c = 0; c < row.size(); ++c)
+         {
+            std::cout << "[" << row.get<std::string>(c) << "] ";
+         }
+         std::cout << std::endl;
+      }
+      std::cout << std::endl;
+   }
+
+   {
+      strtk::token_grid::options options;
+
+      options.set_column_delimiters(",")
+             .set_column_split_option(strtk::split_options::default_mode);
+
+      strtk::token_grid grid(data,data.size(),options);
+
+      std::cout << "Before Empty Token Removal" << std::endl;
+      for (std::size_t r = 0; r < grid.row_count(); ++r)
+      {
+         strtk::token_grid::row_type row = grid.row(r);
+         for (std::size_t c = 0; c < row.size(); ++c)
+         {
+            std::cout << "[" << row.get<std::string>(c) << "] ";
+         }
+         std::cout << std::endl;
+      }
+
+      strtk::token_grid::row_range_type range(4,8);
+      grid.remove_token_if(range,strtk::size_equal_to<0>());
+
+      std::cout << "After Empty Token Removal" << std::endl;
+      for (std::size_t r = 0; r < grid.row_count(); ++r)
+      {
+         strtk::token_grid::row_type row = grid.row(r);
+         for (std::size_t c = 0; c < row.size(); ++c)
+         {
+            std::cout << "[" << row.get<std::string>(c) << "] ";
+         }
+         std::cout << std::endl;
+      }
+      std::cout << std::endl;
+   }
+
+}
+
 int main()
 {
    token_grid_test01();
@@ -596,5 +749,7 @@ int main()
    token_grid_test10();
    token_grid_test11();
    token_grid_test12();
+   token_grid_test13();
+   token_grid_test14();
    return 0;
 }

@@ -28,6 +28,7 @@
 #include <map>
 #include <stack>
 #include <queue>
+#include <functional>
 
 #include "strtk.hpp"
 
@@ -590,6 +591,106 @@ void parse_example05()
                 << strtk::text::right_align(2,'0', dt.second) << "."
                 << strtk::text::right_align(3,'0',dt.msecond) << std::endl;
    }
+}
+
+struct event_information
+{
+   std::size_t id;
+   std::string name;
+   std::string location;
+   std::deque<datetime> observation_datetimes;
+};
+
+strtk_register_userdef_type_sink(datetime)
+
+void parse_example06()
+{
+   static const std::string event_data = "172493|Lunar Impact|Mare Tranquillitatis|"
+                                         "2010-01-19 00:28:45.357,2010-02-18 00:57:07.109,"
+                                         "2010-03-20 01:15:11.261,2010-04-21 01:07:27.972";
+
+   strtk::deque_sink<datetime>::type deq_sink(",");
+
+   event_information evt_info;
+   strtk::parse(event_data,"|",evt_info.id,
+                               evt_info.name,
+                               evt_info.location,
+                               deq_sink(evt_info.observation_datetimes));
+
+}
+
+void parse_example07()
+{
+   {
+      static const std::string data = "1,+2,-3|abc,ijk,xyz|123.456,+234.567,-345.678";
+      std::vector<int> int_vector;
+      std::deque<std::string> string_deque;
+      std::list<double> double_list;
+
+      strtk::vector_sink<int>::type vec_sink(",");
+      strtk::deque_sink<std::string>::type deq_sink(",");
+      strtk::list_sink<double>::type lst_sink(",");
+
+      strtk::parse(data,"|",vec_sink(int_vector),
+                            deq_sink(string_deque),
+                            lst_sink(double_list));
+
+      std::cout << "int_vec: "     << strtk::join(" ",int_vector)   << std::endl;
+      std::cout << "string_deq: "  << strtk::join(" ",string_deque) << std::endl;
+      std::cout << "double_list: " << strtk::join(" ",double_list)  << std::endl;
+   }
+
+   {
+      static const std::string data = "1,+2,-3|abc,ijk,xyz|123.456,+234.567,-345.678|-7-6,-5-4,-3-2,-1";
+
+      std::set<int> int_set;
+      std::queue<std::string> string_queue;
+      std::stack<double> double_stack;
+      std::priority_queue<int> int_priority_queue;
+
+      strtk::set_sink<int>::type            set_sink(",");
+      strtk::queue_sink<std::string>::type  que_sink(",");
+      strtk::stack_sink<double>::type       stk_sink(",");
+      strtk::priority_queue_sink<int>::type prq_sink(",");
+
+      strtk::parse(data,"|",set_sink(int_set),
+                            que_sink(string_queue),
+                            stk_sink(double_stack),
+                            prq_sink(int_priority_queue));
+
+   }
+
+   {
+      static const std::string data = "1,+2,-3,4|abc,ijk,rst,xyz|123.456,+234.567,-345.678,456.789,567.890";
+      std::vector<int> int_vector;
+      std::deque<std::string> string_deque;
+      std::list<double> double_list;
+
+      strtk::vector_sink<int>::type        vec_sink(",");
+      strtk::deque_sink<std::string>::type deq_sink(",");
+      strtk::list_sink<double>::type       lst_sink(",");
+
+      strtk::parse(data,"|",vec_sink(  int_vector).count(2),  // consume first 2 values
+                            deq_sink(string_deque).count(3),  // consume first 3 values
+                            lst_sink( double_list).count(4)); // consume first 4 values
+
+      std::cout << "int_vec(2): "     << strtk::join(" ",int_vector)   << std::endl;
+      std::cout << "string_deq(3): "  << strtk::join(" ",string_deque) << std::endl;
+      std::cout << "double_list(4): " << strtk::join(" ",double_list)  << std::endl;
+   }
+}
+
+void parse_example08()
+{
+   static const std::string data = "+123,ignore0,123.456,ignore1,abcdef,ignore2";
+
+   int i = 0;
+   double d = 0.0;
+   std::string s;
+
+   strtk::ignore_token ignore;
+   strtk::parse(data,",",i,ignore,d,ignore,s);
+   std::cout << "i=" << i << " d=" << d << " s=" << s << std::endl;
 }
 
 void remove_inplace_example01()
@@ -1321,6 +1422,9 @@ int main()
    parse_example03();
    parse_example04();
    parse_example05();
+   parse_example06();
+   parse_example07();
+   parse_example08();
    remove_inplace_example01();
    remove_consecutives_example01();
    remove_consecutives_example02();

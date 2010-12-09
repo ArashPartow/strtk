@@ -567,6 +567,7 @@ bool test04(char* buffer, const unsigned int buffer_size)
             p.height += 1.1;
             p.weight += 2.2f;
          }
+
          strtk::binary::writer writer (buffer,buffer_size);
          if (!writer(p_out_list))
          {
@@ -634,6 +635,7 @@ bool test05(char* buffer, const unsigned int buffer_size)
          total_written += writer.write_size();
       }
       t.stop();
+
       printf("[strtk::binary::writer] Person Count:%10llu  Total time:%8.4f  Rate:%14.4fpersons/s %8.3fMB/s\n",
              static_cast<unsigned long long>(rounds * person_count),
              t.time(),
@@ -700,6 +702,7 @@ bool test05(char* buffer, const unsigned int buffer_size)
             total_written += writer.write_size();
          }
          t.stop();
+
          printf("[strtk::binary::writer] Double Count:%10llu  Total time:%8.4f  Rate:%17.4fdbls/s %8.3fMB/s\n",
                 static_cast<unsigned long long>(rounds * max_count),
                 t.time(),
@@ -724,6 +727,7 @@ bool test05(char* buffer, const unsigned int buffer_size)
             total_read += reader.read_size();
          }
          t.stop();
+
          printf("[strtk::binary::reader] Double Count:%10llu  Total time:%8.4f  Rate:%17.4fdbls/s %8.3fMB/s\n",
                 static_cast<unsigned long long>(rounds * max_count),
                 t.time(),
@@ -759,6 +763,7 @@ bool test05(char* buffer, const unsigned int buffer_size)
             total_written += writer.write_size();
          }
          t.stop();
+
          printf("[strtk::binary::writer] String-Permutation Count:%10llu  Total time:%8.4f  Rate:%14.4fstr/s %8.3fMB/s\n",
                 static_cast<unsigned long long>(rounds * str_list.size()),
                 t.time(),
@@ -783,6 +788,7 @@ bool test05(char* buffer, const unsigned int buffer_size)
             total_read += reader.read_size();
          }
          t.stop();
+
          printf("[strtk::binary::reader] String-Permutation Count:%10llu  Total time:%8.4f  Rate:%14.4fstr/s %8.3fMB/s\n",
                 static_cast<unsigned long long>(rounds * str_list.size()),
                 t.time(),

@@ -233,8 +233,10 @@ namespace strtk
       struct bool_type_tag {};
       struct hex_type_tag {};
       struct base64_type_tag {};
+      struct ignore_token_type_tag {};
       struct stdstring_type_tag{};
       struct stdstring_range_type_tag{};
+      struct sink_type_tag {};
 
       template<typename T>
       struct supported_conversion_to_type
@@ -1711,7 +1713,7 @@ namespace strtk
             if (last_token_done_)
             {
                range_.first = range_.second;
-               return *this;
+               return (*this);
             }
             else if (end_ != range_.second)
             {
@@ -1740,7 +1742,7 @@ namespace strtk
                     else
                        ++range_.second;
                  }
-                 return *this;
+                 return (*this);
               }
               else
                  ++range_.second;
@@ -1761,12 +1763,12 @@ namespace strtk
                   range_.first = range_.second;
             }
 
-            return *this;
+            return (*this);
          }
 
          inline tokenizer_iterator operator++(int)
          {
-            tokenizer_iterator tmp = *this;
+            tokenizer_iterator tmp = (*this);
             this->operator++();
             return tmp;
          }
@@ -1777,7 +1779,7 @@ namespace strtk
             {
                for (int i = 0; i < inc; ++i, ++(*this)) ;
             }
-            return *this;
+            return (*this);
          }
 
          inline T operator*() const
@@ -1812,7 +1814,7 @@ namespace strtk
                include_all_delimiters_ = itr.include_all_delimiters_;
                include_delimiters_     = itr.include_delimiters_;
             }
-            return *this;
+            return (*this);
          }
 
          inline std::string remaining() const
@@ -1875,7 +1877,7 @@ namespace strtk
             begin_itr_        = t.begin_itr_;
             tokenize_options_ = t.tokenize_options_;
          }
-         return *this;
+         return (*this);
       }
 
       inline void assign(const std::string& s) const
@@ -1960,7 +1962,7 @@ namespace strtk
          {
             this->sequence_ = it.sequence_;
          }
-         return *this;
+         return (*this);
       }
 
       template<typename Iterator>
@@ -2045,7 +2047,7 @@ namespace strtk
          {
             this->set_ = it.set_;
          }
-         return *this;
+         return (*this);
       }
 
       template<typename Iterator>
@@ -2116,7 +2118,7 @@ namespace strtk
          {
             this->container_ = it.container_;
          }
-         return *this;
+         return (*this);
       }
 
       template<typename Iterator>
@@ -2185,7 +2187,7 @@ namespace strtk
          {
             this->sequence_ = it.sequence_;
          }
-         return *this;
+         return (*this);
       }
 
       inline back_inserter_with_valuetype_iterator& operator=(const typename Sequence::value_type& v)
@@ -2248,7 +2250,7 @@ namespace strtk
          {
             this->set_ = itr.set_;
          }
-         return *this;
+         return (*this);
       }
 
       inline inserter_with_valuetype_iterator& operator=(const typename Set::value_type& v)
@@ -2306,28 +2308,28 @@ namespace strtk
          {
             this->container_ = itr.container_;
          }
-         return *this;
+         return (*this);
       }
 
       inline push_inserter_iterator<Container>& operator=(typename Container::const_reference v)
       {
          container_.push(v);
-         return *this;
+         return (*this);
       }
 
       inline push_inserter_iterator<Container>& operator*()
       {
-         return *this;
+         return (*this);
       }
 
       inline push_inserter_iterator<Container>& operator++()
       {
-         return *this;
+         return (*this);
       }
 
       inline push_inserter_iterator<Container> operator++(int)
       {
-         return *this;
+         return (*this);
       }
 
    private:
@@ -2363,7 +2365,7 @@ namespace strtk
          {
             this->counter_ = it.counter_;
          }
-         return *this;
+         return (*this);
       }
 
       inline counting_back_inserter_iterator& operator=(const T&)
@@ -2426,7 +2428,7 @@ namespace strtk
          {
             this->function_ = it.function_;
          }
-         return *this;
+         return (*this);
       }
 
       template<typename T>
@@ -3271,40 +3273,41 @@ namespace strtk
    {
       if (1 == (std::distance(begin,end) % 2))
          return false;
-      static const unsigned char hex_to_bin[] = {
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x00 - 0x07
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x08 - 0x0F
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x10 - 0x17
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x18 - 0x1F
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x20 - 0x27
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x28 - 0x2F
-                                                   0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // 0x30 - 0x37
-                                                   0x08, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x38 - 0x3F
-                                                   0x00, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x00, // 0x40 - 0x47
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x48 - 0x4F
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x50 - 0x57
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x58 - 0x5F
-                                                   0x00, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x00, // 0x60 - 0x67
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x68 - 0x6F
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x70 - 0x77
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x78 - 0x7F
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x80 - 0x87
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x88 - 0x8F
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x90 - 0x97
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x98 - 0x9F
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xA0 - 0xA7
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xA8 - 0xAF
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xB0 - 0xB7
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xB8 - 0xBF
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xC0 - 0xC7
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xC8 - 0xCF
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xD0 - 0xD7
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xD8 - 0xDF
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xE0 - 0xE7
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xE8 - 0xEF
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xF0 - 0xF7
-                                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // 0xF8 - 0xFF
-                                                };
+      static const unsigned char hex_to_bin[] =
+                                 {
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x00 - 0x07
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x08 - 0x0F
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x10 - 0x17
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x18 - 0x1F
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x20 - 0x27
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x28 - 0x2F
+                                    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // 0x30 - 0x37
+                                    0x08, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x38 - 0x3F
+                                    0x00, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x00, // 0x40 - 0x47
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x48 - 0x4F
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x50 - 0x57
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x58 - 0x5F
+                                    0x00, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x00, // 0x60 - 0x67
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x68 - 0x6F
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x70 - 0x77
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x78 - 0x7F
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x80 - 0x87
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x88 - 0x8F
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x90 - 0x97
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x98 - 0x9F
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xA0 - 0xA7
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xA8 - 0xAF
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xB0 - 0xB7
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xB8 - 0xBF
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xC0 - 0xC7
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xC8 - 0xCF
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xD0 - 0xD7
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xD8 - 0xDF
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xE0 - 0xE7
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xE8 - 0xEF
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0xF0 - 0xF7
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // 0xF8 - 0xFF
+                                 };
 
       const unsigned char* itr = begin;
       while (end != itr)
@@ -3394,40 +3397,41 @@ namespace strtk
 
    inline std::size_t convert_base64_to_bin(const unsigned char* begin, const unsigned char* end, unsigned char* out)
    {
-      static const unsigned char base64_to_bin[] = {
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x00 - 0x07
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x08 - 0x0F
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x10 - 0x17
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x18 - 0x1F
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x20 - 0x27
-                                                      0xFF, 0xFF, 0xFF, 0x3E, 0xFF, 0xFF, 0xFF, 0x3F, // 0x28 - 0x2F
-                                                      0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, // 0x30 - 0x37
-                                                      0x3C, 0x3D, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x38 - 0x3F
-                                                      0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, // 0x40 - 0x47
-                                                      0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, // 0x48 - 0x4F
-                                                      0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, // 0x50 - 0x57
-                                                      0x17, 0x18, 0x19, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x58 - 0x5F
-                                                      0xFF, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, // 0x60 - 0x67
-                                                      0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, // 0x68 - 0x6F
-                                                      0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30, // 0x70 - 0x77
-                                                      0x31, 0x32, 0x33, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x78 - 0x7F
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x80 - 0x87
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x88 - 0x8F
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x90 - 0x97
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x98 - 0x9F
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xA0 - 0xA7
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xA8 - 0xAF
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xB0 - 0xB7
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xB8 - 0xBF
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xC0 - 0xC7
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xC8 - 0xCF
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xD0 - 0xD7
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xD8 - 0xDF
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xE0 - 0xE7
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xE8 - 0xEF
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xF0 - 0xF7
-                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF  // 0xF8 - 0xFF
-                                                  };
+      static const unsigned char base64_to_bin[] =
+                                 {
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x00 - 0x07
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x08 - 0x0F
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x10 - 0x17
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x18 - 0x1F
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x20 - 0x27
+                                    0xFF, 0xFF, 0xFF, 0x3E, 0xFF, 0xFF, 0xFF, 0x3F, // 0x28 - 0x2F
+                                    0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, // 0x30 - 0x37
+                                    0x3C, 0x3D, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x38 - 0x3F
+                                    0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, // 0x40 - 0x47
+                                    0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, // 0x48 - 0x4F
+                                    0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, // 0x50 - 0x57
+                                    0x17, 0x18, 0x19, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x58 - 0x5F
+                                    0xFF, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, // 0x60 - 0x67
+                                    0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, // 0x68 - 0x6F
+                                    0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30, // 0x70 - 0x77
+                                    0x31, 0x32, 0x33, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x78 - 0x7F
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x80 - 0x87
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x88 - 0x8F
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x90 - 0x97
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x98 - 0x9F
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xA0 - 0xA7
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xA8 - 0xAF
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xB0 - 0xB7
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xB8 - 0xBF
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xC0 - 0xC7
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xC8 - 0xCF
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xD0 - 0xD7
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xD8 - 0xDF
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xE0 - 0xE7
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xE8 - 0xEF
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xF0 - 0xF7
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF  // 0xF8 - 0xFF
+                                 };
 
       const unsigned char* end_itr = end;
 
@@ -3494,40 +3498,41 @@ namespace strtk
 
    inline void convert_to_printable_chars(unsigned char* begin, unsigned char* end)
    {
-      static const unsigned char printable_char_table[] = {
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x00 - 0x07
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x08 - 0x0F
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x10 - 0x17
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x18 - 0x1F
-                                                             0x2E, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, // 0x20 - 0x27
-                                                             0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, // 0x28 - 0x2F
-                                                             0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, // 0x30 - 0x37
-                                                             0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F, // 0x38 - 0x3F
-                                                             0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, // 0x40 - 0x47
-                                                             0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F, // 0x48 - 0x4F
-                                                             0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, // 0x50 - 0x57
-                                                             0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F, // 0x58 - 0x5F
-                                                             0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, // 0x60 - 0x67
-                                                             0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, // 0x68 - 0x6F
-                                                             0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, // 0x70 - 0x77
-                                                             0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x2E, // 0x78 - 0x7F
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x80 - 0x87
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x88 - 0x8F
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x90 - 0x97
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x98 - 0x9F
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xA0 - 0xA7
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xA8 - 0xAF
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xB0 - 0xB7
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xB8 - 0xBF
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xC0 - 0xC7
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xC8 - 0xCF
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xD0 - 0xD7
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xD8 - 0xDF
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xE0 - 0xE7
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xE8 - 0xEF
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xF0 - 0xF7
-                                                             0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E  // 0xF8 - 0xFF
-                                                          };
+      static const unsigned char printable_char_table[] =
+                                 {
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x00 - 0x07
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x08 - 0x0F
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x10 - 0x17
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x18 - 0x1F
+                                    0x2E, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, // 0x20 - 0x27
+                                    0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, // 0x28 - 0x2F
+                                    0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, // 0x30 - 0x37
+                                    0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F, // 0x38 - 0x3F
+                                    0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, // 0x40 - 0x47
+                                    0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F, // 0x48 - 0x4F
+                                    0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, // 0x50 - 0x57
+                                    0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F, // 0x58 - 0x5F
+                                    0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, // 0x60 - 0x67
+                                    0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, // 0x68 - 0x6F
+                                    0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, // 0x70 - 0x77
+                                    0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x2E, // 0x78 - 0x7F
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x80 - 0x87
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x88 - 0x8F
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x90 - 0x97
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0x98 - 0x9F
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xA0 - 0xA7
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xA8 - 0xAF
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xB0 - 0xB7
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xB8 - 0xBF
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xC0 - 0xC7
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xC8 - 0xCF
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xD0 - 0xD7
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xD8 - 0xDF
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xE0 - 0xE7
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xE8 - 0xEF
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, // 0xF0 - 0xF7
+                                    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E  // 0xF8 - 0xFF
+                                 };
       unsigned char* itr = begin;
       while (end != itr)
       {
@@ -3743,24 +3748,25 @@ namespace strtk
 
    inline std::size_t high_bit_count(const unsigned char c)
    {
-      static const std::size_t high_bits_in_char[256] = {
-                                                          0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,
-                                                          1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
-                                                          1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
-                                                          2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
-                                                          1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
-                                                          2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
-                                                          2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
-                                                          3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
-                                                          1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
-                                                          2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
-                                                          2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
-                                                          3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
-                                                          2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
-                                                          3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
-                                                          3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
-                                                          4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8
-                                                        };
+      static const std::size_t high_bits_in_char[256] =
+                               {
+                                  0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,
+                                  1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
+                                  1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
+                                  2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+                                  1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
+                                  2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+                                  2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+                                  3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+                                  1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
+                                  2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+                                  2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+                                  3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+                                  2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+                                  3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+                                  3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+                                  4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8
+                               };
       return high_bits_in_char[c];
    }
 
@@ -3811,46 +3817,49 @@ namespace strtk
 
    inline bool bit_state(const std::size_t& index, const unsigned char* ptr)
    {
-      static const unsigned char bit_mask[] = {
-                                                0x01, //00000001
-                                                0x02, //00000010
-                                                0x04, //00000100
-                                                0x08, //00001000
-                                                0x10, //00010000
-                                                0x20, //00100000
-                                                0x40, //01000000
-                                                0x80  //10000000
-                                              };
+      static const unsigned char bit_mask[] =
+                                 {
+                                    0x01, //00000001
+                                    0x02, //00000010
+                                    0x04, //00000100
+                                    0x08, //00001000
+                                    0x10, //00010000
+                                    0x20, //00100000
+                                    0x40, //01000000
+                                    0x80  //10000000
+                                 };
       return (0 != (ptr[(index >> 3)] & bit_mask[index & 7]));
    }
 
    inline void set_bit_high(const std::size_t& index, unsigned char* const ptr)
    {
-      static const unsigned char bit_mask[] = {
-                                                0x01, //00000001
-                                                0x02, //00000010
-                                                0x04, //00000100
-                                                0x08, //00001000
-                                                0x10, //00010000
-                                                0x20, //00100000
-                                                0x40, //01000000
-                                                0x80  //10000000
-                                              };
+      static const unsigned char bit_mask[] =
+                                 {
+                                    0x01, //00000001
+                                    0x02, //00000010
+                                    0x04, //00000100
+                                    0x08, //00001000
+                                    0x10, //00010000
+                                    0x20, //00100000
+                                    0x40, //01000000
+                                    0x80  //10000000
+                                 };
       ptr[(index >> 3)] |= bit_mask[index & 7];
    }
 
    inline void set_bit_low(const std::size_t& index, unsigned char* const ptr)
    {
-      static const unsigned char bit_mask[] = {
-                                                0xFE, //11111110
-                                                0xFD, //11111101
-                                                0xFB, //11111011
-                                                0xF7, //11110111
-                                                0xEF, //11101111
-                                                0xDF, //11011111
-                                                0xBF, //10111111
-                                                0x7F  //01111111
-                                              };
+      static const unsigned char bit_mask[] =
+                                 {
+                                    0xFE, //11111110
+                                    0xFD, //11111101
+                                    0xFB, //11111011
+                                    0xF7, //11110111
+                                    0xEF, //11101111
+                                    0xDF, //11011111
+                                    0xBF, //10111111
+                                    0x7F  //01111111
+                                 };
       ptr[(index >> 3)] &= bit_mask[index & 7];
    }
 
@@ -3861,13 +3870,16 @@ namespace strtk
       {
          return std::numeric_limits<std::size_t>::max();
       }
+
       std::size_t distance = 0;
       const unsigned char* itr1 = begin1;
       const unsigned char* itr2 = begin2;
+
       while (end1 != itr1)
       {
          distance += high_bit_count(static_cast<unsigned char>(((*itr1++) ^ (*itr2++)) & 0xFF));
       }
+
       return distance;
    }
 
@@ -3894,14 +3906,17 @@ namespace strtk
       {
          return std::numeric_limits<std::size_t>::max();
       }
+
       std::size_t distance = 0;
       Iterator itr1 = begin1;
       Iterator itr2 = begin2;
+
       while (end1 != itr1)
       {
          if (*itr1 != *itr2)
             ++distance;
       }
+
       return distance;
    }
 
@@ -3924,8 +3939,8 @@ namespace strtk
       struct options
       {
          options()
-         : split_row_option(split_options::compress_delimiters),
-           split_column_option(split_options::compress_delimiters),
+         : row_split_option(split_options::compress_delimiters),
+           column_split_option(split_options::compress_delimiters),
            row_delimiters("\n\r"),
            column_delimiters(",|;\t ")
          {}
@@ -3934,14 +3949,38 @@ namespace strtk
                  split_options::type sco,
                  const std::string& rd,
                  const std::string& cd)
-         : split_row_option(sro),
-           split_column_option(sco),
+         : row_split_option(sro),
+           column_split_option(sco),
            row_delimiters(rd),
            column_delimiters(cd)
          {}
 
-         split_options::type split_row_option;
-         split_options::type split_column_option;
+         inline options& set_column_split_option(const split_options::type& option)
+         {
+            column_split_option = option;
+            return *this;
+         }
+
+         inline options& set_row_split_option(const split_options::type& option)
+         {
+            row_split_option = option;
+            return *this;
+         }
+
+         inline options& set_column_delimiters(const std::string& delimiters)
+         {
+            column_delimiters = delimiters;
+            return *this;
+         }
+
+         inline options& set_row_delimiters(const std::string& delimiters)
+         {
+            row_delimiters = delimiters;
+            return *this;
+         }
+
+         split_options::type row_split_option;
+         split_options::type column_split_option;
          std::string row_delimiters;
          std::string column_delimiters;
       };
@@ -4349,23 +4388,47 @@ namespace strtk
             itr_list_type::const_iterator end = token_list_->end();
             while (end != itr)
             {
-               const itr_list_type::value_type& range = *itr;
+               const itr_list_type::value_type& range = (*itr);
                *(out++) = string_to_type_converter<T>(range.first,range.second);
                ++itr;
             }
          }
 
+         bool validate_column_range(const col_range_type& range) const
+         {
+            if ((range.first > token_list_->size()) || (range.second > token_list_->size()))
+               return false;
+            else if (range.first > range.second)
+               return false;
+            else
+               return true;
+         }
+
+         col_range_type range(const std::size_t& lower_bound,
+                              const std::size_t& upper_bound = std::numeric_limits<std::size_t>::max()) const
+         {
+            if (std::numeric_limits<std::size_t>::max() != upper_bound)
+               return col_range_type(lower_bound,upper_bound);
+            else
+              return col_range_type(lower_bound,token_list_->size());
+         }
+
          template<typename T,
                   typename Allocator,
                   template<typename,typename> class Sequence>
-         inline bool parse(Sequence<T,Allocator>& sequence) const
+         inline bool parse(const col_range_type& range,
+                           Sequence<T,Allocator>& sequence) const
          {
-            itr_list_type::const_iterator itr = token_list_->begin();
-            itr_list_type::const_iterator end = token_list_->end();
+            if(!validate_column_range(range))
+               return false;
+
+            itr_list_type::const_iterator itr = token_list_->begin() + range.first;
+            itr_list_type::const_iterator end = token_list_->begin() + range.second;
             T t;
+
             while (end != itr)
             {
-               const itr_list_type::value_type& range = *itr;
+               const itr_list_type::value_type& range = (*itr);
                if (!string_to_type_converter(range.first,range.second,t))
                   return false;
                else
@@ -4378,14 +4441,19 @@ namespace strtk
          template<typename T,
                   typename Comparator,
                   typename Allocator>
-         inline bool parse(std::set<T,Comparator,Allocator>& set) const
+         inline bool parse(const col_range_type& range,
+                           std::set<T,Comparator,Allocator>& set) const
          {
-            itr_list_type::const_iterator itr = token_list_->begin();
-            itr_list_type::const_iterator end = token_list_->end();
+            if(!validate_column_range(range))
+               return false;
+
+            itr_list_type::const_iterator itr = token_list_->begin() + range.first;
+            itr_list_type::const_iterator end = token_list_->begin() + range.second;
             T t;
+
             while (end != itr)
             {
-               const itr_list_type::value_type& range = *itr;
+               const itr_list_type::value_type& range = (*itr);
                if (!string_to_type_converter(range.first,range.second,t))
                   return false;
                else
@@ -4396,14 +4464,19 @@ namespace strtk
          }
 
          template<typename T, typename Container>
-         inline bool parse(std::queue<T,Container>& queue) const
+         inline bool parse(const col_range_type& range,
+                           std::queue<T,Container>& queue) const
          {
-            itr_list_type::const_iterator itr = token_list_->begin();
-            itr_list_type::const_iterator end = token_list_->end();
+            if(!validate_column_range(range))
+               return false;
+
+            itr_list_type::const_iterator itr = token_list_->begin() + range.first;
+            itr_list_type::const_iterator end = token_list_->begin() + range.second;
             T t;
+
             while (end != itr)
             {
-               const itr_list_type::value_type& range = *itr;
+               const itr_list_type::value_type& range = (*itr);
                if (!string_to_type_converter(range.first,range.second,t))
                   return false;
                else
@@ -4414,14 +4487,19 @@ namespace strtk
          }
 
          template<typename T, typename Container>
-         inline bool parse(std::stack<T,Container>& stack) const
+         inline bool parse(const col_range_type& range,
+                           std::stack<T,Container>& stack) const
          {
-            itr_list_type::const_iterator itr = token_list_->begin();
-            itr_list_type::const_iterator end = token_list_->end();
+            if(!validate_column_range(range))
+               return false;
+
+            itr_list_type::const_iterator itr = token_list_->begin() + range.first;
+            itr_list_type::const_iterator end = token_list_->begin() + range.second;
             T t;
+
             while (end != itr)
             {
-               const itr_list_type::value_type& range = *itr;
+               const itr_list_type::value_type& range = (*itr);
                if (!string_to_type_converter(range.first,range.second,t))
                   return false;
                else
@@ -4434,14 +4512,19 @@ namespace strtk
          template<typename T,
                   typename Container,
                   typename Comparator>
-         inline bool parse(std::priority_queue<T,Container,Comparator>& priority_queue) const
+         inline bool parse(const col_range_type& range,
+                           std::priority_queue<T,Container,Comparator>& priority_queue) const
          {
-            itr_list_type::const_iterator itr = token_list_->begin();
-            itr_list_type::const_iterator end = token_list_->end();
+            if(!validate_column_range(range))
+               return false;
+
+            itr_list_type::const_iterator itr = token_list_->begin() + range.first;
+            itr_list_type::const_iterator end = token_list_->begin() + range.second;
             T t;
+
             while (end != itr)
             {
-               const itr_list_type::value_type& range = *itr;
+               const itr_list_type::value_type& range = (*itr);
                if (!string_to_type_converter(range.first,range.second,t))
                   return false;
                else
@@ -4449,6 +4532,42 @@ namespace strtk
                ++itr;
             }
             return true;
+         }
+
+         template<typename T,
+                  typename Allocator,
+                  template<typename,typename> class Sequence>
+         inline bool parse(Sequence<T,Allocator>& sequence) const
+         {
+            return parse(range(0),sequence);
+         }
+
+         template<typename T,
+                  typename Comparator,
+                  typename Allocator>
+         inline bool parse(std::set<T,Comparator,Allocator>& set) const
+         {
+            return parse(range(0),set);
+         }
+
+         template<typename T, typename Container>
+         inline bool parse(std::queue<T,Container>& queue) const
+         {
+            return parse(range(0),queue);
+         }
+
+         template<typename T, typename Container>
+         inline bool parse(std::stack<T,Container>& stack) const
+         {
+            return parse(range(0),stack);
+         }
+
+         template<typename T,
+                  typename Container,
+                  typename Comparator>
+         inline bool parse(std::priority_queue<T,Container,Comparator>& priority_queue) const
+         {
+            return parse(range(0),priority_queue);
          }
 
          template<typename T,
@@ -4463,7 +4582,7 @@ namespace strtk
             itr_list_type::const_iterator end = token_list_->end();
             while (end != itr)
             {
-               const itr_list_type::value_type& range = *itr;
+               const itr_list_type::value_type& range = (*itr);
                if (!string_to_type_converter(range.first,range.second,t))
                   return false;
                else
@@ -4483,7 +4602,7 @@ namespace strtk
             itr_list_type::const_iterator end = token_list_->end();
             while (end != itr)
             {
-               const itr_list_type::value_type& range = *itr;
+               const itr_list_type::value_type& range = (*itr);
                if (string_to_type_converter(range.first,range.second,value))
                {
                   *(out++) = value;
@@ -4709,12 +4828,16 @@ namespace strtk
       {
          if (index > max_column_count_)
             return false;
+
          if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
             return false;
+
          if (range.first > range.second)
             return false;
+
          itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
          itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
+
          while (end != itr)
          {
             if (index < (*itr).size())
@@ -4759,12 +4882,16 @@ namespace strtk
       {
          if (index > max_column_count_)
             return false;
+
          if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
             return false;
+
          if (range.first > range.second)
             return false;
+
          itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
          itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
+
          while (end != itr)
          {
             process_column((*itr++)[index],out);
@@ -4789,12 +4916,16 @@ namespace strtk
          if ((index1 > max_column_count_) ||
              (index2 > max_column_count_))
             return false;
+
          if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
             return false;
+
          if (range.first > range.second)
             return false;
+
          itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
          itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
+
          while (end != itr)
          {
             process_column((*itr)[index1],out1);
@@ -4817,12 +4948,16 @@ namespace strtk
              (index2 > max_column_count_) ||
              (index3 > max_column_count_))
             return false;
+
          if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
             return false;
+
          if (range.first > range.second)
             return false;
+
          itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
          itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
+
          while (end != itr)
          {
             process_column((*itr)[index1],out1);
@@ -4850,12 +4985,16 @@ namespace strtk
              (index3 > max_column_count_) ||
              (index4 > max_column_count_))
             return false;
+
          if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
             return false;
+
          if (range.first > range.second)
             return false;
+
          itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
          itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
+
          while (end != itr)
          {
             process_column((*itr)[index1],out1);
@@ -4888,12 +5027,16 @@ namespace strtk
              (index4 > max_column_count_) ||
              (index5 > max_column_count_))
             return false;
+
          if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
             return false;
+
          if (range.first > range.second)
             return false;
+
          itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
          itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
+
          while (end != itr)
          {
             process_column((*itr)[index1],out1);
@@ -4916,26 +5059,89 @@ namespace strtk
       {
          if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
             return false;
+
          if (range.first > range.second)
             return false;
-         itr_list_list_type::iterator itr = token_list_.begin() + range.first;
-         itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
-         while (end != itr)
-         {
-            if (!itr->empty() && predicate(itr->front().first,itr->back().second))
-            {
-               itr = token_list_.erase(itr);
-            }
-            else
-              ++itr;
-         }
+
+         itr_list_list_type::iterator begin = token_list_.begin() + range.first;
+         itr_list_list_type::iterator end   = token_list_.begin() + range.second;
+
+         itr_list_list_type::iterator new_end = std::remove_if(begin,end,
+                                                               remove_row_if_predicate<Predicate>(predicate));
+
+         token_list_.erase(new_end,token_list_.begin() + range.second);
+
          return true;
       }
 
       template<typename Predicate>
-      inline void remove_row_if(Predicate predicate)
+      inline bool remove_row_if(Predicate predicate)
       {
          return remove_row_if(all_rows(),predicate);
+      }
+
+      inline void remove_empty_tokens(const row_range_type& range)
+      {
+         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
+            return;
+
+         if (range.first > range.second)
+            return;
+
+         itr_list_list_type::iterator itr = token_list_.begin() + range.first;
+         itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
+
+         while (end != itr)
+         {
+            itr_list_type& row_deq = (*itr);
+            itr_list_type::iterator row_itr = row_deq.begin();
+
+            while (row_deq.end() != row_itr)
+            {
+               if (0 == std::distance(row_itr->first,row_itr->second))
+               {
+                  row_itr = (*itr).erase(row_itr);
+               }
+               else
+                  ++row_itr;
+            }
+            ++itr;
+         }
+      }
+
+      template<typename Predicate>
+      inline void remove_token_if(const row_range_type& range, Predicate p)
+      {
+         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
+            return;
+
+         if (range.first > range.second)
+            return;
+
+         itr_list_list_type::iterator itr = token_list_.begin() + range.first;
+         itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
+
+         while (end != itr)
+         {
+            itr_list_type& row_deq = (*itr);
+            itr_list_type::iterator row_itr = row_deq.begin();
+
+            while (row_deq.end() != row_itr)
+            {
+               if (p(row_itr->first,row_itr->second))
+               {
+                  row_itr = (*itr).erase(row_itr);
+               }
+               else
+                  ++row_itr;
+            }
+            ++itr;
+         }
+      }
+
+      inline void remove_empty_tokens()
+      {
+         remove_empty_tokens(all_rows());
       }
 
       inline void enforce_column_count(const std::size_t& column_count)
@@ -5015,13 +5221,17 @@ namespace strtk
       {
          if (col > max_column_count_)
             return false;
+
          if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
             return false;
+
          if (range.first > range.second)
             return false;
+
          itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
          itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
          T current_value = T();
+
          while (end != itr)
          {
             if (!(*itr).empty())
@@ -5050,13 +5260,17 @@ namespace strtk
       {
          if (col > max_column_count_)
             return false;
+
          if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
             return false;
+
          if (range.first > range.second)
             return false;
+
          itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
          itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
          T current_value = T();
+
          while (end != itr)
          {
             if (!(*itr).empty() && p(row_type(*itr)))
@@ -5068,6 +5282,7 @@ namespace strtk
             }
             ++itr;
          }
+
          return true;
       }
 
@@ -5112,14 +5327,18 @@ namespace strtk
       {
          if (col > max_column_count_)
             return false;
+
          if ((row_range.first > token_list_.size()) || (row_range.second > token_list_.size()))
             return false;
+
          if (row_range.first > row_range.second)
             return false;
+
          itr_list_list_type::const_iterator itr = token_list_.begin() + row_range.first;
          itr_list_list_type::const_iterator end = token_list_.begin() + row_range.second;
          range_type range;
          bool appended = false;
+
          while (end != itr)
          {
             if (!delimiter.empty() && appended)
@@ -5136,6 +5355,7 @@ namespace strtk
             }
             ++itr;
          }
+
          return true;
       }
 
@@ -5155,13 +5375,17 @@ namespace strtk
       {
          if (col > max_column_count_)
             return false;
+
          if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
             return false;
+
          if (range.first > range.second)
             return false;
+
          itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
          itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
          bool appended = false;
+
          while (end != itr)
          {
             if (!delimiter.empty() && appended)
@@ -5178,6 +5402,7 @@ namespace strtk
             }
             ++itr;
          }
+
          return true;
       }
 
@@ -5198,10 +5423,13 @@ namespace strtk
 
          if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
             return false;
+
          if (range.first >= range.second)
             return false;
+
          itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
          row_range_type r(range.first,range.first);
+
          for (std::size_t i = range.first; i < range.second; ++i, ++itr)
          {
             if (p(row_type(*itr)))
@@ -5254,7 +5482,7 @@ namespace strtk
          split(text_newline_predicate,
                buffer_, buffer_ + buffer_size_,
                std::back_inserter(row_list),
-               options_.split_row_option);
+               options_.row_split_option);
 
          multiple_char_delimiter_predicate token_predicate(options_.column_delimiters);
 
@@ -5273,7 +5501,8 @@ namespace strtk
                      itr->first,
                      itr->second,
                      std::back_inserter(current_token_list),
-                     options_.split_column_option);
+                     options_.column_split_option);
+
                if (!current_token_list.empty())
                {
                   token_list_.push_back(current_token_list);
@@ -5292,14 +5521,18 @@ namespace strtk
          std::ifstream stream(file_name_.c_str(),std::ios::binary);
          if (!stream)
             return false;
+
          stream.seekg (0,std::ios::end);
          buffer_size_ = static_cast<std::size_t>(stream.tellg());
          if (0 == buffer_size_)
             return false;
+
          stream.seekg (0,std::ios::beg);
+
          buffer_ = new unsigned char[buffer_size_];
          stream.read(reinterpret_cast<char*>(buffer_),static_cast<std::streamsize>(buffer_size_));
          stream.close(); // scope should handle this.
+
          return true;
       }
 
@@ -5321,6 +5554,22 @@ namespace strtk
          }
       }
 
+      template<typename Predicate>
+      struct remove_row_if_predicate
+      {
+         remove_row_if_predicate(Predicate p)
+         : p_(p)
+         {}
+
+         inline bool operator()(const itr_list_type& itr_list)
+         {
+            return (!itr_list.empty() &&
+                    p_(itr_list.front().first,itr_list.back().second));
+         }
+
+         Predicate p_;
+      };
+
    private:
 
       itr_list_list_type token_list_;
@@ -5341,6 +5590,28 @@ namespace strtk
       t = string_to_type_converter<T>(std::string(range.first,range.second));
       return true;
    }
+
+   struct empty_range
+   {
+   public:
+
+      template<typename InputIterator>
+      inline bool operator()(const InputIterator begin, const InputIterator end)
+      {
+         return (0 == std::distance(begin,end));
+      }
+   };
+
+   struct nonempty_range
+   {
+   public:
+
+      template<typename InputIterator>
+      inline bool operator()(const InputIterator begin, const InputIterator end)
+      {
+         return (0 != std::distance(begin,end));
+      }
+   };
 
    template<typename OutputIterator>
    struct filter_non_empty_range
@@ -5436,6 +5707,7 @@ namespace strtk
                return;
             }
          }
+
          if (!allow_through_on_match_)
          {
             predicate_(range);
@@ -6361,8 +6633,8 @@ namespace strtk
              template <typename,typename> class Sequence>
    inline std::size_t parse(const std::string& data,
                             const std::string& delimiters,
-                             Sequence<T,Allocator>& sequence,
-                             const split_options::type& split_option = split_options::compress_delimiters)
+                            Sequence<T,Allocator>& sequence,
+                            const split_options::type& split_option = split_options::compress_delimiters)
    {
       return parse(data.c_str(),
                    data.c_str() + data.size(),
@@ -6463,6 +6735,8 @@ namespace strtk
    #define strtk_parse_hex_type(T)\
    ,t.T
 
+   #define strtk_parse_ignore_token()\
+   ,ignore_token()
 
    #define strtk_parse_end()\
    );}}
@@ -6968,7 +7242,7 @@ namespace strtk
       inline build_string& operator << (const T& t)
       {
          data_ += type_to_string(t);
-         return *this;
+         return (*this);
       }
 
       inline operator std::string () const
@@ -7714,7 +7988,7 @@ namespace strtk
                begin_ = middle_ = end_;
             }
          }
-         return *this;
+         return (*this);
       }
 
       inline combination_iterator operator++(int)
@@ -7730,7 +8004,7 @@ namespace strtk
          {
             for (int i = 0; i < inc; ++i, ++(*this)) ;
          }
-         return *this;
+         return (*this);
       }
 
       inline range_type operator*() const
@@ -8259,6 +8533,22 @@ namespace strtk
 
    } // namespace binary
 
+   class ignore_token
+   {
+   public:
+
+      template<typename InputIterator>
+      inline ignore_token& operator=(const std::pair<InputIterator,InputIterator>&)
+      {
+         return (*this);
+      }
+
+      inline ignore_token& operator=(const std::string&)
+      {
+         return (*this);
+      }
+   };
+
    template<typename T>
    class hex_to_number_sink
    {
@@ -8296,7 +8586,7 @@ namespace strtk
       {
          valid_ = hns.valid_;
          t_ = hns.t_;
-         return *this;
+         return (*this);
       }
 
       template<typename InputIterator>
@@ -8307,7 +8597,7 @@ namespace strtk
          if ((size > 2) && ((*s.first) == '0') && (((*s.first + 1) == 'x') || ((*s.first + 1) == 'X')))
             offset = 2;
          if ((size - offset) > (2 * sizeof(T)))
-               return *this;
+               return (*this);
 
          const std::size_t buffer_size = 2 * sizeof(T);
          const std::size_t buffer_offset = ((size - offset) % 2);
@@ -8315,7 +8605,7 @@ namespace strtk
          if (!range_only_contains(hex_value_check(),s.first + offset,s.first + size))
          {
             valid_ = false;
-            return *this;
+            return (*this);
          }
 
          std::copy(s.first + offset, s.first + size, buffer + buffer_offset);
@@ -8324,7 +8614,7 @@ namespace strtk
                                     buffer + (size - offset) + buffer_offset,
                                     reinterpret_cast<char*>(t_));
          reverse_bytes();
-         return *this;
+         return (*this);
       }
 
       inline hex_to_number_sink& operator=(const std::string& s)
@@ -8399,7 +8689,7 @@ namespace strtk
       {
          valid_ = bns.valid_;
          t_ = bns.t_;
-         return *this;
+         return (*this);
       }
 
       inline base64_to_number_sink& operator=(const std::string& s)
@@ -8407,13 +8697,13 @@ namespace strtk
          if (!range_only_contains(base64_value_check(),s.c_str(),s.c_str() + s.size()))
          {
             valid_ = false;
-            return *this;
+            return (*this);
          }
 
          *t_ = T(0);
          convert_base64_to_bin(s.c_str(), s.c_str() + s.size(),reinterpret_cast<char*>(t_));
          reverse_bytes();
-         return *this;
+         return (*this);
       }
 
       template<typename InputIterator>
@@ -8422,13 +8712,13 @@ namespace strtk
          if (!range_only_contains(base64_value_check(),s.first,s.second))
          {
             valid_ = false;
-            return *this;
+            return (*this);
          }
 
          *t_ = T(0);
          convert_base64_to_bin(s.first, s.second,reinterpret_cast<char*>(t_));
          reverse_bytes();
-         return *this;
+         return (*this);
       }
 
       inline bool valid() const
@@ -8455,6 +8745,213 @@ namespace strtk
       bool valid_;
       T* t_;
    };
+
+   namespace details
+   {
+
+      template <typename InputIterator,
+                typename T,
+                typename Allocator,
+                template <typename,typename> class Sequence>
+      inline std::size_t parse_stl_container_proxy(const InputIterator begin,
+                                                   const InputIterator end,
+                                                   const std::string& delimiters,
+                                                   Sequence<T,Allocator>& sequence,
+                                                   const split_options::type& split_option = split_options::compress_delimiters)
+      {
+         return parse(begin,end,delimiters,sequence,split_option);
+      }
+
+      template <typename InputIterator,
+                typename T,
+                typename Comparator,
+                typename Allocator>
+      inline std::size_t parse_stl_container_proxy(const InputIterator begin,
+                                                   const InputIterator end,
+                                                   const std::string& delimiters,
+                                                   std::set<T,Comparator,Allocator>& set,
+                                                   const split_options::type& split_option = split_options::compress_delimiters)
+      {
+         return parse(begin,end,delimiters,set,split_option);
+      }
+
+      template <typename InputIterator,
+                typename T,
+                typename Container>
+      inline std::size_t parse_stl_container_proxy(const InputIterator begin,
+                                                   const InputIterator end,
+                                                   const std::string& delimiters,
+                                                   std::queue<T,Container>& queue,
+                                                   const split_options::type& split_option = split_options::compress_delimiters)
+      {
+         return parse(begin,end,delimiters,queue,split_option);
+      }
+
+      template <typename InputIterator,
+                typename T,
+                typename Container>
+      inline std::size_t parse_stl_container_proxy(const InputIterator begin,
+                                                   const InputIterator end,
+                                                   const std::string& delimiters,
+                                                   std::stack<T,Container>& stack,
+                                                   const split_options::type& split_option = split_options::compress_delimiters)
+      {
+         return parse(begin,end,delimiters,stack,split_option);
+      }
+
+      template <typename InputIterator,
+                typename T,
+                typename Container,
+                typename Comparator>
+      inline std::size_t parse_stl_container_proxy(const InputIterator begin,
+                                                   const InputIterator end,
+                                                   const std::string& delimiters,
+                                                   std::priority_queue<T,Container,Comparator>& priority_queue,
+                                                   const split_options::type& split_option = split_options::compress_delimiters)
+      {
+         return parse(begin,end,delimiters,priority_queue,split_option);
+      }
+
+      template <typename InputIterator,
+                typename T,
+                typename Allocator,
+                template <typename,typename> class Sequence>
+      inline std::size_t parse_n_stl_container_proxy(const InputIterator begin,
+                                                     const InputIterator end,
+                                                     const std::string& delimiters,
+                                                     const std::size_t& n,
+                                                     Sequence<T,Allocator>& sequence,
+                                                     const split_options::type& split_option = split_options::compress_delimiters)
+      {
+         return parse_n(begin,end,delimiters,n,sequence,split_option);
+      }
+
+      template <typename InputIterator,
+                typename T,
+                typename Comparator,
+                typename Allocator>
+      inline std::size_t parse_n_stl_container_proxy(const InputIterator begin,
+                                                     const InputIterator end,
+                                                     const std::string& delimiters,
+                                                     const std::size_t& n,
+                                                     std::set<T,Comparator,Allocator>& set,
+                                                     const split_options::type& split_option = split_options::compress_delimiters)
+      {
+         return parse_n(begin,end,delimiters,n,set,split_option);
+      }
+
+      template <typename InputIterator,
+                typename T,
+                typename Container>
+      inline std::size_t parse_n_stl_container_proxy(const InputIterator begin,
+                                                     const InputIterator end,
+                                                     const std::string& delimiters,
+                                                     const std::size_t& n,
+                                                     std::queue<T,Container>& queue,
+                                                     const split_options::type& split_option = split_options::compress_delimiters)
+      {
+         return parse_n(begin,end,delimiters,n,queue,split_option);
+      }
+
+      template <typename InputIterator,
+                typename T,
+                typename Container>
+      inline std::size_t parse_n_stl_container_proxy(const InputIterator begin,
+                                                     const InputIterator end,
+                                                     const std::string& delimiters,
+                                                     const std::size_t& n,
+                                                     std::stack<T,Container>& stack,
+                                                     const split_options::type& split_option = split_options::compress_delimiters)
+      {
+         return parse_n(begin,end,delimiters,n,stack,split_option);
+      }
+
+      template <typename InputIterator,
+                typename T,
+                typename Container,
+                typename Comparator>
+      inline std::size_t parse_n_stl_container_proxy(const InputIterator begin,
+                                                     const InputIterator end,
+                                                     const std::string& delimiters,
+                                                     const std::size_t& n,
+                                                     std::priority_queue<T,Container,Comparator>& priority_queue,
+                                                     const split_options::type& split_option = split_options::compress_delimiters)
+      {
+         return parse_n(begin,end,delimiters,n,priority_queue,split_option);
+      }
+
+   } // namespace details
+
+   template<typename Container>
+   class sink_type
+   {
+   public:
+      typedef typename Container::value_type value_type;
+
+      inline sink_type(const std::string& delimiters,
+                       const split_options::type& split_option = split_options::compress_delimiters)
+      : delimiters_(delimiters),
+        split_option_(split_option),
+        container_(0),
+        element_count_(std::numeric_limits<std::size_t>::max())
+      {}
+
+      inline sink_type(Container& container,
+                       const std::string& delimiters,
+                       const split_options::type& split_option = split_options::compress_delimiters)
+      : delimiters_(delimiters),
+        split_option_(split_option),
+        container_(&container)
+      {}
+
+      inline sink_type& count(const std::size_t& element_count = std::numeric_limits<std::size_t>::max())
+      {
+         element_count_ = element_count;
+         return (*this);
+      }
+
+      inline sink_type& operator()(Container& container,
+                                   const std::string& delimiters = "",
+                                   const split_options::type& split_option = split_options::compress_delimiters)
+      {
+         container_ = (&container);
+         if (!delimiters.empty())
+            delimiters_ = delimiters;
+         split_option_ = split_option;
+         return (*this);
+      }
+
+      template<typename InputIterator>
+      inline bool parse(InputIterator begin, InputIterator end)
+      {
+         if (container_)
+         {
+            if (std::numeric_limits<std::size_t>::max() == element_count_)
+               return (details::parse_stl_container_proxy
+                         (begin,end,delimiters_,(*container_),split_option_) > 0);
+            else
+               return (details::parse_n_stl_container_proxy
+                         (begin,end,delimiters_,element_count_,(*container_),split_option_) == element_count_);
+         }
+         else
+            return false;
+      }
+
+   private:
+
+      std::string delimiters_;
+      split_options::type split_option_;
+      Container* container_;
+      std::size_t element_count_;
+   };
+
+   template<typename T> struct vector_sink { typedef sink_type<std::vector<T> > type; };
+   template<typename T> struct deque_sink  { typedef sink_type<std::deque<T> >  type; };
+   template<typename T> struct list_sink   { typedef sink_type<std::list<T> >   type; };
+   template<typename T> struct set_sink    { typedef sink_type<std::set<T> >    type; };
+   template<typename T> struct queue_sink  { typedef sink_type<std::queue<T> >  type; };
+   template<typename T> struct stack_sink  { typedef sink_type<std::stack<T> >  type; };
+   template<typename T> struct priority_queue_sink { typedef sink_type<std::priority_queue<T> > type; };
 
    namespace text
    {
@@ -8576,40 +9073,42 @@ namespace strtk
 
    namespace details
    {
-      static const unsigned char digit_table[] = {
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xFF - 0x07
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x08 - 0x0F
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x10 - 0x17
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x18 - 0x1F
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x20 - 0x27
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x28 - 0x2F
-                                                   0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // 0x30 - 0x37
-                                                   0x08, 0x09, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x38 - 0x3F
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x40 - 0x47
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x48 - 0x4F
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x50 - 0x57
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x58 - 0x5F
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x60 - 0x67
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x68 - 0x6F
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x70 - 0x77
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x78 - 0x7F
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x80 - 0x87
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x88 - 0x8F
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x90 - 0x97
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x98 - 0x9F
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xA0 - 0xA7
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xA8 - 0xAF
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xB0 - 0xB7
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xB8 - 0xBF
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xC0 - 0xC7
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xC8 - 0xCF
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xD0 - 0xD7
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xD8 - 0xDF
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xE0 - 0xE7
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xE8 - 0xEF
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xF0 - 0xF7
-                                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF  // 0xF8 - 0xFF
-                                                 };
+      static const unsigned char digit_table[] =
+                                 {
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xFF - 0x07
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x08 - 0x0F
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x10 - 0x17
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x18 - 0x1F
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x20 - 0x27
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x28 - 0x2F
+                                   0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // 0x30 - 0x37
+                                   0x08, 0x09, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x38 - 0x3F
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x40 - 0x47
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x48 - 0x4F
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x50 - 0x57
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x58 - 0x5F
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x60 - 0x67
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x68 - 0x6F
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x70 - 0x77
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x78 - 0x7F
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x80 - 0x87
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x88 - 0x8F
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x90 - 0x97
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0x98 - 0x9F
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xA0 - 0xA7
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xA8 - 0xAF
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xB0 - 0xB7
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xB8 - 0xBF
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xC0 - 0xC7
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xC8 - 0xCF
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xD0 - 0xD7
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xD8 - 0xDF
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xE0 - 0xE7
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xE8 - 0xEF
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xF0 - 0xF7
+                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF  // 0xF8 - 0xFF
+                                 };
+
       static const std::size_t digit_table_size = sizeof(digit_table) / sizeof(unsigned char);
 
       template<typename T>
@@ -8717,9 +9216,9 @@ namespace strtk
       template<> struct numeric<long long>          { enum { length = 19, size = 24, bound_length = 18}; };
       template<> struct numeric<unsigned long long> { enum { length = 19, size = 24, bound_length = 18}; };
 
-      template<> struct numeric<float>              { enum { min_exp =  -38, max_exp =  +38 }; };
-      template<> struct numeric<double>             { enum { min_exp = -308, max_exp = +308 }; };
-      template<> struct numeric<long double>        { enum { min_exp = -308, max_exp = +308 }; };
+      template<> struct numeric<float>              { enum { min_exp =  -38, max_exp =  +38, precision = 10}; };
+      template<> struct numeric<double>             { enum { min_exp = -308, max_exp = +308, precision = 15}; };
+      template<> struct numeric<long double>        { enum { min_exp = -308, max_exp = +308, precision = 15}; };
 
       #define strtk_register_unsigned_type_tag(T)\
       template<> struct supported_conversion_to_type<T> { typedef unsigned_type_tag type; };\
@@ -8753,6 +9252,18 @@ namespace strtk
 
       #define strtk_register_stdstring_range_type_tag(T)\
       template<> struct supported_conversion_to_type< std::pair<T,T> >{ typedef stdstring_range_type_tag type; };
+
+      #define strtk_register_sink_type_tag(T)\
+      template<> struct supported_conversion_to_type<sink_type<std::vector<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_to_type<sink_type<std::deque<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_to_type<sink_type<std::list<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_to_type<sink_type<std::set<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_to_type<sink_type<std::queue<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_to_type<sink_type<std::stack<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_to_type<sink_type<std::priority_queue<T> > > { typedef sink_type_tag type; };\
+
+      template<> struct supported_conversion_to_type<ignore_token>{ typedef ignore_token_type_tag type; };
+
 
       #define strtk_register_sequence_iterator_type(sequence)\
       strtk_register_supported_iterator_type(sequence<char>::iterator)\
@@ -8814,6 +9325,24 @@ namespace strtk
       strtk_register_sequence_iterator_type(std::vector)
       strtk_register_sequence_iterator_type(std::deque)
 
+      strtk_register_sink_type_tag(float)
+      strtk_register_sink_type_tag(double)
+      strtk_register_sink_type_tag(long double)
+      strtk_register_sink_type_tag(signed char)
+      strtk_register_sink_type_tag(char)
+      strtk_register_sink_type_tag(short)
+      strtk_register_sink_type_tag(int)
+      strtk_register_sink_type_tag(long)
+      strtk_register_sink_type_tag(unsigned char)
+      strtk_register_sink_type_tag(unsigned short)
+      strtk_register_sink_type_tag(unsigned int)
+      strtk_register_sink_type_tag(unsigned long)
+      strtk_register_sink_type_tag(unsigned long long)
+      strtk_register_sink_type_tag(std::string)
+
+      #define strtk_register_userdef_type_sink(T)\
+      namespace strtk { namespace details { strtk_register_sink_type_tag(T) }}
+
       template<typename Iterator, typename T, typename Tag>
       inline bool string_to_type_converter_impl(Iterator& begin, const Iterator end, T& t, not_supported_type_tag)
       {
@@ -8829,7 +9358,6 @@ namespace strtk
             begin = end;
             return true;
          #else
-         /*
             try
             {
                std::stringstream ss(std::string(begin,end));
@@ -8841,7 +9369,6 @@ namespace strtk
             }
             begin = end;
             return true;
-            */
          #endif
       }
 
@@ -9154,7 +9681,16 @@ namespace strtk
                            1.0E+161, 1.0E+162, 1.0E+163, 1.0E+164, 1.0E+165, 1.0E+166, 1.0E+167, 1.0E+168, 1.0E+169, 1.0E+170,
                            1.0E+171, 1.0E+172, 1.0E+173, 1.0E+174, 1.0E+175, 1.0E+176, 1.0E+177, 1.0E+178, 1.0E+179, 1.0E+180,
                            1.0E+181, 1.0E+182, 1.0E+183, 1.0E+184, 1.0E+185, 1.0E+186, 1.0E+187, 1.0E+188, 1.0E+189, 1.0E+190,
-                           1.0E+191, 1.0E+192, 1.0E+193, 1.0E+194, 1.0E+195, 1.0E+196, 1.0E+197, 1.0E+198, 1.0E+199, 1.0E+200
+                           1.0E+191, 1.0E+192, 1.0E+193, 1.0E+194, 1.0E+195, 1.0E+196, 1.0E+197, 1.0E+198, 1.0E+199, 1.0E+200,
+                           1.0E+221, 1.0E+222, 1.0E+223, 1.0E+224, 1.0E+225, 1.0E+226, 1.0E+227, 1.0E+228, 1.0E+229, 1.0E+230,
+                           1.0E+231, 1.0E+232, 1.0E+233, 1.0E+234, 1.0E+235, 1.0E+236, 1.0E+237, 1.0E+238, 1.0E+239, 1.0E+240,
+                           1.0E+241, 1.0E+242, 1.0E+243, 1.0E+244, 1.0E+245, 1.0E+246, 1.0E+247, 1.0E+248, 1.0E+249, 1.0E+250,
+                           1.0E+251, 1.0E+252, 1.0E+253, 1.0E+254, 1.0E+255, 1.0E+256, 1.0E+257, 1.0E+258, 1.0E+259, 1.0E+260,
+                           1.0E+261, 1.0E+262, 1.0E+263, 1.0E+264, 1.0E+265, 1.0E+266, 1.0E+267, 1.0E+268, 1.0E+269, 1.0E+270,
+                           1.0E+271, 1.0E+272, 1.0E+273, 1.0E+274, 1.0E+275, 1.0E+276, 1.0E+277, 1.0E+278, 1.0E+279, 1.0E+280,
+                           1.0E+281, 1.0E+282, 1.0E+283, 1.0E+284, 1.0E+285, 1.0E+286, 1.0E+287, 1.0E+288, 1.0E+289, 1.0E+290,
+                           1.0E+291, 1.0E+292, 1.0E+293, 1.0E+294, 1.0E+295, 1.0E+296, 1.0E+297, 1.0E+298, 1.0E+299, 1.0E+300,
+                           1.0E+301, 1.0E+302, 1.0E+303, 1.0E+304, 1.0E+305, 1.0E+306, 1.0E+307, 1.0E+308
                          };
 
             static const std::size_t fract10_size = sizeof(fract10) / sizeof(double);
@@ -9197,6 +9733,13 @@ namespace strtk
          return true;
       }
 
+      template<typename Iterator, typename IgnoreTokenType>
+      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, IgnoreTokenType&, ignore_token_type_tag)
+      {
+         itr = end;
+         return true;
+      }
+
       template<typename Iterator, typename HexSinkType>
       inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, HexSinkType& t, hex_type_tag)
       {
@@ -9212,6 +9755,15 @@ namespace strtk
       {
          t = std::pair<Iterator,Iterator>(itr,end);
          if (!t.valid())
+            return false;
+         itr = end;
+         return true;
+      }
+
+      template<typename Iterator, typename SinkType>
+      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, SinkType& t, sink_type_tag)
+      {
+         if (!t.parse(itr,end))
             return false;
          itr = end;
          return true;
@@ -9301,7 +9853,7 @@ namespace strtk
          char* itr = buffer + (strtk::details::numeric<T>::size - 1);
          bool negative = (value < 0);
          if (negative)
-            value = static_cast<T>(std::abs(value));
+            value = static_cast<T>(-1 * value);
 
          T remainder = 0;
          std::size_t index = 0;
@@ -9312,7 +9864,7 @@ namespace strtk
             {
                remainder  = value % radix_cube;
                value     /= radix_cube;
-               index = remainder * 3;
+               index    = static_cast<std::size_t>(remainder * 3);
                *(itr--) = static_cast<char>(details::rev_digit_table3[index + 0]);
                *(itr--) = static_cast<char>(details::rev_digit_table3[index + 1]);
                *(itr--) = static_cast<char>(details::rev_digit_table3[index + 2]);
@@ -9322,7 +9874,7 @@ namespace strtk
             {
                remainder  = value % radix_sqr;
                value     /= radix_sqr;
-               index = remainder << 1;
+               index    = static_cast<std::size_t>(remainder) << 1;
                *(itr--) = static_cast<char>(details::rev_digit_table2[index + 0]);
                *(itr--) = static_cast<char>(details::rev_digit_table2[index + 1]);
             }
@@ -9521,7 +10073,7 @@ namespace strtk
       inline ext_string& operator << (const T& t)
       {
          s_ += type_to_string(t);
-         return *this;
+         return (*this);
       }
 
       inline operator std::string () const
@@ -9569,70 +10121,70 @@ namespace strtk
       inline ext_string& to_lowercase()
       {
          convert_to_lowercase(s_);
-         return *this;
+         return (*this);
       }
 
       inline ext_string& to_uppercase()
       {
          convert_to_uppercase(s_);
-         return *this;
+         return (*this);
       }
 
       template<typename Predicate>
       inline ext_string& remove_leading(const Predicate& p)
       {
-         if (s_.empty()) return *this;
+         if (s_.empty()) return (*this);
          strtk::remove_leading(p,s_);
-         return *this;
+         return (*this);
       }
 
       inline ext_string& remove_leading(const std::string& removal_set)
       {
          if (removal_set.empty())
-            return *this;
+            return (*this);
          else if (1 == removal_set.size())
             strtk::remove_leading(single_delimiter_predicate<std::string::value_type>(removal_set[0]),s_);
          else
             strtk::remove_leading(multiple_char_delimiter_predicate(removal_set),s_);
-         return *this;
+         return (*this);
       }
 
       template<typename Predicate>
       inline ext_string& remove_trailing(const Predicate& p)
       {
-         if (s_.empty()) return *this;
+         if (s_.empty()) return (*this);
          strtk::remove_trailing(p,s_);
-         return *this;
+         return (*this);
       }
 
       inline ext_string& remove_trailing(const std::string& removal_set)
       {
          if (removal_set.empty())
-            return *this;
+            return (*this);
          else if (1 == removal_set.size())
             strtk::remove_trailing(single_delimiter_predicate<std::string::value_type>(removal_set[0]),s_);
          else
             strtk::remove_trailing(multiple_char_delimiter_predicate(removal_set),s_);
-         return *this;
+         return (*this);
       }
 
       template<typename T>
       inline ext_string& operator += (const T& t)
       {
          s_.append(type_to_string(t));
-         return *this;
+         return (*this);
       }
 
       inline ext_string& operator -= (const std::string& pattern)
       {
          replace(pattern,"");
-         return *this;
+         return (*this);
       }
 
       inline ext_string& operator *= (const std::size_t& n)
       {
          strtk::replicate_inplace(n,s_);
-         return *this;
+         return (*this);
       }
 
       inline void replace(const std::string& pattern, const std::string& replace_pattern)
@@ -10106,7 +10658,7 @@ namespace strtk
 
          for (std::size_t i = 0; i < count; ++i)
          {
-            if(!stream.read(reinterpret_cast<char*>(&t),static_cast<std::streamsize>(sizeof(T))).fail())
+            if (!stream.read(reinterpret_cast<char*>(&t),static_cast<std::streamsize>(sizeof(T))).fail())
             {
                sequence.push_back(t);
             }
@@ -10128,7 +10680,7 @@ namespace strtk
 
          for (std::size_t i = 0; i < count; ++i)
          {
-            if(!stream.read(reinterpret_cast<char*>(&t),static_cast<std::streamsize>(sizeof(T))).fail())
+            if (!stream.read(reinterpret_cast<char*>(&t),static_cast<std::streamsize>(sizeof(T))).fail())
             {
                set.insert(t);
             }
@@ -11612,5 +12164,6 @@ namespace strtk
    } // namespace information
 
 } // namespace strtk
+
 
 #endif
