@@ -732,7 +732,39 @@ void token_grid_test14()
       }
       std::cout << std::endl;
    }
+}
 
+void token_grid_test15()
+{
+   const std::string data = "\"ICAO Code\"|\"IATA Code\"|Airport|City|Country\n"
+                            "AYGA|GKA|\"Goroka Gatue\"|Goroka|Papua New Guinea\n"
+                            "BGCO|GCO|\"Nerlerit Inaat Constable Pynt\"|\"Nerlerit Inaat\"|Greenland\n"
+                            "BZGD|ZGD|Godley|Auckland|New Zealand\n"
+                            "CYQM|YQM|\"Greater Moncton International\"|Moncton|Canada\n"
+                            "EDRK|ZNV|\"Koblenz Winningen\"|Koblenz|Germany\n"
+                            "FAHU|AHU|Kwazulu-Natal|\"HMS Bastard Memorial\"|South Africa\n"
+                            "FQMP|MZB|\"Mocimboa Da Praia\"|\"Mocimboa Da Praia\"|Mozambique\n"
+                            "KINS|INS|\"Indian Springs AF AUX\"|Indian Springs|USA\n"
+                            "UHNN|HNN|Nikolaevsk|\"Nikolaevsk Na Amure\"|Russia\n"
+                            "WBKK|BKI|\"Kota Kinabalu International\"|Kota Kinabalu|Malaysia\n"
+                            "ZSJD|JDZ|\"Jingdezhen Airport\"|Jingdezhen|China\n";
+
+   strtk::token_grid::options options;
+
+   options.set_column_delimiters("|");
+   options.support_dquotes = true;
+
+   strtk::token_grid grid(data,data.size(),options);
+
+   for (std::size_t r = 0; r < grid.row_count(); ++r)
+   {
+      strtk::token_grid::row_type row = grid.row(r);
+      for (std::size_t c = 0; c < row.size(); ++c)
+      {
+         std::cout << "[" << row.get<std::string>(c) << "] ";
+      }
+      std::cout << std::endl;
+   }
 }
 
 int main()
@@ -751,5 +783,6 @@ int main()
    token_grid_test12();
    token_grid_test13();
    token_grid_test14();
+   token_grid_test15();
    return 0;
 }

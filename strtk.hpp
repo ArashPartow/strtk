@@ -269,7 +269,7 @@ namespace strtk
       };
 
       template<typename T> struct numeric;
-      template<typename T> inline std::size_t type_length(const T& t);
+      template<typename T> inline std::size_t type_length(const T&);
 
       struct no_t {};
       struct yes_t {};
@@ -993,12 +993,32 @@ namespace strtk
       }
    }
 
+   namespace details
+   {
+      inline std::size_t strnlen(const char* s, std::size_t n)
+      {
+         // Not the most optimal implementation. Waiting for
+         // strn* extensions to become mandetory.
+         const char* itr = s;
+         for(std::size_t i = 0; i < n; ++i, ++itr)
+         {
+            if ('\0' == (*itr)) return i;
+         }
+         return n;
+      }
+
+      inline std::size_t strnlen(const unsigned char* s, std::size_t n)
+      {
+         return strnlen(reinterpret_cast<const char*>(s),n);
+      }
+   }
+
    inline void remove_consecutives_inplace(const char* rem_chars, std::string& s)
    {
       if (s.empty()) return;
       const std::size_t removal_count = remove_consecutives_inplace(multiple_char_delimiter_predicate(
                                                                     rem_chars,
-                                                                    rem_chars + ::strnlen(rem_chars,256)),
+                                                                    rem_chars + details::strnlen(rem_chars,256)),
                                                                     s.begin(),
                                                                     s.end());
       if (removal_count > 0)
@@ -1130,7 +1150,7 @@ namespace strtk
    {
       const std::size_t removal_count = remove_trailing(multiple_char_delimiter_predicate(
                                                         rem_chars,
-                                                        rem_chars + ::strnlen(rem_chars,256)),
+                                                        rem_chars + details::strnlen(rem_chars,256)),
                                                         s.begin(),
                                                         s.end());
       if (removal_count > 0)
@@ -1206,7 +1226,7 @@ namespace strtk
       if (s.empty()) return;
       const std::size_t removal_count = remove_leading(multiple_char_delimiter_predicate(
                                                        rem_chars,
-                                                       rem_chars + ::strnlen(rem_chars,256)),
+                                                       rem_chars + details::strnlen(rem_chars,256)),
                                                        s.begin(),
                                                        s.end());
       if (removal_count > 0)
@@ -1678,7 +1698,7 @@ namespace strtk
       template<typename Iterartor,
                typename Predicate,
                typename T = std::pair<Iterator,Iterator> >
-      class tokenizer_iterator : public std::iterator<std::forward_iterator_tag, T>
+      class tokenizer_iterator : public std::iterator<std::forward_iterator_tag,T>
       {
       protected:
 
@@ -2374,7 +2394,7 @@ namespace strtk
          return (*this);
       }
 
-      inline void operator()(const T& v)
+      inline void operator()(const T&)
       {
          ++counter_;
       }
@@ -3942,17 +3962,20 @@ namespace strtk
          : row_split_option(split_options::compress_delimiters),
            column_split_option(split_options::compress_delimiters),
            row_delimiters("\n\r"),
-           column_delimiters(",|;\t ")
+           column_delimiters(",|;\t "),
+           support_dquotes(false)
          {}
 
          options(split_options::type sro,
                  split_options::type sco,
                  const std::string& rd,
-                 const std::string& cd)
+                 const std::string& cd,
+                 const bool support_dq = false)
          : row_split_option(sro),
            column_split_option(sco),
            row_delimiters(rd),
-           column_delimiters(cd)
+           column_delimiters(cd),
+           support_dquotes(support_dq)
          {}
 
          inline options& set_column_split_option(const split_options::type& option)
@@ -3983,6 +4006,7 @@ namespace strtk
          split_options::type column_split_option;
          std::string row_delimiters;
          std::string column_delimiters;
+         bool support_dquotes;
       };
 
       class row_type
@@ -5393,10 +5417,10 @@ namespace strtk
             appended = false;
             if (!(*itr).empty() && p(row_type(*itr)))
             {
-               range = (*itr)[col];
-               if (range.first != range.second)
+               range_type r = (*itr)[col];
+               if (r.first != r.second)
                {
-                  result.append(range.first,range.second);
+                  result.append(r.first,r.second);
                   appended = true;
                }
             }
@@ -5472,6 +5496,39 @@ namespace strtk
       token_grid(const token_grid& tg);
       token_grid operator=(const token_grid& tg);
 
+      class double_quotes_predicate
+      {
+      public:
+
+         double_quotes_predicate(const std::string& delimiters)
+         : in_bracket_range_(false),
+           mdp_(delimiters)
+         {}
+
+         inline bool operator()(const unsigned char c) const
+         {
+            if ('"' == c)
+            {
+               in_bracket_range_ = !in_bracket_range_;
+               return true;
+            }
+            else if (in_bracket_range_)
+               return false;
+            else
+               return mdp_(c);
+         }
+
+         inline void reset()
+         {
+            in_bracket_range_ = false;
+         }
+
+      private:
+
+         mutable bool in_bracket_range_;
+         mutable strtk::multiple_char_delimiter_predicate mdp_;
+      };
+
       bool load()
       {
          if (load_from_file_ && !load_buffer_from_file())
@@ -5485,6 +5542,7 @@ namespace strtk
                options_.row_split_option);
 
          multiple_char_delimiter_predicate token_predicate(options_.column_delimiters);
+         double_quotes_predicate token_predicate_dblq(options_.column_delimiters);
 
          min_column_count_ = std::numeric_limits<std::size_t>::max();
          max_column_count_ = std::numeric_limits<std::size_t>::min();
@@ -5497,11 +5555,21 @@ namespace strtk
             if (0 != std::distance(itr->first,itr->second))
             {
                itr_list_type current_token_list;
-               split(token_predicate,
-                     itr->first,
-                     itr->second,
-                     std::back_inserter(current_token_list),
-                     options_.column_split_option);
+               if (!options_.support_dquotes)
+                  split(token_predicate,
+                        itr->first,
+                        itr->second,
+                        std::back_inserter(current_token_list),
+                        options_.column_split_option);
+               else
+               {
+                  split(token_predicate_dblq,
+                        itr->first,
+                        itr->second,
+                        std::back_inserter(current_token_list),
+                        options_.column_split_option);
+                  token_predicate_dblq.reset();
+               }
 
                if (!current_token_list.empty())
                {
@@ -7874,7 +7942,7 @@ namespace strtk
    inline bool for_each_combination_conditional(Iterator begin, Iterator end, const std::size_t& size, Function function)
    {
       if (static_cast<typename std::iterator_traits<Iterator>::difference_type>(size) > std::distance(begin,end))
-         return;
+         return false;
       do
       {
          if (!function(begin,begin + size))
@@ -7905,7 +7973,7 @@ namespace strtk
    inline bool for_each_combutation_conditional(Iterator begin, Iterator end, const std::size_t& size, Function function)
    {
       if (static_cast<typename std::iterator_traits<Iterator>::difference_type>(size) > std::distance(begin,end))
-         return;
+         return false;
       do
       {
          do
@@ -10041,7 +10109,7 @@ namespace strtk
    }
 
    template<typename T>
-   inline std::size_t type_length(const T& t)
+   inline std::size_t type_length(const T&)
    {
       return type_length<T>();
    }
@@ -10672,7 +10740,7 @@ namespace strtk
       template<typename T,
                typename Comparator,
                typename Allocator>
-      inline void read_pod(std::ifstream& stream,
+      inline bool read_pod(std::ifstream& stream,
                            const std::size_t& count,
                            std::set<T,Comparator,Allocator>& set)
       {
@@ -10811,7 +10879,8 @@ namespace strtk
       inline void write_pod(std::ofstream& stream,
                             const T1& t1, const T2& t2)
       {
-         stream.write(reinterpret_cast<char*>(&const_cast<T2&>(t2)),static_cast<std::streamsize>(sizeof(T2)));
+         stream.write(reinterpret_cast<char*>(&const_cast<T1&>(t1)),static_cast<std::streamsize>(sizeof(T1)));
+         stream.write(reinterpret_cast<char*>(&const_cast<T1&>(t2)),static_cast<std::streamsize>(sizeof(T2)));
       }
 
       template<typename T>

@@ -80,7 +80,7 @@ public:
 
 private:
 
-   static const std::size_t max_token_count = 4;
+   enum { max_token_count = 4 };
    typedef std::pair<char*,char*> iterator_type;
 
    strtk::multiple_char_delimiter_predicate predicate_;
