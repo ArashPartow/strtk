@@ -16,6 +16,7 @@
 
 
 COMPILER         = -c++
+#COMPILER         = -clang
 OPTIMIZATION_OPT = -O1
 BASE_OPTIONS     = -pedantic-errors -ansi -Wall -Wextra -Werror -Wno-long-long
 OPTIONS          = $(BASE_OPTIONS) $(OPTIMIZATION_OPT) -o

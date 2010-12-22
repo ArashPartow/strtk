@@ -86,8 +86,8 @@ int main()
       }
       else
       {
-         std::size_t read_in_width = 0;
-         if (0 != (read_in_width = static_cast<std::size_t>(std::cin.gcount())))
+         std::size_t read_in_width = static_cast<std::size_t>(std::cin.gcount());
+         if (0 != read_in_width)
          {
             strtk::convert_bin_to_hex(buffer,buffer + read_in_width,hex_buffer);
             std::cout << std::hex << std::uppercase << std::setw(10) << current_address << "  ";

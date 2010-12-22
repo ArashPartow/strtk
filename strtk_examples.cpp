@@ -39,6 +39,7 @@ void information()
 
 void tokenizer_example01()
 {
+   std::cout << "tokenizer_example01" << std::endl;
    std::string s = "abc|123|xyz|789";
    strtk::single_delimiter_predicate<std::string::value_type> predicate('|');
    typedef strtk::std_string::tokenizer<>::type tokenizer_type;
@@ -54,6 +55,7 @@ void tokenizer_example01()
 
 void tokenizer_example02()
 {
+   std::cout << "tokenizer_example02" << std::endl;
    std::string s = "abc.123 xyz?789";
    strtk::multiple_char_delimiter_predicate predicate(" .;?");
    typedef strtk::std_string::tokenizer<strtk::multiple_char_delimiter_predicate>::type tokenizer_type;
@@ -69,6 +71,7 @@ void tokenizer_example02()
 
 void tokenizer_example03()
 {
+   std::cout << "tokenizer_example03" << std::endl;
    std::string s = "abc||123|||||xyz|789";
    strtk::single_delimiter_predicate<std::string::value_type> predicate('|');
    typedef strtk::std_string::tokenizer<>::type tokenizer_type;
@@ -84,6 +87,7 @@ void tokenizer_example03()
 
 void tokenizer_example04()
 {
+   std::cout << "tokenizer_example04" << std::endl;
    std::string s = "abc.;123? xyz;?789";
    strtk::multiple_char_delimiter_predicate predicate(" .;?");
    typedef strtk::std_string::tokenizer<strtk::multiple_char_delimiter_predicate>::type tokenizer_type;
@@ -99,6 +103,7 @@ void tokenizer_example04()
 
 void tokenizer_example05()
 {
+   std::cout << "tokenizer_example05" << std::endl;
    unsigned int data[] = {1,2,3,0,4,5,6,0,7,8,0,9};
    const std::size_t data_size = sizeof(data) / sizeof(unsigned int);
    strtk::single_delimiter_predicate<unsigned int> predicate(0);
@@ -115,6 +120,7 @@ void tokenizer_example05()
 
 void tokenizer_example06()
 {
+   std::cout << "tokenizer_example06" << std::endl;
    unsigned int data[] = {1,2,3,0,4,5,6,10,7,8,0,9};
    const std::size_t data_size = sizeof(data) / sizeof(unsigned int);
    unsigned int delimiters[2] = {0,10};
@@ -132,6 +138,7 @@ void tokenizer_example06()
 
 void tokenizer_example07()
 {
+   std::cout << "tokenizer_example07" << std::endl;
    double data[] = {1.1,2.2,3.3,0.0,4.4,5.5,6.6,0,7.7,8.8,0,9.9};
    const std::size_t data_size = sizeof(data) / sizeof(double);
    strtk::single_delimiter_predicate<double> predicate(0);
@@ -148,6 +155,7 @@ void tokenizer_example07()
 
 void tokenizer_example08()
 {
+   std::cout << "tokenizer_example08" << std::endl;
    double data[] = {1.1,2.2,3.3,0.0,4.4,5.5,6.6,10.0,7.7,8.8,10.0,9.9};
    const std::size_t data_size = sizeof(data) / sizeof(double);
    double delimiters[2] = {0.0,10.0};
@@ -165,6 +173,7 @@ void tokenizer_example08()
 
 void tokenizer_example09()
 {
+   std::cout << "tokenizer_example09" << std::endl;
    std::string s = "abc|123|xyz|789";
    strtk::single_delimiter_predicate<std::string::value_type> predicate('|');
    strtk::std_string::tokenizer<>::type tokenizer(s,predicate);
@@ -175,6 +184,7 @@ void tokenizer_example09()
 
 void tokenizer_example10()
 {
+   std::cout << "tokenizer_example10" << std::endl;
    std::string str_list[] = { "abc" , "delimiter" , "ijk" , "delimiter" ,
                               "lmn" , "delimiter" , "opq", "rst" ,"uvw" ,
                               "delimiter" , "xyz" , "123" };
@@ -194,6 +204,7 @@ void tokenizer_example10()
 
 void tokenizer_example11()
 {
+   std::cout << "tokenizer_example11" << std::endl;
    std::string s = "123|456|789|101112";
    strtk::single_delimiter_predicate<std::string::value_type> predicate('|');
    typedef strtk::std_string::tokenizer<strtk::single_delimiter_predicate<std::string::value_type> >::type tokenizer_type;
@@ -205,6 +216,7 @@ void tokenizer_example11()
 
 void tokenizer_example12()
 {
+   std::cout << "tokenizer_example12" << std::endl;
    // tokenizer_example01 with much simpler syntax.
    std::string s = "abc|123|xyz|789";
    strtk::std_string::tokenizer<>::type tokenizer(s,strtk::std_string::tokenizer<>::predicate_type('|'));
@@ -219,6 +231,7 @@ void tokenizer_example12()
 
 void tokenizer_example13()
 {
+   std::cout << "tokenizer_example13" << std::endl;
    std::string s = "abc|123|xyz|789";
    strtk::std_string::tokenizer<>::type tokenizer(s,strtk::std_string::tokenizer<>::predicate_type('|'));
    strtk::std_string::tokenizer<>::type::iterator itr = tokenizer.begin();
@@ -229,6 +242,7 @@ void tokenizer_example13()
 
 void split_example01()
 {
+   std::cout << "split_example01" << std::endl;
    std::string s = "abc|123|xyz|789";
    strtk::std_string::token_list_type token_list;
    strtk::single_delimiter_predicate<std::string::value_type> predicate('|');
@@ -244,6 +258,7 @@ void split_example01()
 
 void split_example02()
 {
+   std::cout << "split_example02" << std::endl;
    std::string s = "abc?123,xyz;789";
    strtk::std_string::token_list_type token_list;
    strtk::multiple_char_delimiter_predicate predicate(" .;?");
@@ -259,6 +274,7 @@ void split_example02()
 
 void split_example03()
 {
+   std::cout << "split_example03" << std::endl;
    std::string s = "abc|123|xyz|789";
    strtk::std_string::token_list_type token_list;
    strtk::single_delimiter_predicate<std::string::value_type> predicate('|');
@@ -274,6 +290,7 @@ void split_example03()
 
 void split_example04()
 {
+   std::cout << "split_example04" << std::endl;
    std::string s = "abc?123,xyz;789";
    strtk::std_string::token_list_type token_list;
    strtk::multiple_char_delimiter_predicate predicate(" .;?");
@@ -289,6 +306,7 @@ void split_example04()
 
 void split_example05()
 {
+   std::cout << "split_example05" << std::endl;
    std::string s = "abc?123,xyz;789";
    strtk::std_string::token_list_type token_list;
    strtk::split(" .;?",s,std::back_inserter(token_list));
@@ -304,6 +322,7 @@ void split_example05()
 void split_regex_example()
 {
    #ifdef strtk_enable_regex
+   std::cout << "split_regex_example" << std::endl;
    std::string s = "(12)(345)(6789)(0ijkx)(yz)";
    std::list<std::string> token_list;
    strtk::split_regex("\\(.*?\\)",
@@ -316,6 +335,7 @@ void split_regex_example()
 
 void split_n_example01()
 {
+   std::cout << "split_n_example01" << std::endl;
    std::string s = "token1|token2|token3|token4|token5";
    strtk::std_string::token_list_type token_list;
    strtk::single_delimiter_predicate<std::string::value_type> predicate('|');
@@ -332,6 +352,7 @@ void split_n_example01()
 
 void split_n_example02()
 {
+   std::cout << "split_n_example02" << std::endl;
    std::string s = "token1?token2,token3;token4,token5";
    strtk::std_string::token_list_type token_list;
    strtk::multiple_char_delimiter_predicate predicate(" .;?");
@@ -348,6 +369,7 @@ void split_n_example02()
 
 void split_n_example03()
 {
+   std::cout << "split_n_example03" << std::endl;
    std::string s = "token1?token2,token3;token4,token5";
    strtk::std_string::token_list_type token_list;
    const std::size_t token_count = 4;
@@ -364,6 +386,7 @@ void split_n_example03()
 void split_regex_n_example()
 {
    #ifdef strtk_enable_regex
+   std::cout << "split_regex_n_example" << std::endl;
    std::string s = "(token1)(token2)(token3)(token4)(token5)";
    std::list<std::string> token_list;
    const std::size_t token_count = 4;
@@ -374,11 +397,12 @@ void split_regex_n_example()
 
 void offset_splitter_example01()
 {
+   std::cout << "offset_splitter_example01" << std::endl;
    std::string s = "abcdefghijklmnopqrstuvwxyz012";
    const int offset_list[] = {1,2,3,4,5,6,7};
    const strtk::offset_predicate<7> os_p(offset_list);
    strtk::std_string::token_list_type token_list;
-   strtk::offset_splitter(s.begin(),s.end(),os_p,std::back_inserter(token_list));
+   strtk::offset_splitter(s,os_p,std::back_inserter(token_list));
    strtk::std_string::token_list_type::iterator itr = token_list.begin();
    while (token_list.end() != itr)
    {
@@ -390,11 +414,12 @@ void offset_splitter_example01()
 
 void offset_splitter_example02()
 {
+   std::cout << "offset_splitter_example02" << std::endl;
    std::string s = "20000101091011123";
    const int offset_list[] = {4,2,2,2,2,2,3};
    const strtk::offset_predicate<7> os_p(offset_list);
    strtk::std_string::token_list_type token_list;
-   strtk::offset_splitter(s.begin(),s.end(),os_p,std::back_inserter(token_list));
+   strtk::offset_splitter(s,os_p,std::back_inserter(token_list));
    strtk::std_string::token_list_type::iterator itr = token_list.begin();
    while (token_list.end() != itr)
    {
@@ -409,9 +434,10 @@ void offset_splitter_example02()
 
 void offset_splitter_example03()
 {
+   std::cout << "offset_splitter_example03" << std::endl;
    std::string s = "abcdefghijklmnopqrstuvwxyz012";
    strtk::std_string::token_list_type token_list;
-   strtk::offset_splitter(s.begin(),s.end(),strtk::offsets(1,2,3,4,5,6,7),std::back_inserter(token_list));
+   strtk::offset_splitter(s,strtk::offsets(1,2,3,4,5,6,7),std::back_inserter(token_list));
    strtk::std_string::token_list_type::iterator itr = token_list.begin();
    while (token_list.end() != itr)
    {
@@ -423,6 +449,7 @@ void offset_splitter_example03()
 
 void construct_example()
 {
+   std::cout << "construct_example" << std::endl;
    std::string  i1 = "abcd";
    char         i2 = 'x';
    int          i3 = -1234;
@@ -435,6 +462,7 @@ void construct_example()
 
 void parse_example01()
 {
+   std::cout << "parse_example01" << std::endl;
    std::string input = "abcd|x|-1234|78901|4567.8901|0x75BCD15|AABB";
 
    std::string  o1 = "";
@@ -459,6 +487,8 @@ void parse_example01()
 
 void parse_example02()
 {
+   std::cout << "parse_example02" << std::endl;
+
    std::string int_string    = "0,-1,+2,-3,4,-5,+6,-7,8,-9";
    std::string uint_string   = "0,100,200,300,400,500,600,700,800,900";
    std::string double_string = "0.0,1.1,2.2,3.3,4.4,5.5,6.6,7.7,8.8,9.9";
@@ -489,6 +519,7 @@ void parse_example02()
 
 void parse_example03()
 {
+   std::cout << "parse_example03" << std::endl;
    std::string int_string    = "0,1,2,3,4,5,6,7,8,9";
    std::string uint_string   = "0,100,200,300,400,500,600,700,800,900";
    std::string double_string = "0.0,1.1,2.2,3.3,4.4,5.5,6.6,7.7,8.8,9.9";
@@ -533,6 +564,7 @@ strtk_parse_end()
 
 void parse_example04()
 {
+   std::cout << "parse_example04" << std::endl;
    type t;
    std::string s = "abcdefghijklmnop|123.456|987654321|A|1";
    if(strtk::parse(s,"|",t))
@@ -556,20 +588,25 @@ struct datetime
 
 namespace strtk
 {
-   template<typename Iterator>
-   inline bool string_to_type_converter_impl(const Iterator& begin, const Iterator& end,
-                                             datetime& dt,
-                                             details::not_supported_type_tag&)
+   namespace details
    {
-      static const std::string delimiters ("-:. ");
-      return strtk::parse(begin, end, delimiters,
-                          dt.year, dt.month, dt.day,
-                          dt.hour, dt.minute, dt.second, dt.msecond);
+      template<typename Iterator>
+      inline bool string_to_type_converter_impl(const Iterator& begin, const Iterator& end,
+                                                datetime& dt,
+                                                details::not_supported_type_tag&)
+      {
+         static const std::string delimiters ("-:. ");
+         return strtk::parse(begin, end, delimiters,
+                             dt.year, dt.month, dt.day,
+                             dt.hour, dt.minute, dt.second, dt.msecond);
+      }
    }
 }
 
 void parse_example05()
 {
+   std::cout << "parse_example05" << std::endl;
+
    static const std::string data = "2000-01-10 03:01:16.123|2001-02-22 05:12:24.234|"
                                    "2002-03-13 07:23:32.345|2003-04-24 09:34:47.456|"
                                    "2004-05-15 11:46:51.767|2005-06-26 15:57:03.678|"
@@ -605,6 +642,8 @@ strtk_register_userdef_type_sink(datetime)
 
 void parse_example06()
 {
+   std::cout << "parse_example06" << std::endl;
+
    static const std::string event_data = "172493|Lunar Impact|Mare Tranquillitatis|"
                                          "2010-01-19 00:28:45.357,2010-02-18 00:57:07.109,"
                                          "2010-03-20 01:15:11.261,2010-04-21 01:07:27.972";
@@ -621,6 +660,8 @@ void parse_example06()
 
 void parse_example07()
 {
+   std::cout << "parse_example07" << std::endl;
+
    {
       static const std::string data = "1,+2,-3|abc,ijk,xyz|123.456,+234.567,-345.678";
       std::vector<int> int_vector;
@@ -682,8 +723,8 @@ void parse_example07()
 
 void parse_example08()
 {
+   std::cout << "parse_example08" << std::endl;
    static const std::string data = "+123,ignore0,123.456,ignore1,abcdef,ignore2";
-
    int i = 0;
    double d = 0.0;
    std::string s;
@@ -695,6 +736,7 @@ void parse_example08()
 
 void remove_inplace_example01()
 {
+   std::cout << "remove_inplace_example01" << std::endl;
    std::string s = "aa abb cdd  ee fg";
    std::cout << s << " -> ";
    strtk::remove_inplace(' ',s);
@@ -703,6 +745,7 @@ void remove_inplace_example01()
 
 void remove_consecutives_example01()
 {
+   std::cout << "remove_consecutives_example01" << std::endl;
    std::string s = "aaabbcddeefg";
    std::cout << s << " -> ";
    strtk::remove_consecutives_inplace(s);
@@ -711,6 +754,7 @@ void remove_consecutives_example01()
 
 void remove_consecutives_example02()
 {
+   std::cout << "remove_consecutives_example02" << std::endl;
    std::string s = "aaabbcaaaddeeafg";
    std::cout << s << " -> ";
    strtk::remove_consecutives_inplace('a',s);
@@ -719,6 +763,7 @@ void remove_consecutives_example02()
 
 void remove_consecutives_example03()
 {
+   std::cout << "remove_consecutives_example03" << std::endl;
    std::string s = "aaabbcaaaddeeafg";
    std::cout << s << " -> ";
    strtk::remove_consecutives_inplace(strtk::multiple_char_delimiter_predicate("abcdefg"),s);
@@ -727,6 +772,7 @@ void remove_consecutives_example03()
 
 void remove_trailing_example()
 {
+   std::cout << "remove_trailing_example" << std::endl;
    std::string s = "The quick brown fox jumps over the lazy dog  , _";
    std::cout << "Before: ["<< s << "]" << std::endl;
    strtk::remove_trailing(" _,",s);
@@ -735,6 +781,7 @@ void remove_trailing_example()
 
 void remove_leading_example()
 {
+   std::cout << "remove_leading_example" << std::endl;
    std::string s = "_ ,  The quick brown fox jumps over the lazy dog";
    std::cout << "Before: ["<< s << "]" << std::endl;
    strtk::remove_leading(" _,",s);
@@ -744,6 +791,7 @@ void remove_leading_example()
 void uri_extractor_example01()
 {
    #ifdef strtk_enable_regex
+   std::cout << "uri_extractor_example01" << std::endl;
    std::string text = "someone@somewhere.com http://www.test.net some.place.com any.one@any.where.com ftp://123.abcxyz.org";
    std::list<std::string> email_list;
    std::list<std::string> url_list;
@@ -757,6 +805,7 @@ void uri_extractor_example01()
 void generate_random_example01()
 {
    #ifdef strtk_enable_random
+   std::cout << "generate_random_example01" << std::endl;
    const std::size_t data_size = 10;
    unsigned char* data = new unsigned char[data_size];
    strtk::generate_random_data(data,data_size,1000000);
@@ -772,6 +821,7 @@ void generate_random_example01()
 void generate_random_example02()
 {
    #ifdef strtk_enable_random
+   std::cout << "generate_random_example02" << std::endl;
    std::deque<int> rnd_int_list;
    strtk::generate_random_values<int>(5,-5,+5,rnd_int_list);
 
@@ -794,6 +844,7 @@ void generate_random_example02()
 void random_permutation_example()
 {
    #ifdef strtk_enable_random
+   std::cout << "random_permutation_example" << std::endl;
    std::vector<std::size_t> lst;
    for (std::size_t i = 0; i < 10; lst.push_back(i++)) ;
 
@@ -817,6 +868,7 @@ void random_permutation_example()
 void random_combination_example()
 {
    #ifdef strtk_enable_random
+   std::cout << "random_combination_example" << std::endl;
 
    std::size_t seed[] = {
                            0x390E348F, 0x2884D0F5, 0x18AEB587, 0x31F9038C, 0x2AB63848,
@@ -838,6 +890,7 @@ void random_combination_example()
 
 void lexicographically_canonicalize_example()
 {
+   std::cout << "lexicographically_canonicalize_example" << std::endl;
    std::string str_list[] = {
                               "xyzabcabc",
                               "ijkxyzabc",
@@ -880,6 +933,7 @@ void lexicographically_canonicalize_example()
 
 void hash_example()
 {
+   std::cout << "hash_example" << std::endl;
             char  chr_list[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
    unsigned char uchr_list[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
             int   int_list[] = {   -4,   -3,   -2,   -1,    0,    1,    2, 3, 4 };
@@ -906,6 +960,7 @@ void hash_example()
 
 void join_example()
 {
+   std::cout << "join_example" << std::endl;
    const std::size_t str_list_size = 5;
    std::string str_list [] = {
                                "1",
@@ -938,6 +993,7 @@ void join_example()
 
 void inserter_example()
 {
+   std::cout << "inserter_example" << std::endl;
    const std::string base = "The Quick Brown Fox Jumps Over The Lazy Dog";
    std::string str;
    std::string str_output;
@@ -958,6 +1014,7 @@ void inserter_example()
 
 void combination_example01()
 {
+   std::cout << "combination_example01" << std::endl;
    std::string s = "abcdefg";
    std::size_t set_size = s.size() - 1;
    std::size_t combination_index = 0;
@@ -970,6 +1027,7 @@ void combination_example01()
 
 void combination_example02()
 {
+   std::cout << "combination_example02" << std::endl;
    {
       typedef std::vector<int> vec_t;
       typedef strtk::combination_iterator<vec_t::iterator> itr_type;
@@ -1005,6 +1063,7 @@ void combination_example02()
 
 void typename_example()
 {
+   std::cout << "typename_example" << std::endl;
    char           t00;
    unsigned char  t01;
    short          t02;
@@ -1066,6 +1125,7 @@ void typename_example()
 
 void iota_example()
 {
+   std::cout << "iota_example" << std::endl;
    std::deque<int> ilst;
 
    strtk::iota(ilst,10,1);
@@ -1077,6 +1137,7 @@ void iota_example()
 
 void bracketize_example()
 {
+   std::cout << "bracketize_example" << std::endl;
    std::string int_data = "1,2,3,4,5,6,7,8,9,10";
    std::string string_data = "the quick brown fox jumps over the lazy dog";
 
@@ -1092,6 +1153,7 @@ void bracketize_example()
 
 void cut_example()
 {
+   std::cout << "cut_example" << std::endl;
    std::string s = "0123456789";
    std::deque<std::string> str_list;
    for (std::size_t i = 0; i < s.size(); ++i)
@@ -1106,6 +1168,7 @@ void cut_example()
 
 void exract_unique_example()
 {
+   std::cout << "exract_unique_example" << std::endl;
    {
       std::string s = "abcabcabcabcabcabcabc";
       std::string unique;
@@ -1133,11 +1196,13 @@ void func(const char* s)
 
 void build_string_example()
 {
+   std::cout << "build_string_example" << std::endl;
    func(strtk::build_string() << "ABC " << 123 << " " << 456.789);
 }
 
 void make_key_lists()
 {
+   std::cout << "make_key_lists" << std::endl;
    std::map<std::string,int> map;
    map["zero"]  = 0;
    map["one"]   = 1;
@@ -1164,6 +1229,7 @@ void make_key_lists()
 
 void make_value_lists()
 {
+   std::cout << "make_value_lists" << std::endl;
    std::multimap<std::string,int> map;
 
    map.insert(std::pair<std::string,int>("one",1));
@@ -1194,6 +1260,7 @@ void make_value_lists()
 
 void globbing_example()
 {
+   std::cout << "globbing_example" << std::endl;
    {
       std::string pattern = "a?c";
       std::string data    = "abc";
@@ -1237,6 +1304,7 @@ void globbing_example()
 
 void example_replace()
 {
+   std::cout << "example_replace" << std::endl;
    std::string data = "abcdefabcdefabcdefabcdefabcdefabcdef";
    typedef std::pair<std::string,std::string> pair_type;
    const pair_type pattern_replace[] = {
@@ -1263,6 +1331,7 @@ void example_replace()
 
 void find_example()
 {
+   std::cout << "find_example" << std::endl;
    std::string data = "abc 123 ABC 456 abc 789 AbC 012 abc 345 aBC 678 ABc 901";
    std::string pattern = "abc";
 
@@ -1321,6 +1390,7 @@ void find_example()
 
 void ext_string_example()
 {
+   std::cout << "ext_string_example" << std::endl;
    {
       strtk::ext_string es("ext_string");
       std::cout << "es + 123 = " << es + 123 << std::endl;

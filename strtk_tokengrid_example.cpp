@@ -472,13 +472,34 @@ void token_grid_test10()
    static const std::size_t volume_column = 6;
 
    strtk::token_grid grid(market_data,market_data.size(),",");
-   unsigned long long total_volume = 0;
 
-   grid.accumulate_column(volume_column,symbol_predicate("GOOG"),total_volume);
-   std::cout << "Total Volume (GOOG): " << total_volume << std::endl;
+   struct stock_info
+   {
+      stock_info()
+      : total_volume(0),
+        day_count(0),
+        average_daily_volume(0.0)
+      {}
 
-   grid.accumulate_column(volume_column,symbol_predicate("MSFT"),total_volume);
-   std::cout << "Total Volume (MSFT): " << total_volume << std::endl;
+      unsigned long long total_volume;
+      std::size_t day_count;
+      double average_daily_volume;
+   };
+
+   stock_info goog;
+   stock_info msft;
+
+   goog.day_count = grid.accumulate_column(volume_column,symbol_predicate("GOOG"),goog.total_volume);
+   msft.day_count = grid.accumulate_column(volume_column,symbol_predicate("MSFT"),msft.total_volume);
+
+   goog.average_daily_volume = (1.0 * goog.total_volume) / goog.day_count;
+   msft.average_daily_volume = (1.0 * msft.total_volume) / msft.day_count;
+
+   std::cout << "[GOOG] Total Volume: " << goog.total_volume << std::endl;
+   std::cout << "[MSFT] Total Volume: " << msft.total_volume << std::endl;
+
+   std::cout << "[GOOG] ADV: " << goog.average_daily_volume << std::endl;
+   std::cout << "[MSFT] ADV: " << msft.average_daily_volume << std::endl;
 }
 
 void token_grid_test11()
