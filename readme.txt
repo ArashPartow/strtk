@@ -54,6 +54,7 @@ C++ standard library. Installation of Boost on:
 [COMPILER COMPATIBILITY]
 (*) GNU Compiler Collection (4.3+)
 (*) Intel® C++ Compiler (9.x+)
+(*) Clang/LLVM (1.1+)
 (*) Microsoft Visual Studio C++ Compiler (8.1+)
 (*) Comeau C++ Compiler (4.3+)
 

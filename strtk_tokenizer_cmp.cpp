@@ -46,7 +46,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/lexical_cast.hpp>
 
-//Note: Define USE_SPIRIT to include Karma and Qi Tests (requires Boost 1.42+)
+//Note: Define USE_SPIRIT to include Karma and Qi Tests (requires Boost 1.45+)
 //#define USE_SPIRIT
 #ifdef USE_SPIRIT
  #define INCLUDE_KARMA
