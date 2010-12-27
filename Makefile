@@ -16,9 +16,10 @@
 
 
 COMPILER         = -c++
-#COMPILER         = -clang
+#COMPILER        = -clang
 OPTIMIZATION_OPT = -O1
-BASE_OPTIONS     = -pedantic-errors -ansi -Wall -Wextra -Werror -Wno-long-long
+NO_EXTRA_LIBS    = -Dstrtk_no_tr1_or_boost
+BASE_OPTIONS     = -ansi -pedantic-errors -Wall -Wextra -Werror -Wno-long-long
 OPTIONS          = $(BASE_OPTIONS) $(OPTIMIZATION_OPT) -o
 REGEX            = -lboost_regex
 PTHREAD          = -lpthread

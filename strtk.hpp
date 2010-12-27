@@ -40,10 +40,11 @@
 #include <stack>
 #include <queue>
 
-
-#define strtk_enable_lexical_cast
-#define strtk_enable_random
-#define strtk_enable_regex
+#ifndef strtk_no_tr1_or_boost
+   #define strtk_enable_lexical_cast
+   #define strtk_enable_random
+   #define strtk_enable_regex
+#endif
 
 #ifdef strtk_enable_lexical_cast
    #include <boost/lexical_cast.hpp>
