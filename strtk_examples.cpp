@@ -586,22 +586,13 @@ struct datetime
    unsigned int msecond;
 };
 
-namespace strtk
-{
-   namespace details
-   {
-      template<typename Iterator>
-      inline bool string_to_type_converter_impl(const Iterator& begin, const Iterator& end,
-                                                datetime& dt,
-                                                details::not_supported_type_tag&)
-      {
-         static const std::string delimiters ("-:. ");
-         return strtk::parse(begin, end, delimiters,
-                             dt.year, dt.month, dt.day,
-                             dt.hour, dt.minute, dt.second, dt.msecond);
-      }
-   }
-}
+
+strtk_string_to_type_begin(datetime)
+   static const std::string delimiters ("-:. ");
+   return strtk::parse(begin, end, delimiters,
+                       t.year, t.month, t.day,
+                       t.hour, t.minute, t.second, t.msecond);
+strtk_string_to_type_end()
 
 void parse_example05()
 {

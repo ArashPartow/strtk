@@ -334,6 +334,20 @@ namespace strtk
          throw;
    }
 
+   #define strtk_begin_register_string_to_type \
+   namespace strtk { namespace details {
+
+   #define strtk_end_register_string_to_type \
+   }}
+
+   #define strtk_string_to_type_begin(Type) \
+   namespace strtk { namespace details { template<typename Iterator> \
+   inline bool string_to_type_converter_impl(const Iterator& begin, const Iterator& end, \
+                                             Type& t, details::not_supported_type_tag&) {
+
+   #define strtk_string_to_type_end()\
+   }}}
+
    template <typename T,
              typename Allocator,
              template <typename,typename> class Sequence>

@@ -30,7 +30,7 @@ Code repository:
 (1) strtk.hpp  should be  placed in  a project  or system include path
 (e.g: /usr/include/).
 
-(2)  If  the Boost  libraries  (random, regex,  lexical_cast)  are not
+(2) If the Boost libraries  (random, regex,  lexical_cast etc) are not
 available  or  it  not  wished   they  be  used  then  the   following
 preprocessor directive needs defining, either in code before strtk.hpp
 is included or as a compiler switch:
