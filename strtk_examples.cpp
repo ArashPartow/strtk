@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * String Toolkit Library Examples                               *
- * Author: Arash Partow (2002-2010)                              *
+ * Author: Arash Partow (2002-2011)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -319,10 +319,10 @@ void split_example05()
    std::cout << std::endl;
 }
 
-void split_regex_example()
+void split_regex_example01()
 {
    #ifdef strtk_enable_regex
-   std::cout << "split_regex_example" << std::endl;
+   std::cout << "split_regex_example01" << std::endl;
    std::string s = "(12)(345)(6789)(0ijkx)(yz)";
    std::list<std::string> token_list;
    strtk::split_regex("\\(.*?\\)",
@@ -330,6 +330,32 @@ void split_regex_example()
                       std::back_inserter(token_list),
                       strtk::regex_match_mode::match_1);
    std::cout << strtk::join("\t",token_list) << std::endl;
+   #endif
+}
+
+void split_regex_example02()
+{
+   #ifdef strtk_enable_regex
+   std::cout << "split_regex_example02" << std::endl;
+   {
+      std::string data = "a 1^bc,0023| def?gh(4567ijk)-89 10l,m$n-op+123r@st+3u v*w2y56yz+";
+      std::deque<int> int_list;
+      strtk::split_regex("([+-]?([\\d]+))",
+                         data,
+                         strtk::range_to_type_back_inserter(int_list),
+                         strtk::regex_match_mode::match_1);
+      std::cout << strtk::join(" ",int_list) << std::endl;
+   }
+
+   {
+      std::string data = "ab$c1.1?d-2.2ef#ghi+3.3%(123.456)!&*-7.89E+12@^=";
+      std::deque<double> double_list;
+      strtk::split_regex(strtk::ieee754_expression,
+                         data,
+                         strtk::range_to_type_back_inserter(double_list),
+                         strtk::regex_match_mode::match_1);
+      std::cout << strtk::join(" ",double_list) << std::endl;
+   }
    #endif
 }
 
@@ -383,15 +409,43 @@ void split_n_example03()
    std::cout << std::endl;
 }
 
-void split_regex_n_example()
+void split_regex_n_example01()
 {
    #ifdef strtk_enable_regex
-   std::cout << "split_regex_n_example" << std::endl;
+   std::cout << "split_regex_n_example01" << std::endl;
    std::string s = "(token1)(token2)(token3)(token4)(token5)";
    std::list<std::string> token_list;
    const std::size_t token_count = 4;
    strtk::split_regex_n("\\(.*?\\)",s,token_count,std::back_inserter(token_list));
    std::cout << strtk::join("\t",token_list) << std::endl;
+   #endif
+}
+
+void split_regex_n_example02()
+{
+   #ifdef strtk_enable_regex
+   std::cout << "split_regex_n_example02" << std::endl;
+   {
+      std::string data = "a 1^bc,0023| def?gh(4567ijk)-89 10l,m$n-op+123r@st+3u v*w2y56yz+";
+      std::deque<int> int_list;
+      strtk::split_regex_n("([+-]?([\\d]+))",
+                           data,
+                           3, // Extract the first 3 ints
+                           strtk::range_to_type_back_inserter(int_list),
+                           strtk::regex_match_mode::match_1);
+      std::cout << strtk::join(" ",int_list) << std::endl;
+   }
+
+   {
+      std::string data = "ab$c1.1?d-2.2ef#ghi+3.3%(123.456)!&*-7.89E+12@^=";
+      std::deque<double> double_list;
+      strtk::split_regex_n(strtk::ieee754_expression,
+                           data,
+                           4, // Extract the first 4 doubles
+                           strtk::range_to_type_back_inserter(double_list),
+                           strtk::regex_match_mode::match_1);
+      std::cout << strtk::join(" ",double_list) << std::endl;
+   }
    #endif
 }
 
@@ -1469,11 +1523,13 @@ int main()
    split_example03();
    split_example04();
    split_example05();
-   split_regex_example();
+   split_regex_example01();
+   split_regex_example02();
    split_n_example01();
    split_n_example02();
    split_n_example03();
-   split_regex_n_example();
+   split_regex_n_example01();
+   split_regex_n_example02();
    offset_splitter_example01();
    offset_splitter_example02();
    offset_splitter_example03();

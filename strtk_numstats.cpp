@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * Number Statistics                                             *
- * Author: Arash Partow (2002-2010)                              *
+ * Author: Arash Partow (2002-2011)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
