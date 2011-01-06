@@ -3299,6 +3299,65 @@ namespace strtk
       lexicographically_canonicalize(sequence.begin(),sequence.end());
    }
 
+   inline const char* first_non_repeated_char(const char* begin, const char* end)
+   {
+      typedef std::pair<bool,unsigned long long> lut_element_type;
+      static const std::size_t lut_size = 256;
+      lut_element_type lut[lut_size] =
+                       {
+                          lut_element_type(false,std::numeric_limits<unsigned long long>::max())
+                       };
+
+      const char* itr = begin;
+      unsigned long long position = 0;
+      while (end != itr)
+      {
+         lut_element_type& cell = lut[static_cast<unsigned int>(*itr)];
+         if (!cell.first)
+         {
+            cell.second = position;
+            cell.first = true;
+         }
+         else if (std::numeric_limits<unsigned long long>::max() != cell.second)
+         {
+            cell.second = std::numeric_limits<unsigned long long>::max();
+         }
+         ++itr;
+         ++position;
+      }
+
+      position = std::numeric_limits<unsigned long long>::max();
+
+      for (std::size_t i = 0; i < lut_size; ++i)
+      {
+         const lut_element_type& cell = lut[i];
+         if ((!cell.first) || (std::numeric_limits<unsigned long long>::max() == cell.second))
+            continue;
+         if (cell.second < position)
+            position = cell.second;
+      }
+
+      return (begin + position);
+   }
+
+   inline const unsigned char* first_non_repeated_char(const unsigned char* begin, const unsigned char* end)
+   {
+      const char * b = const_cast<const char*>(reinterpret_cast<char*>(const_cast<unsigned char*>(begin)));
+      const char * e = const_cast<const char*>(reinterpret_cast<char*>(const_cast<unsigned char*>(end)));
+      return const_cast<const unsigned char*>(reinterpret_cast<unsigned char*>(const_cast<char*>(first_non_repeated_char(b,e))));
+   }
+
+   inline std::size_t first_non_repeated_char(const std::string& str)
+   {
+      if (str.empty())
+         return static_cast<std::size_t>(std::string::npos);
+      const char* itr = first_non_repeated_char(str.data(),str.data() + str.size());
+      if ((str.data() + str.size()) != itr)
+         return static_cast<std::size_t>(itr - str.data());
+      else
+         return static_cast<std::size_t>(std::string::npos);
+   }
+
    inline void convert_bin_to_hex(const unsigned char* begin, const unsigned char* end, unsigned char* out)
    {
       static const unsigned char hex_symbol[] = { "0123456789ABCDEF" };
@@ -12153,6 +12212,125 @@ namespace strtk
                ++itr;
          }
       }
+
+      template<typename T,
+               typename Allocator,
+               template<typename,typename> class Sequence>
+      inline void push_back(Sequence<T,Allocator>& sequence,
+                            const T& v1, const T& v2, const T& v3, const T& v4,
+                            const T& v5, const T& v6, const T& v7, const T& v8,
+                            const T& v9, const T& v10)
+      {
+         sequence.push_back(v1);  sequence.push_back(v2);
+         sequence.push_back(v3);  sequence.push_back(v4);
+         sequence.push_back(v5);  sequence.push_back(v6);
+         sequence.push_back(v7);  sequence.push_back(v8);
+         sequence.push_back(v9); sequence.push_back(v10);
+      }
+
+      template<typename T,
+               typename Allocator,
+               template<typename,typename> class Sequence>
+      inline void push_back(Sequence<T,Allocator>& sequence,
+                            const T& v1, const T& v2, const T& v3, const T& v4,
+                            const T& v5, const T& v6, const T& v7, const T& v8,
+                            const T& v9)
+      {
+         sequence.push_back(v1);  sequence.push_back(v2);
+         sequence.push_back(v3);  sequence.push_back(v4);
+         sequence.push_back(v5);  sequence.push_back(v6);
+         sequence.push_back(v7);  sequence.push_back(v8);
+         sequence.push_back(v9);
+      }
+
+      template<typename T,
+               typename Allocator,
+               template<typename,typename> class Sequence>
+      inline void push_back(Sequence<T,Allocator>& sequence,
+                            const T& v1, const T& v2, const T& v3, const T& v4,
+                            const T& v5, const T& v6, const T& v7, const T& v8)
+      {
+         sequence.push_back(v1);  sequence.push_back(v2);
+         sequence.push_back(v3);  sequence.push_back(v4);
+         sequence.push_back(v5);  sequence.push_back(v6);
+         sequence.push_back(v7);  sequence.push_back(v8);
+      }
+
+      template<typename T,
+               typename Allocator,
+               template<typename,typename> class Sequence>
+      inline void push_back(Sequence<T,Allocator>& sequence,
+                            const T& v1, const T& v2, const T& v3, const T& v4,
+                            const T& v5, const T& v6, const T& v7)
+      {
+         sequence.push_back(v1);  sequence.push_back(v2);
+         sequence.push_back(v3);  sequence.push_back(v4);
+         sequence.push_back(v5);  sequence.push_back(v6);
+         sequence.push_back(v7);
+      }
+
+      template<typename T,
+               typename Allocator,
+               template<typename,typename> class Sequence>
+      inline void push_back(Sequence<T,Allocator>& sequence,
+                            const T& v1, const T& v2, const T& v3, const T& v4,
+                            const T& v5, const T& v6)
+      {
+         sequence.push_back(v1);  sequence.push_back(v2);
+         sequence.push_back(v3);  sequence.push_back(v4);
+         sequence.push_back(v5);  sequence.push_back(v6);
+      }
+
+      template<typename T,
+               typename Allocator,
+               template<typename,typename> class Sequence>
+      inline void push_back(Sequence<T,Allocator>& sequence,
+                            const T& v1, const T& v2, const T& v3, const T& v4,
+                            const T& v5)
+      {
+         sequence.push_back(v1);  sequence.push_back(v2);
+         sequence.push_back(v3);  sequence.push_back(v4);
+         sequence.push_back(v5);
+      }
+
+      template<typename T,
+               typename Allocator,
+               template<typename,typename> class Sequence>
+      inline void push_back(Sequence<T,Allocator>& sequence,
+                            const T& v1, const T& v2, const T& v3, const T& v4)
+      {
+         sequence.push_back(v1);  sequence.push_back(v2);
+         sequence.push_back(v3);  sequence.push_back(v4);
+      }
+
+      template<typename T,
+               typename Allocator,
+               template<typename,typename> class Sequence>
+      inline void push_back(Sequence<T,Allocator>& sequence,
+                            const T& v1, const T& v2, const T& v3)
+      {
+         sequence.push_back(v1);  sequence.push_back(v2);
+         sequence.push_back(v3);
+      }
+
+      template<typename T,
+               typename Allocator,
+               template<typename,typename> class Sequence>
+      inline void push_back(Sequence<T,Allocator>& sequence,
+                            const T& v1, const T& v2)
+      {
+         sequence.push_back(v1);  sequence.push_back(v2);
+      }
+
+      template<typename T,
+               typename Allocator,
+               template<typename,typename> class Sequence>
+      inline void push_back(Sequence<T,Allocator>& sequence,
+                            const T& v1)
+      {
+         sequence.push_back(v1);
+      }
+
 
    } // namespace util
 

@@ -1502,6 +1502,33 @@ void ext_string_example()
    }
 }
 
+void non_repeated_char_example()
+{
+   std::cout << "non_repeated_char_example" << std::endl;
+   const std::string str_list[] =
+                     {
+                        "",
+                        "abcdefghijklmnopqrstuvwxyz",
+                        "abcdefghijklmnopqrstuvwxyza",
+                        "abcabcabcabc",
+                        "abaabbaaabbbcabaabbaaabbb",
+                        "1a2b3c4d2b3c4d"
+                     };
+
+   const std::size_t str_list_size = sizeof(str_list) / sizeof(std::string);
+
+   for (std::size_t i = 0; i < str_list_size; ++i)
+   {
+      const std::size_t index = strtk::first_non_repeated_char(str_list[i]);
+      if (std::string::npos == index)
+      {
+         std::cout << "No non-repeated chars in string." << std::endl;
+         continue;
+      }
+      std::cout << "First non repeated char: " << str_list[i][index] << std::endl;
+   }
+}
+
 int main()
 {
    information();
@@ -1571,5 +1598,6 @@ int main()
    example_replace();
    find_example();
    ext_string_example();
+   non_repeated_char_example();
    return 0;
 }
