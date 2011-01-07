@@ -12441,15 +12441,16 @@ namespace strtk
 
             inline unsigned long long usec_time() const
             {
-               unsigned long long diff = (stop_time_.tv_sec - start_time_.tv_sec) * 1000000;
-               if (stop_time_.tv_usec > start_time_.tv_usec)
-                  diff += (stop_time_.tv_usec - start_time_.tv_usec);
-               else if (stop_time_.tv_usec < start_time_.tv_usec)
+               if (!in_use_)
                {
-                  diff += (start_time_.tv_usec - stop_time_.tv_usec);
-                  diff -= 1000000;
+                  if (stop_time_.tv_sec >= start_time_.tv_sec)
+                     return 1000000 * (stop_time_.tv_sec  - start_time_.tv_sec ) +
+                                      (stop_time_.tv_usec - start_time_.tv_usec);
+                  else
+                     return std::numeric_limits<unsigned long long>::max();
                }
-               return diff;
+               else
+                  return std::numeric_limits<unsigned long long>::max();
             }
 
             inline double time() const
