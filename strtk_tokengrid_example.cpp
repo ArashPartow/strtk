@@ -451,7 +451,7 @@ private:
 
 void token_grid_test10()
 {
-                              //Date,Symbol,Open,Close,High,Low,Volume
+                                   //Date,Symbol,Open,Close,High,Low,Volume
    const std::string market_data = "20090701,GOOG,424.2000,418.9900,426.4000,418.1500,2310768\n"
                                    "20090701,MSFT,24.0500,24.0400,24.3000,23.9600,54915127\n"
                                    "20090702,GOOG,415.4100,408.4900,415.4100,406.8100,2517630\n"

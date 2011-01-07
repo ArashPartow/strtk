@@ -9330,7 +9330,7 @@ namespace strtk
                                     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                  };
 
-      static const unsigned char rev_digit_table3[] =
+      static const unsigned char rev_3digit_lut[] =
                                  {
                                     "000100200300400500600700800900010110210310410510610710810910020120220320420"
                                     "520620720820920030130230330430530630730830930040140240340440540640740840940"
@@ -9374,7 +9374,7 @@ namespace strtk
                                     "579679779879979089189289389489589689789889989099199299399499599699799899999"
                                  };
 
-      static const unsigned char rev_digit_table2[] =
+      static const unsigned char rev_2digit_lut[] =
                                  {
                                     "0010203040506070809001112131415161718191"
                                     "0212223242526272829203132333435363738393"
@@ -10018,9 +10018,9 @@ namespace strtk
                remainder  = value % radix_cube;
                value     /= radix_cube;
                index = remainder * 3;
-               *(itr--) = static_cast<char>(details::rev_digit_table3[index + 0]);
-               *(itr--) = static_cast<char>(details::rev_digit_table3[index + 1]);
-               *(itr--) = static_cast<char>(details::rev_digit_table3[index + 2]);
+               *(itr--) = static_cast<char>(details::rev_3digit_lut[index + 0]);
+               *(itr--) = static_cast<char>(details::rev_3digit_lut[index + 1]);
+               *(itr--) = static_cast<char>(details::rev_3digit_lut[index + 2]);
             }
 
             while (value >= static_cast<T>(radix))
@@ -10028,8 +10028,8 @@ namespace strtk
                remainder  = value % radix_sqr;
                value     /= radix_sqr;
                index = remainder << 1;
-               *(itr--) = static_cast<char>(details::rev_digit_table2[index + 0]);
-               *(itr--) = static_cast<char>(details::rev_digit_table2[index + 1]);
+               *(itr--) = static_cast<char>(details::rev_2digit_lut[index + 0]);
+               *(itr--) = static_cast<char>(details::rev_2digit_lut[index + 1]);
             }
 
             if (0 != value)
@@ -10069,9 +10069,9 @@ namespace strtk
                remainder  = value % radix_cube;
                value     /= radix_cube;
                index    = static_cast<std::size_t>(remainder * 3);
-               *(itr--) = static_cast<char>(details::rev_digit_table3[index + 0]);
-               *(itr--) = static_cast<char>(details::rev_digit_table3[index + 1]);
-               *(itr--) = static_cast<char>(details::rev_digit_table3[index + 2]);
+               *(itr--) = static_cast<char>(details::rev_3digit_lut[index + 0]);
+               *(itr--) = static_cast<char>(details::rev_3digit_lut[index + 1]);
+               *(itr--) = static_cast<char>(details::rev_3digit_lut[index + 2]);
             }
 
             while (value >= static_cast<T>(radix))
@@ -10079,8 +10079,8 @@ namespace strtk
                remainder  = value % radix_sqr;
                value     /= radix_sqr;
                index    = static_cast<std::size_t>(remainder) << 1;
-               *(itr--) = static_cast<char>(details::rev_digit_table2[index + 0]);
-               *(itr--) = static_cast<char>(details::rev_digit_table2[index + 1]);
+               *(itr--) = static_cast<char>(details::rev_2digit_lut[index + 0]);
+               *(itr--) = static_cast<char>(details::rev_2digit_lut[index + 1]);
             }
 
             if (0 != value)
@@ -12401,24 +12401,24 @@ namespace strtk
             timer()
             : in_use_(false)
             {
-               QueryPerformanceFrequency(&clock_frequency);
+               QueryPerformanceFrequency(&clock_frequency_);
             }
 
             inline void start()
             {
                in_use_ = true;
-               QueryPerformanceCounter(&start_time);
+               QueryPerformanceCounter(&start_time_);
             }
 
             inline void stop()
             {
-               QueryPerformanceCounter(&stop_time);
+               QueryPerformanceCounter(&stop_time_);
                in_use_ = false;
             }
 
             inline double time() const
             {
-               return (1.0 *(stop_time.QuadPart - start_time.QuadPart)) / (1.0 * clock_frequency.QuadPart);
+               return (1.0 * (stop_time_.QuadPart - start_time_.QuadPart)) / (1.0 * clock_frequency_.QuadPart);
             }
 
          #else
@@ -12430,24 +12430,33 @@ namespace strtk
             inline void start()
             {
                in_use_ = true;
-               gettimeofday(&start_time, 0);
+               gettimeofday(&start_time_,0);
             }
 
             inline void stop()
             {
-               gettimeofday(&stop_time,  0);
+               gettimeofday(&stop_time_, 0);
                in_use_ = false;
+            }
+
+            inline unsigned long long usec_time() const
+            {
+               unsigned long long diff = (stop_time_.tv_sec - start_time_.tv_sec) * 1000000;
+               if (stop_time_.tv_usec > start_time_.tv_usec)
+                  diff += (stop_time_.tv_usec - start_time_.tv_usec);
+               else if (stop_time_.tv_usec < start_time_.tv_usec)
+               {
+                  diff += (start_time_.tv_usec - stop_time_.tv_usec);
+                  diff -= 1000000;
+               }
+               return diff;
             }
 
             inline double time() const
             {
-               double diff = (stop_time.tv_sec - start_time.tv_sec) * 1000000.0;
-               if (stop_time.tv_usec > start_time.tv_usec)
-                  diff += (1.0 * (stop_time.tv_usec - start_time.tv_usec));
-               else if (stop_time.tv_usec < start_time.tv_usec)
-                  diff -= (1.0 * (start_time.tv_usec - stop_time.tv_usec));
-               return (diff / 1000000.0);
+               return usec_time() * 0.000001;
             }
+
          #endif
 
             inline bool in_use() const
@@ -12460,13 +12469,12 @@ namespace strtk
             bool in_use_;
 
          #ifdef WIN32
-            LARGE_INTEGER start_time;
-            LARGE_INTEGER stop_time;
-            LARGE_INTEGER clock_frequency;
+            LARGE_INTEGER start_time_;
+            LARGE_INTEGER stop_time_;
+            LARGE_INTEGER clock_frequency_;
          #else
-            struct timeval start_time;
-            struct timeval stop_time;
-            struct timeval clock_frequency;
+            struct timeval start_time_;
+            struct timeval stop_time_;
          #endif
       };
    } // namespace util
