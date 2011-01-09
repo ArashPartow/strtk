@@ -7001,6 +7001,475 @@ namespace strtk
                      split_option);
    }
 
+   template<typename T1, typename  T2, typename  T3, typename T4,
+            typename T5, typename  T6, typename  T7, typename T8,
+            typename T9, typename T10, typename T11, typename T12>
+   inline bool parse_line(std::ifstream& stream,
+                          const std::string& delimiters,
+                          T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6,
+                          T7& t7, T8& t8, T9& t9, T10& t10, T11& t11, T12& t12)
+   {
+      if (!stream)
+         return false;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return false;
+      if (data.empty())
+         return false;
+      return strtk::parse(data,
+                          delimiters,
+                          t1,t2,t3,t4,t5,t6,
+                          t7,t8,t9,t10,t11,t12);
+   }
+
+   template<typename T1, typename  T2, typename  T3, typename T4,
+            typename T5, typename  T6, typename  T7, typename T8,
+            typename T9, typename T10, typename T11>
+   inline bool parse_line(std::ifstream& stream,
+                          const std::string& delimiters,
+                          T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6,
+                          T7& t7, T8& t8, T9& t9, T10& t10, T11& t11)
+   {
+      if (!stream)
+         return false;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return false;
+      if (data.empty())
+         return false;
+      return strtk::parse(data,
+                          delimiters,
+                          t1,t2,t3,t4,t5,t6,
+                          t7,t8,t9,t10,t11);
+   }
+
+   template<typename T1, typename  T2, typename  T3, typename T4,
+            typename T5, typename  T6, typename  T7, typename T8,
+            typename T9, typename T10>
+   inline bool parse_line(std::ifstream& stream,
+                          const std::string& delimiters,
+                          T1& t1, T2& t2, T3& t3, T4&  t4, T5& t5, T6& t6,
+                          T7& t7, T8& t8, T9& t9, T10& t10)
+   {
+      if (!stream)
+         return false;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return false;
+      if (data.empty())
+         return false;
+      return strtk::parse(data,
+                          delimiters,
+                          t1,t2,t3,t4,t5,t6,
+                          t7,t8,t9,t10);
+   }
+
+   template<typename T1, typename  T2, typename  T3, typename T4,
+            typename T5, typename  T6, typename  T7, typename T8,
+            typename T9>
+   inline bool parse_line(std::ifstream& stream,
+                          const std::string& delimiters,
+                          T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6,
+                          T7& t7, T8& t8, T9& t9)
+   {
+      if (!stream)
+         return false;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return false;
+      if (data.empty())
+         return false;
+      return strtk::parse(data,
+                          delimiters,
+                          t1,t2,t3,t4,t5,t6,
+                          t7,t8,t9);
+   }
+
+   template<typename T1, typename  T2, typename  T3, typename T4,
+            typename T5, typename  T6, typename  T7, typename T8>
+   inline bool parse_line(std::ifstream& stream,
+                          const std::string& delimiters,
+                          T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6,
+                          T7& t7, T8& t8)
+   {
+      if (!stream)
+         return false;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return false;
+      if (data.empty())
+         return false;
+      return strtk::parse(data,
+                          delimiters,
+                          t1,t2,t3,t4,t5,t6,
+                          t7,t8);
+   }
+
+   template<typename T1, typename  T2, typename  T3, typename T4,
+            typename T5, typename  T6, typename  T7>
+   inline bool parse_line(std::ifstream& stream,
+                          const std::string& delimiters,
+                          T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6,
+                          T7& t7)
+   {
+      if (!stream)
+         return false;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return false;
+      if (data.empty())
+         return false;
+      return strtk::parse(data,
+                          delimiters,
+                          t1,t2,t3,t4,t5,t6,t7);
+   }
+
+   template<typename T1, typename  T2, typename  T3, typename T4,
+            typename T5, typename  T6>
+   inline bool parse_line(std::ifstream& stream,
+                          const std::string& delimiters,
+                          T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6)
+   {
+      if (!stream)
+         return false;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return false;
+      if (data.empty())
+         return false;
+      return strtk::parse(data,
+                          delimiters,
+                          t1,t2,t3,t4,t5,t6);
+   }
+
+   template<typename T1, typename  T2, typename  T3, typename T4,
+            typename T5>
+   inline bool parse_line(std::ifstream& stream,
+                          const std::string& delimiters,
+                          T1& t1, T2& t2, T3& t3, T4& t4, T5& t5)
+   {
+      if (!stream)
+         return false;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return false;
+      if (data.empty())
+         return false;
+      return strtk::parse(data,
+                          delimiters,
+                          t1,t2,t3,t4,t5);
+   }
+
+   template<typename T1, typename  T2, typename  T3, typename T4>
+   inline bool parse_line(std::ifstream& stream,
+                          const std::string& delimiters,
+                          T1& t1, T2& t2, T3& t3, T4& t4)
+   {
+      if (!stream)
+         return false;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return false;
+      if (data.empty())
+         return false;
+      return strtk::parse(data,
+                          delimiters,
+                          t1,t2,t3,t4);
+   }
+
+   template<typename T1, typename  T2, typename  T3>
+   inline bool parse_line(std::ifstream& stream,
+                          const std::string& delimiters,
+                          T1& t1, T2& t2, T3& t3)
+   {
+      if (!stream)
+         return false;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return false;
+      if (data.empty())
+         return false;
+      return strtk::parse(data,
+                          delimiters,
+                          t1,t2,t3);
+   }
+
+   template<typename T1, typename  T2>
+   inline bool parse_line(std::ifstream& stream,
+                          const std::string& delimiters,
+                          T1& t1, T2& t2)
+   {
+      if (!stream)
+         return false;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return false;
+      if (data.empty())
+         return false;
+      return strtk::parse(data,
+                          delimiters,
+                          t1,t2);
+   }
+
+   template<typename T1>
+   inline bool parse_line(std::ifstream& stream,
+                          const std::string& delimiters,
+                          T1& t1)
+   {
+      if (!stream)
+         return false;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return false;
+      if (data.empty())
+         return false;
+      return strtk::parse(data,
+                          delimiters,
+                          t1);
+   }
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline std::size_t parse_line(std::ifstream& stream,
+                                 const std::string& delimiters,
+                                 Sequence<T,Allocator>& sequence,
+                                 const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      if (!stream)
+         return 0;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return 0;
+      if (data.empty())
+         return 0;
+      return strtk::parse(data,
+                          delimiters,
+                          sequence,
+                          split_option);
+   }
+
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t parse_line(std::ifstream& stream,
+                                 const std::string& delimiters,
+                                 std::set<T,Comparator,Allocator>& set,
+                                 const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      if (!stream)
+         return 0;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return 0;
+      if (data.empty())
+         return 0;
+      return strtk::parse(data,
+                          delimiters,
+                          set,
+                          split_option);
+   }
+
+
+   template <typename T,
+             typename Container>
+   inline std::size_t parse_line(std::ifstream& stream,
+                                 const std::string& delimiters,
+                                 std::queue<T,Container>& queue,
+                                 const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      if (!stream)
+         return 0;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return 0;
+      if (data.empty())
+         return 0;
+      return strtk::parse(data,
+                          delimiters,
+                          queue,
+                          split_option);
+   }
+
+   template <typename T,
+             typename Container>
+   inline std::size_t parse_line(std::ifstream& stream,
+                                 const std::string& delimiters,
+                                 std::stack<T,Container>& stack,
+                                 const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      if (!stream)
+         return 0;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return 0;
+      if (data.empty())
+         return 0;
+      return strtk::parse(data,
+                          delimiters,
+                          stack,
+                          split_option);
+   }
+
+   template <typename T,
+             typename Container,
+             typename Comparator>
+   inline std::size_t parse_line(std::ifstream& stream,
+                                 const std::string& delimiters,
+                                 std::priority_queue<T,Container,Comparator>& priority_queue,
+                                 const split_options::type& split_option = split_options::compress_delimiters)
+
+   {
+      if (!stream)
+         return 0;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return 0;
+      if (data.empty())
+         return 0;
+      return strtk::parse(data,
+                          delimiters,
+                          priority_queue,
+                          split_option);
+   }
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline std::size_t parse_line_n(std::ifstream& stream,
+                                   const std::string& delimiters,
+                                   const std::size_t& n,
+                                   Sequence<T,Allocator>& sequence,
+                                   const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      if (!stream)
+         return 0;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return 0;
+      if (data.empty())
+         return 0;
+      return strtk::parse_n(data,
+                            delimiters,
+                            n,
+                            sequence,
+                            split_option);
+   }
+
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t parse_line_n(std::ifstream& stream,
+                                   const std::string& delimiters,
+                                   const std::size_t& n,
+                                   std::set<T,Comparator,Allocator>& set,
+                                   const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      if (!stream)
+         return 0;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return 0;
+      if (data.empty())
+         return 0;
+      return strtk::parse_n(data,
+                            delimiters,
+                            n,
+                            set,
+                            split_option);
+   }
+
+
+   template <typename T,
+             typename Container>
+   inline std::size_t parse_line_n(std::ifstream& stream,
+                                   const std::string& delimiters,
+                                   const std::size_t& n,
+                                   std::queue<T,Container>& queue,
+                                   const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      if (!stream)
+         return 0;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return 0;
+      if (data.empty())
+         return 0;
+      return strtk::parse_n(data,
+                            delimiters,
+                            n,
+                            queue,
+                            split_option);
+   }
+
+   template <typename T,
+             typename Container>
+   inline std::size_t parse_line_n(std::ifstream& stream,
+                                   const std::string& delimiters,
+                                   const std::size_t& n,
+                                   std::stack<T,Container>& stack,
+                                   const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      if (!stream)
+         return 0;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return 0;
+      if (data.empty())
+         return 0;
+      return strtk::parse_n(data,
+                            delimiters,
+                            n,
+                            stack,
+                            split_option);
+   }
+
+   template <typename T,
+             typename Container,
+             typename Comparator>
+   inline std::size_t parse_line_n(std::ifstream& stream,
+                                   const std::string& delimiters,
+                                   const std::size_t& n,
+                                   std::priority_queue<T,Container,Comparator>& priority_queue,
+                                   const split_options::type& split_option = split_options::compress_delimiters)
+
+   {
+      if (!stream)
+         return 0;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return 0;
+      if (data.empty())
+         return 0;
+      return strtk::parse_n(data,
+                            delimiters,
+                            n,
+                            priority_queue,
+                            split_option);
+   }
+
    template<typename T1, typename T2, typename  T3, typename  T4,
             typename T5, typename T6, typename  T7, typename  T8,
             typename T9, typename T10, typename T11, typename T12>
