@@ -1529,6 +1529,53 @@ void non_repeated_char_example()
    }
 }
 
+void translation_table_example()
+{
+   std::cout << "translation_table_example" << std::endl;
+
+   const std::string intab  = "aeiou";
+   const std::string outtab = "12345";
+
+   {
+      std::string s = "Such is this simple string sample....Wowzers!";
+      strtk::translation_table trans_table(intab,outtab);
+      std::cout << "Before: " << s << std::endl;
+      std::transform(s.begin(),s.end(),s.begin(),trans_table);
+      std::cout << "After: " << s << std::endl;
+   }
+
+   {
+      std::string s = "Such is this simple string sample....Wowzers!";
+      std::cout << "Before: " << s << std::endl;
+      std::transform(s.begin(),s.end(),s.begin(),strtk::translation_table(intab,outtab));
+      std::cout << "After: " << s << std::endl;
+   }
+
+   {
+      std::string s = "Such is this simple string sample....Wowzers!";
+      std::cout << "Before: " << s << std::endl;
+      std::transform(s.begin(),s.end(),s.begin(),strtk::translation_table("aeiou","12345"));
+      std::cout << "After: " << s << std::endl;
+   }
+
+   {
+      std::string s = "Such is this simple string sample....Wowzers!";
+      strtk::translation_table trans_table(intab,outtab);
+      std::cout << "Before: " << s << std::endl;
+      strtk::translate_inplace(trans_table,s);
+      std::cout << "After: " << s << std::endl;
+   }
+
+   {
+      std::string s = "Such is this simple string sample....Wowzers!";
+      strtk::translation_table trans_table(intab,outtab);
+      std::cout << "Before: " << s << std::endl;
+      std::cout << "After: " << strtk::translate(trans_table,s) << std::endl;
+   }
+
+}
+
+
 int main()
 {
    information();
@@ -1599,5 +1646,6 @@ int main()
    find_example();
    ext_string_example();
    non_repeated_char_example();
+   translation_table_example();
    return 0;
 }

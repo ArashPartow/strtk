@@ -8195,6 +8195,50 @@ namespace strtk
       cut(r0,r1,set.begin(),set.end());
    }
 
+   class translation_table
+   {
+   public:
+      translation_table(const std::string& itable, const std::string& otable)
+      {
+         if (itable.size() != otable.size())
+         {
+            throw;
+         }
+         std::fill_n(table_,256,-1);
+         for (std::size_t i = 0; i < itable.size(); ++i)
+         {
+            table_[static_cast<unsigned int>(itable[i])] = otable[i];
+         }
+      }
+
+      char operator()(const char c) const
+      {
+         const int& v = table_[static_cast<unsigned int>(c)];
+         return (v == -1) ? c : static_cast<char> (v);
+      }
+
+      unsigned char operator()(const unsigned char c) const
+      {
+         const int& v = table_[static_cast<unsigned int>(c)];
+         return (v == -1) ? c : static_cast<unsigned char> (v);
+      }
+
+   private:
+      int table_[256];
+   };
+
+   std::string translate(const translation_table& trans_table, const std::string& s)
+   {
+      std::string result = s;
+      std::transform(result.begin(),result.end(),result.begin(),trans_table);
+      return result;
+   }
+
+   void translate_inplace(const translation_table& trans_table, std::string& s)
+   {
+      std::transform(s.begin(),s.end(),s.begin(),trans_table);
+   }
+
    #ifdef strtk_enable_random
    inline void generate_random_data(unsigned char* data,
                                     std::size_t length,
