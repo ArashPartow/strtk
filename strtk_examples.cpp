@@ -1572,9 +1572,7 @@ void translation_table_example()
       std::cout << "Before: " << s << std::endl;
       std::cout << "After: " << strtk::translate(trans_table,s) << std::endl;
    }
-
 }
-
 
 int main()
 {
