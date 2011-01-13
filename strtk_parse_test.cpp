@@ -46,16 +46,26 @@ std::size_t title_length()
                                "[tokenizer(sd) raw speed test]",
                                "[split(mcd) raw speed test]",
                                "[split(md) raw speed test]",
-                               "[split(sd) raw speed test]"
+                               "[split(sd) raw speed test]",
+                               "[strtk_int_parse_test]",
+                               "[stdstl_int_parse_test]",
+                               "[strtk_double_parse_test]",
+                               "[stdstl_double_parse_test]"
                             };
    std::size_t length = 0;
-   length = std::max<std::size_t>(length,s[0].size());
-   length = std::max<std::size_t>(length,s[1].size());
-   length = std::max<std::size_t>(length,s[2].size());
-   length = std::max<std::size_t>(length,s[3].size());
-   length = std::max<std::size_t>(length,s[4].size());
-   length = std::max<std::size_t>(length,s[5].size());
-   length = std::max<std::size_t>(length,s[6].size());
+   length = std::max<std::size_t>(length,s[ 0].size());
+   length = std::max<std::size_t>(length,s[ 1].size());
+   length = std::max<std::size_t>(length,s[ 2].size());
+   length = std::max<std::size_t>(length,s[ 3].size());
+   length = std::max<std::size_t>(length,s[ 4].size());
+   length = std::max<std::size_t>(length,s[ 5].size());
+   length = std::max<std::size_t>(length,s[ 6].size());
+   length = std::max<std::size_t>(length,s[ 7].size());
+   length = std::max<std::size_t>(length,s[ 8].size());
+   length = std::max<std::size_t>(length,s[ 9].size());
+   length = std::max<std::size_t>(length,s[10].size());
+   length = std::max<std::size_t>(length,s[11].size());
+   length = std::max<std::size_t>(length,s[12].size());
    return length + 1;
 }
 
@@ -422,6 +432,160 @@ void raw_split_sd_speed_test()
           (s.size() * sd_rounds) / (1048576.0 * t.time()));
 }
 
+void strtk_vs_stdstl_int_parse_test()
+{
+   static const std::string int_str = "0 1 2 3 4 5 6 7 8 9 "
+                                      "00 11 22 33 44 55 66 77 88 99 "
+                                      "000 111 222 333 444 555 666 777 888 999 "
+                                      "0000 1111 2222 3333 4444 5555 6666 7777 8888 9999 "
+                                      "00000 11111 22222 33333 44444 55555 66666 77777 88888 99999 "
+                                      "000000 111111 222222 333333 444444 555555 666666 777777 888888 999999 "
+                                      "0000000 1111111 2222222 3333333 4444444 5555555 6666666 7777777 8888888 9999999 "
+                                      "00000000 11111111 22222222 33333333 44444444 55555555 66666666 77777777 88888888 99999999 "
+                                      "000000000 111111111 222222222 333333333 444444444 555555555 666666666 777777777 888888888 999999999 "
+                                      "0 +1 +2 +3 +4 +5 +6 +7 +8 +9 "
+                                      "00 +11 +22 +33 +44 +55 +66 +77 +88 +99 "
+                                      "000 +111 +222 +333 +444 +555 +666 +777 +888 +999 "
+                                      "0000 +1111 +2222 +3333 +4444 +5555 +6666 +7777 +8888 +9999 "
+                                      "00000 +11111 +22222 +33333 +44444 +55555 +66666 +77777 +88888 +99999 "
+                                      "000000 +111111 +222222 +333333 +444444 +555555 +666666 +777777 +888888 +999999 "
+                                      "0000000 +1111111 +2222222 +3333333 +4444444 +5555555 +6666666 +7777777 +8888888 +9999999 "
+                                      "00000000 +11111111 +22222222 +33333333 +44444444 +55555555 +66666666 +77777777 +88888888 +99999999 "
+                                      "000000000 +111111111 +222222222 +333333333 +444444444 +555555555 +666666666 +777777777 +888888888 +999999999 "
+                                      "0 -1 -2 -3 -4 -5 -6 -7 -8 -9 "
+                                      "00 -11 -22 -33 -44 -55 -66 -77 -88 -99 "
+                                      "000 -111 -222 -333 -444 -555 -666 -777 -888 -999 "
+                                      "0000 -1111 -2222 -3333 -4444 -5555 -6666 -7777 -8888 -9999 "
+                                      "00000 -11111 -22222 -33333 -44444 -55555 -66666 -77777 -88888 -99999 "
+                                      "000000 -111111 -222222 -333333 -444444 -555555 -666666 -777777 -888888 -999999 "
+                                      "0000000 -1111111 -2222222 -3333333 -4444444 -5555555 -6666666 -7777777 -8888888 -9999999 "
+                                      "00000000 -11111111 -22222222 -33333333 -44444444 -55555555 -66666666 -77777777 -88888888 -99999999 "
+                                      "000000000 -111111111 -222222222 -333333333 -444444444 -555555555 -666666666 -777777777 -888888888 -999999999 ";
+
+   static const std::size_t test_count = 200000;
+
+   {
+      std::cout << strtk::text::left_align(title_length(),' ',"[strtk_int_parse_test]");
+      std::vector<int> int_list;
+      int_list.reserve(2000);
+      unsigned long long total_ints = 0;
+      strtk::util::timer t;
+      t.start();
+      for (std::size_t i = 0; i < test_count; ++i)
+      {
+         strtk::parse(int_str," ",int_list);
+         total_ints += int_list.size();
+         int_list.clear();
+      }
+      t.stop();
+      printf("Numbers:%10lu\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
+             static_cast<unsigned long>(total_ints),
+             t.time(),
+             total_ints / t.time());
+   }
+
+   {
+      std::cout << strtk::text::left_align(title_length(),' ',"[stdstl_int_parse_test]");
+      std::vector<int> int_list;
+      int_list.reserve(2000);
+      std::stringstream line_stream;
+      unsigned long long total_ints = 0;
+      strtk::util::timer t;
+      t.start();
+      for (std::size_t i = 0; i < test_count; ++i)
+      {
+         line_stream << int_str;
+         int_list.assign((std::istream_iterator<int>(line_stream)),
+                          std::istream_iterator<int>());
+         total_ints += int_list.size();
+         int_list.clear();
+         line_stream.clear();
+      }
+      t.stop();
+      printf("Numbers:%10lu\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
+             static_cast<unsigned long>(total_ints),
+             t.time(),
+             total_ints / t.time());
+   }
+}
+
+void strtk_vs_stdstl_double_parse_test()
+{
+   static const std::string double_str = ".0 .1 .2 .3 .4 .5 .6 .7 .8 .9 "
+                                         "0.0 1.1 2.2 3.3 4.4 5.5 6.6 7.7 8.8 9.9 "
+                                         "1.11 2.22 3.33 4.44 5.55 6.66 7.77 8.88 9.99 "
+                                         "11.11 22.22 33.33 44.44 55.55 66.66 77.77 88.88 99.99 "
+                                         "11.111 22.222 33.333 44.444 55.555 66.666 77.777 88.888 99.999 "
+                                         "111.111 222.222 333.333 444.444 555.555 666.666 777.777 888.888 999.999 "
+                                         "111.1111 222.2222 333.3333 444.4444 555.5555 666.6666 777.7777 888.8888 999.9999 "
+                                         "1111.1111 2222.2222 3333.3333 4444.4444 5555.5555 6666.6666 7777.7777 8888.8888 9999.9999 "
+                                         "1111.11111 222.222222 3.33333333 444444.444 5555.55555 6.66666666 77.7777777 8888.88888 99999.9999 "
+                                         "+.0 +.1 +.2 +.3 +.4 +.5 +.6 +.7 +.8 +.9 "
+                                         "+0.0 1.1 +2.2 +3.3 +4.4 +5.5 +6.6 +7.7 +8.8 +9.9 "
+                                         "+1.11 +2.22 +3.33 +4.44 +5.55 +6.66 +7.77 +8.88 +9.99 "
+                                         "+11.11 +22.22 +33.33 +44.44 +55.55 +66.66 +77.77 +88.88 +99.99 "
+                                         "+11.111 +22.222 +33.333 +44.444 +55.555 +66.666 +77.777 +88.888 +99.999 "
+                                         "+111.111 +222.222 +333.333 +444.444 +555.555 +666.666 +777.777 +888.888 +999.999 "
+                                         "+111.1111 +222.2222 +333.3333 +444.4444 +555.5555 +666.6666 +777.7777 +888.8888 +999.9999 "
+                                         "+1111.1111 +2222.2222 +3333.3333 +4444.4444 +5555.5555 +6666.6666 +7777.7777 +8888.8888 +9999.9999 "
+                                         "+1111.11111 +222.222222 +3.33333333 +444444.444 +5555.55555 +6.66666666 +77.7777777 +8888.88888 +99999.9999 "
+                                         "-.0 -.1 -.2 -.3 -.4 -.5 -.6 -.7 -.8 -.9 "
+                                         "-0.0 1.1 -2.2 -3.3 -4.4 -5.5 -6.6 -7.7 -8.8 -9.9 "
+                                         "-1.11 -2.22 -3.33 -4.44 -5.55 -6.66 -7.77 -8.88 -9.99 "
+                                         "-11.11 -22.22 -33.33 -44.44 -55.55 -66.66 -77.77 -88.88 -99.99 "
+                                         "-11.111 -22.222 -33.333 -44.444 -55.555 -66.666 -77.777 -88.888 -99.999 "
+                                         "-111.111 -222.222 -333.333 -444.444 -555.555 -666.666 -777.777 -888.888 -999.999 "
+                                         "-111.1111 -222.2222 -333.3333 -444.4444 -555.5555 -666.6666 -777.7777 -888.8888 -999.9999 "
+                                         "-1111.1111 -2222.2222 -3333.3333 -4444.4444 -5555.5555 -6666.6666 -7777.7777 -8888.8888 -9999.9999 "
+                                         "-1111.11111 -222.222222 -3.33333333 -444444.444 -5555.55555 -6.66666666 -77.7777777 -8888.88888 -99999.9999 ";
+
+   static const std::size_t test_count = 200000;
+
+   {
+      std::cout << strtk::text::left_align(title_length(),' ',"[strtk_double_parse_test]");
+      std::vector<double> int_list;
+      int_list.reserve(2000);
+      unsigned long long total_ints = 0;
+      strtk::util::timer t;
+      t.start();
+      for (std::size_t i = 0; i < test_count; ++i)
+      {
+         strtk::parse(double_str," ",int_list);
+         total_ints += int_list.size();
+         int_list.clear();
+      }
+      t.stop();
+      printf("Numbers:%10lu\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
+             static_cast<unsigned long>(total_ints),
+             t.time(),
+             total_ints / t.time());
+   }
+
+   {
+      std::cout << strtk::text::left_align(title_length(),' ',"[stdstl_double_parse_test]");
+      std::vector<double> double_list;
+      double_list.reserve(2000);
+      std::stringstream line_stream;
+      unsigned long long total_ints = 0;
+      strtk::util::timer t;
+      t.start();
+      for (std::size_t i = 0; i < test_count; ++i)
+      {
+         line_stream << double_str;
+         double_list.assign((std::istream_iterator<double>(line_stream)),
+                            std::istream_iterator<double>());
+         total_ints += double_list.size();
+         double_list.clear();
+         line_stream.clear();
+      }
+      t.stop();
+      printf("Numbers:%10lu\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
+             static_cast<unsigned long>(total_ints),
+             t.time(),
+             total_ints / t.time());
+   }
+}
+
 int main()
 {
    parse_test01();
@@ -433,5 +597,7 @@ int main()
    raw_split_sd_speed_test();
    raw_split_mcd_speed_test();
    raw_split_md_speed_test();
+   strtk_vs_stdstl_int_parse_test();
+   strtk_vs_stdstl_double_parse_test();
    return 0;
 }
