@@ -8630,6 +8630,147 @@ namespace strtk
       return true;
    }
 
+   inline unsigned long long n_choose_k(const unsigned long long& n, const unsigned long long& k)
+   {
+      if (n  < k) return 0;
+      if (0 == n) return 0;
+      if (0 == k) return 0;
+      if (n == k) return 1;
+      typedef unsigned long long value_type;
+      value_type* table = new value_type[static_cast<std::size_t>(n * n)];
+      std::fill_n(table,n * n,0);
+      class n_choose_k_impl
+      {
+      public:
+
+         n_choose_k_impl(value_type* table,const value_type& dimension)
+         : table_(table),
+           dimension_(dimension)
+         {}
+
+         inline value_type& lookup(const value_type& n, const value_type& k)
+         {
+            return table_[dimension_ * n + k];
+         }
+
+         inline value_type compute(const value_type& n, const value_type& k)
+         {
+            if ((0 == k) || (k == n))
+               return 1;
+            value_type v1 = lookup(n - 1,k - 1);
+            if (0 == v1)
+               v1 = lookup(n - 1,k - 1) = compute(n - 1,k - 1);
+            value_type v2 = lookup(n - 1,k);
+            if (0 == v2)
+               v2 = lookup(n - 1,k) = compute(n - 1,k);
+            return v1 + v2;
+         }
+
+         value_type* table_;
+         value_type dimension_;
+      };
+      value_type result = n_choose_k_impl(table,n).compute(n,k);
+      delete [] table;
+      return result;
+   }
+
+   namespace nth_combination_options
+   {
+      typedef std::size_t type;
+      enum
+      {
+         default_mode     = 1,
+         zero_based_index = 1,
+         complete_index   = 2
+      };
+
+      static inline bool required_zero_based_index(const type& opt)
+      {
+         return zero_based_index == (opt & zero_based_index);
+      }
+
+      static inline bool required_complete_index(const type& opt)
+      {
+         return complete_index == (opt & complete_index);
+      }
+
+   } // namespace nth_combination_options
+
+   template<typename OutputIterator>
+   inline void nth_combination_sequence(unsigned long long n,
+                                        const std::size_t& r,
+                                        const std::size_t& k,
+                                        OutputIterator out,
+                                        nth_combination_options::type options = nth_combination_options::default_mode)
+   {
+      //Compute the indicies for the n'th combination of r-choose-k
+      typedef unsigned long long value_type;
+
+      std::vector<std::size_t> index_list(k,0);
+      value_type j;
+      value_type x = 0;
+      ++n;
+      for (std::size_t i = 1; i <= (k - 1); i++)
+      {
+         index_list[i - 1] = 0;
+         if (1 < i)
+         {
+            index_list[i - 1] = index_list[i - 2];
+         }
+         do
+         {
+            index_list[i - 1] = index_list[i - 1] + 1;
+            j = n_choose_k(r - index_list[i - 1], k - i);
+            x = x + j;
+         }
+         while (n > x);
+         x = x - j;
+      }
+
+      index_list[k - 1] = index_list[k - 2] + static_cast<std::size_t>(n) - static_cast<std::size_t>(x);
+
+      if (nth_combination_options::required_zero_based_index(options))
+      {
+         for (std::size_t i = 0; i < index_list.size(); --index_list[i++]);
+      }
+
+      std::copy(index_list.begin(),index_list.end(),out);
+
+      if (nth_combination_options::required_complete_index(options))
+      {
+         std::size_t initial_index = nth_combination_options::required_zero_based_index(options) ? 0 : 1;
+         std::vector<unsigned int> exist_table(r + initial_index,0);
+
+         for (std::size_t i = 0; i < index_list.size(); ++i)
+         {
+            exist_table[index_list[i]] = 1;
+         }
+
+         for (std::size_t i = initial_index; i < exist_table.size(); ++i)
+         {
+            if (0 == exist_table[i]) *(out++) = i;
+         }
+      }
+      return;
+   }
+
+   template<typename InputIterator, typename OutputIterator>
+   inline void nth_combination_sequence(const std::size_t& n,
+                                        const std::size_t& k,
+                                        const InputIterator begin,
+                                        const InputIterator end,
+                                        OutputIterator out,
+                                        nth_combination_options::type options = nth_combination_options::default_mode)
+   {
+      const std::size_t length = std::distance(begin,end);
+      std::vector<std::size_t> index_list;
+      nth_combination_sequence(n,length,k,std::back_inserter(index_list),options);
+      for (std::size_t i = 0; i < index_list.size(); ++i)
+      {
+         *(out++) = *(begin + index_list[i]);
+      }
+   }
+
    template<typename Iterator>
    class combination_iterator : public std::iterator<std::forward_iterator_tag,
                                                      std::pair<Iterator,Iterator>,

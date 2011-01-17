@@ -34,6 +34,7 @@ BUILD_LIST+=strtk_glober
 BUILD_LIST+=strtk_hexview
 BUILD_LIST+=strtk_ipv4_parser
 BUILD_LIST+=strtk_keyvalue_example
+BUILD_LIST+=strtk_nth_combination_example
 BUILD_LIST+=strtk_numstats
 BUILD_LIST+=strtk_parse_test
 BUILD_LIST+=strtk_period_parser
@@ -88,6 +89,9 @@ strtk_combinations: strtk_combinations.cpp strtk.hpp
 strtk_combinator_example: strtk_combinator_example.cpp strtk.hpp
 	$(COMPILER) $(OPTIONS) strtk_combinator_example strtk_combinator_example.cpp $(LINKER_OPT)
 
+strtk_nth_combination_example: strtk_nth_combination_example.cpp strtk.hpp
+	$(COMPILER) $(OPTIONS) strtk_nth_combination_example strtk_nth_combination_example.cpp $(LINKER_OPT)
+
 strtk_glober: strtk_glober.cpp strtk.hpp
 	$(COMPILER) $(OPTIONS) strtk_glober strtk_glober.cpp $(LINKER_OPT)
 
@@ -138,6 +142,7 @@ strip_bin:
 	strip -s strtk_hexview
 	strip -s strtk_ipv4_parser
 	strip -s strtk_keyvalue_example
+	strip -s strtk_nth_combination_example
 	strip -s strtk_numstats
 	strip -s strtk_parse_test
 	strip -s strtk_period_parser
@@ -161,6 +166,7 @@ valgrind_check:
 	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_hexview
 	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_ipv4_parser
 	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_keyvalue_example
+	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_nth_combination_example
 	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_numstats
 	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_parse_test
 	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_period_parser
