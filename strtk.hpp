@@ -8634,8 +8634,9 @@ namespace strtk
    {
       if (n  < k) return 0;
       if (0 == n) return 0;
-      if (0 == k) return 0;
+      if (0 == k) return 1;
       if (n == k) return 1;
+      if (1 == k) return n;
       typedef unsigned long long value_type;
       value_type* table = new value_type[static_cast<std::size_t>(n * n)];
       std::fill_n(table,n * n,0);
@@ -8650,7 +8651,7 @@ namespace strtk
 
          inline value_type& lookup(const value_type& n, const value_type& k)
          {
-            return table_[dimension_ * n + k];
+            return table_[(dimension_ * n) + k];
          }
 
          inline value_type compute(const value_type& n, const value_type& k)
