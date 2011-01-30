@@ -106,9 +106,7 @@ void nth_combination_example02()
       strtk::nth_combination_sequence(i,
                                       k,
                                       char_list.begin(),char_list.end(),
-                                      std::back_inserter(nth_combination),
-                                      strtk::nth_combination_options::zero_based_index |
-                                      strtk::nth_combination_options::complete_index);
+                                      std::back_inserter(nth_combination));
 
       std::cout << strtk::text::right_align(4,'0',i) << " | "
                 << strtk::join("",index_list)        << " | "
@@ -135,9 +133,7 @@ void nth_combination_example03()
    strtk::nth_combination_sequence(4,
                                    k,
                                    char_list.begin(),char_list.end(),
-                                   std::back_inserter(nth_combination),
-                                   strtk::nth_combination_options::zero_based_index |
-                                   strtk::nth_combination_options::complete_index);
+                                   std::back_inserter(nth_combination));
 
    //Iterate beginning from 5th combination to the end
    std::size_t i = 4;

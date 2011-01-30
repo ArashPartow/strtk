@@ -8638,20 +8638,19 @@ namespace strtk
       if (n == k) return 1;
       if (1 == k) return n;
       typedef unsigned long long value_type;
-      value_type* table = new value_type[static_cast<std::size_t>(n * n)];
-      std::fill_n(table,n * n,0);
       class n_choose_k_impl
       {
       public:
 
          n_choose_k_impl(value_type* table,const value_type& dimension)
          : table_(table),
-           dimension_(dimension)
+         dimension_(dimension / 2)
          {}
 
          inline value_type& lookup(const value_type& n, const value_type& k)
          {
-            return table_[(dimension_ * n) + k];
+            const std::size_t index = static_cast<std::size_t>((dimension_ * n) + ((k < (n - k)) ? k : (n - k)));
+            return table_[index];
          }
 
          inline value_type compute(const value_type& n, const value_type& k)
@@ -8668,41 +8667,22 @@ namespace strtk
          }
 
          value_type* table_;
-         value_type dimension_;
+         const value_type dimension_;
       };
+      std::size_t table_size = static_cast<std::size_t>(n * (n / 2) + (n & 1));
+      value_type* table = new value_type[table_size];
+      std::fill_n(table,table_size,0);
       value_type result = n_choose_k_impl(table,n).compute(n,k);
       delete [] table;
       return result;
    }
-
-   namespace nth_combination_options
-   {
-      typedef std::size_t type;
-      enum
-      {
-         default_mode     = 1,
-         zero_based_index = 1,
-         complete_index   = 2
-      };
-
-      static inline bool required_zero_based_index(const type& opt)
-      {
-         return zero_based_index == (opt & zero_based_index);
-      }
-
-      static inline bool required_complete_index(const type& opt)
-      {
-         return complete_index == (opt & complete_index);
-      }
-
-   } // namespace nth_combination_options
 
    template<typename OutputIterator>
    inline void nth_combination_sequence(unsigned long long n,
                                         const std::size_t& r,
                                         const std::size_t& k,
                                         OutputIterator out,
-                                        nth_combination_options::type options = nth_combination_options::default_mode)
+                                        const bool complete_index = true)
    {
       //Compute the indicies for the n'th combination of r-choose-k
       typedef unsigned long long value_type;
@@ -8729,25 +8709,20 @@ namespace strtk
       }
 
       index_list[k - 1] = index_list[k - 2] + static_cast<std::size_t>(n) - static_cast<std::size_t>(x);
-
-      if (nth_combination_options::required_zero_based_index(options))
-      {
-         for (std::size_t i = 0; i < index_list.size(); --index_list[i++]);
-      }
+      for (std::size_t i = 0; i < index_list.size(); --index_list[i++]);
 
       std::copy(index_list.begin(),index_list.end(),out);
 
-      if (nth_combination_options::required_complete_index(options))
+      if (complete_index)
       {
-         std::size_t initial_index = nth_combination_options::required_zero_based_index(options) ? 0 : 1;
-         std::vector<unsigned int> exist_table(r + initial_index,0);
+         std::vector<unsigned int> exist_table(r,0);
 
          for (std::size_t i = 0; i < index_list.size(); ++i)
          {
             exist_table[index_list[i]] = 1;
          }
 
-         for (std::size_t i = initial_index; i < exist_table.size(); ++i)
+         for (std::size_t i = 0; i < exist_table.size(); ++i)
          {
             if (0 == exist_table[i]) *(out++) = i;
          }
@@ -8761,11 +8736,11 @@ namespace strtk
                                         const InputIterator begin,
                                         const InputIterator end,
                                         OutputIterator out,
-                                        nth_combination_options::type options = nth_combination_options::default_mode)
+                                        const bool complete_index = true)
    {
       const std::size_t length = std::distance(begin,end);
       std::vector<std::size_t> index_list;
-      nth_combination_sequence(n,length,k,std::back_inserter(index_list),options);
+      nth_combination_sequence(n,length,k,std::back_inserter(index_list),complete_index);
       for (std::size_t i = 0; i < index_list.size(); ++i)
       {
          *(out++) = *(begin + index_list[i]);
