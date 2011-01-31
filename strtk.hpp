@@ -3301,43 +3301,40 @@ namespace strtk
 
    inline const char* first_non_repeated_char(const char* begin, const char* end)
    {
-      typedef std::pair<bool,unsigned long long> lut_element_type;
       static const std::size_t lut_size = 256;
-      lut_element_type lut[lut_size] =
-                       {
-                          lut_element_type(false,std::numeric_limits<unsigned long long>::max())
-                       };
+      unsigned long long lut[lut_size];
+
+      std::fill_n(lut,lut_size,std::numeric_limits<unsigned long long>::max());
+
+      static const unsigned long long not_yet_encountered = std::numeric_limits<unsigned long long>::max();
+      static const unsigned long long repeated = not_yet_encountered - 1;
 
       const char* itr = begin;
       unsigned long long position = 0;
       while (end != itr)
       {
-         lut_element_type& cell = lut[static_cast<unsigned int>(*itr)];
-         if (!cell.first)
+         unsigned long long& element = lut[static_cast<unsigned int>(*itr)];
+         if (not_yet_encountered == element)
          {
-            cell.second = position;
-            cell.first = true;
+            element = position;
          }
-         else if (std::numeric_limits<unsigned long long>::max() != cell.second)
+         else if (element < repeated)
          {
-            cell.second = std::numeric_limits<unsigned long long>::max();
+            element = repeated;
          }
          ++itr;
          ++position;
       }
 
-      position = std::numeric_limits<unsigned long long>::max();
+      position = repeated;
 
       for (std::size_t i = 0; i < lut_size; ++i)
       {
-         const lut_element_type& cell = lut[i];
-         if ((!cell.first) || (std::numeric_limits<unsigned long long>::max() == cell.second))
-            continue;
-         if (cell.second < position)
-            position = cell.second;
+         if (lut[i] < position)
+            position = lut[i];
       }
 
-      return (begin + position);
+      return (repeated != position) ? (begin + position) : end;
    }
 
    inline const unsigned char* first_non_repeated_char(const unsigned char* begin, const unsigned char* end)
@@ -8231,13 +8228,13 @@ namespace strtk
          }
       }
 
-      char operator()(const char c) const
+      inline char operator()(const char c) const
       {
          const int& v = table_[static_cast<unsigned int>(c)];
          return (v == -1) ? c : static_cast<char> (v);
       }
 
-      unsigned char operator()(const unsigned char c) const
+      inline unsigned char operator()(const unsigned char c) const
       {
          const int& v = table_[static_cast<unsigned int>(c)];
          return (v == -1) ? c : static_cast<unsigned char> (v);
@@ -8247,14 +8244,14 @@ namespace strtk
       int table_[256];
    };
 
-   std::string translate(const translation_table& trans_table, const std::string& s)
+   inline std::string translate(const translation_table& trans_table, const std::string& s)
    {
       std::string result = s;
       std::transform(result.begin(),result.end(),result.begin(),trans_table);
       return result;
    }
 
-   void translate_inplace(const translation_table& trans_table, std::string& s)
+   inline void translate_inplace(const translation_table& trans_table, std::string& s)
    {
       std::transform(s.begin(),s.end(),s.begin(),trans_table);
    }
