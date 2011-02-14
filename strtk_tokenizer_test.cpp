@@ -593,12 +593,18 @@ struct data_block
    }
 };
 
-void std_double_to_string(const double& d, std::string& s)
+inline void std_double_to_string(const double& d, std::string& s)
 {
    char buffer[128];
    std::size_t sz = sprintf(buffer,"%20.19e",d);
    buffer[sz] = 0;
    s.assign(buffer);
+}
+
+inline bool strtk_isnan(const double& v)
+{
+   volatile double d = v;
+   return d != d;
 }
 
 bool test_double_convert()
@@ -725,7 +731,8 @@ bool test_double_convert()
               "-6.06", "-0.606", "-6.0606", "-0.60606", "-6.060606", "-0.6060606", "-6.06060606", "-6.606060606",
               "-7.07", "-0.707", "-7.0707", "-0.70707", "-7.070707", "-0.7070707", "-7.07070707", "-7.707070707",
               "-8.08", "-0.808", "-8.0808", "-0.80808", "-8.080808", "-0.8080808", "-8.08080808", "-8.808080808",
-              "-9.09", "-0.909", "-9.0909", "-0.90909", "-9.090909", "-0.9090909", "-9.09090909", "-9.909090909"
+              "-9.09", "-0.909", "-9.0909", "-0.90909", "-9.090909", "-0.9090909", "-9.09090909", "-9.909090909",
+               "+inf",   "-inf",     "NAN",      "nan"
                };
 
    static const double d[] =
@@ -850,8 +857,12 @@ bool test_double_convert()
          -6.06, -0.606, -6.0606, -0.60606, -6.060606, -0.6060606, -6.06060606, -6.606060606,
          -7.07, -0.707, -7.0707, -0.70707, -7.070707, -0.7070707, -7.07070707, -7.707070707,
          -8.08, -0.808, -8.0808, -0.80808, -8.080808, -0.8080808, -8.08080808, -8.808080808,
-         -9.09, -0.909, -9.0909, -0.90909, -9.090909, -0.9090909, -9.09090909, -9.909090909
-               };
+         -9.09, -0.909, -9.0909, -0.90909, -9.090909, -0.9090909, -9.09090909, -9.909090909,
+         +std::numeric_limits<double>::infinity(),
+         -std::numeric_limits<double>::infinity(),
+          std::numeric_limits<double>::quiet_NaN(),
+          std::numeric_limits<double>::quiet_NaN()
+        };
 
    std::size_t d_size = sizeof(double_str) / sizeof(std::string);
 
@@ -865,7 +876,7 @@ bool test_double_convert()
          return false;
       }
 
-      if (d[i] != v)
+      if ((d[i] != v) && (!strtk_isnan(v)))
       {
          std::cout << "test_double_convert() double check[" << i << "]" << std::endl;
          return false;

@@ -1599,8 +1599,9 @@ namespace strtk
       std::size_t match_count = 0;
       while (end != (itr = std::search(itr, end, pattern_begin, pattern_end)))
       {
-         *out++ = std::make_pair(itr,itr + pattern_length);
+         *out = std::make_pair(itr,itr + pattern_length);
          itr += pattern_length;
+         ++out;
          ++match_count;
       }
       return match_count;
@@ -1632,8 +1633,9 @@ namespace strtk
 
       while (end != (itr = std::search(itr, end, pattern_begin, pattern_end, imatch_char)))
       {
-         *out++ = std::make_pair(itr,itr + pattern_length);
+         *out = std::make_pair(itr,itr + pattern_length);
          itr += pattern_length;
+         ++out;
          ++match_count;
       }
 
@@ -2832,7 +2834,8 @@ namespace strtk
       while (itr_end != itr)
       {
          token.assign((*itr)[mode].first,(*itr)[mode].second);
-         *(out++) = token;
+         *out = token;
+         ++out;
          ++itr;
          ++match_count;
       }
@@ -2900,7 +2903,8 @@ namespace strtk
       while (itr_end != itr)
       {
          token.assign((*itr)[mode].first,(*itr)[mode].second);
-         *(out++) = token;
+         *out = token;
+         ++out;
          ++itr;
          if (++match_count >= token_count)
             return match_count;
@@ -3121,7 +3125,8 @@ namespace strtk
          range.first = range.second;
          range.second += increment_amount;
          length -= increment_amount;
-         *(out++) = range;
+         *out = range;
+         ++out;
          ++match_count;
       }
       return match_count;
@@ -8076,10 +8081,12 @@ namespace strtk
       InputIterator itr = begin;
       while (end != itr)
       {
-         *out++ = *itr;
+         *out = *itr;
+         ++out;
          if (ins(*itr++))
          {
-            *out++ = ins();
+            *out = ins();
+            ++out;
             size += 2;
          }
          else
@@ -8094,7 +8101,8 @@ namespace strtk
       Iterator itr = begin;
       while (end != itr)
       {
-         *(itr++) = value++;
+         *itr = value++;
+         ++itr;
       }
    }
 
@@ -8133,7 +8141,8 @@ namespace strtk
    {
       while (count)
       {
-         *out++ = value++;
+         *out = value++;
+         ++out;
          --count;
       }
    }
@@ -8163,7 +8172,8 @@ namespace strtk
       InputIterator itr = begin;
       while (end != itr)
       {
-         const std::string& s = *itr++;
+         const std::string& s = *itr;
+         ++itr;
          if (s.size() < r0)
             continue;
          (*out++) = s.substr(r0,std::min(r1,s.size()) - r0);
@@ -8415,8 +8425,9 @@ namespace strtk
       while (!index.empty())
       {
          std::size_t idx = static_cast<std::size_t>(index.size() * rng());
-         *(out++) = *(begin + index[idx]);
+         *out = *(begin + index[idx]);
          index.erase(index.begin() + idx);
+         ++out;
       }
    }
 
@@ -8461,8 +8472,9 @@ namespace strtk
       while (set_size)
       {
          std::size_t idx = static_cast<std::size_t>(index.size() * rng());
-         *(out++) = *(begin + index[idx]);
+         *out = *(begin + index[idx]);
          index.erase(index.begin() + idx);
+         ++out;
          --set_size;
       }
       return true;
@@ -8721,10 +8733,13 @@ namespace strtk
 
          for (std::size_t i = 0; i < exist_table.size(); ++i)
          {
-            if (0 == exist_table[i]) *(out++) = i;
+            if (0 == exist_table[i])
+            {
+               *out = i;
+               ++out;
+            }
          }
       }
-      return;
    }
 
    template<typename InputIterator, typename OutputIterator>
@@ -8740,7 +8755,8 @@ namespace strtk
       nth_combination_sequence(n,length,k,std::back_inserter(index_list),complete_index);
       for (std::size_t i = 0; i < index_list.size(); ++i)
       {
-         *(out++) = *(begin + index_list[i]);
+         *out = *(begin + index_list[i]);
+         ++out;
       }
    }
 
@@ -8866,7 +8882,9 @@ namespace strtk
          ushort_string_adptr(std::string& str)
          : s(str)
          {}
+
          std::string& s;
+
      private:
         ushort_string_adptr operator=(const ushort_string_adptr&);
       };
@@ -9876,7 +9894,7 @@ namespace strtk
 
       inline bool is_uppercase_letter(const char c)
       {
-         return (('a' <= c) && ( c <= 'z'));
+         return (('A' <= c) && ( c <= 'Z'));
       }
 
       inline bool is_digit(const char c)
@@ -10426,8 +10444,50 @@ namespace strtk
             ++itr;
             negative = true;
          }
+
          if (end == itr)
             return false;
+
+         // Check for Infinity (inf,INF,InF,iNf...)
+         if (('i' == *itr) || ('I' == *itr))
+         {
+            ++itr;
+            if (('n' != *itr) && ('N' != *itr))
+               return false;
+
+            ++itr;
+            if (('f' != *itr) && ('F' != *itr))
+               return false;
+
+            ++itr;
+            if (end != itr) return false;
+
+            if (negative)
+               t = -std::numeric_limits<T>::infinity();
+            else
+               t =  std::numeric_limits<T>::infinity();
+
+            return true;
+         }
+         // Check for NaN (nan,NAN,NaN,nAn...)
+         else if (('n' == *itr) || ('N' == *itr))
+         {
+            ++itr;
+            if (('a' != *itr) && ('A' != *itr))
+               return false;
+
+            ++itr;
+            if (('n' != *itr) && ('N' != *itr))
+               return false;
+
+            ++itr;
+            if (end != itr)
+               return false;
+
+            t = std::numeric_limits<T>::quiet_NaN();
+
+            return true;
+         }
 
          bool instate = false;
 
