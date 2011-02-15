@@ -10432,45 +10432,9 @@ namespace strtk
       }
 
       template<typename Iterator, typename T>
-      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, T& t, real_type_tag)
+      inline bool parse_nan(Iterator& itr, const Iterator end, T& t)
       {
-         if (end == itr) return false;
-         double d = 0.0;
-         bool negative = false;
-         if ('+' == *itr)
-            ++itr;
-         else if ('-' == *itr)
-         {
-            ++itr;
-            negative = true;
-         }
-
-         if (end == itr)
-            return false;
-
-         // Check for Infinity (inf,INF,InF,iNf...)
-         if (('i' == *itr) || ('I' == *itr))
-         {
-            ++itr;
-            if (('n' != *itr) && ('N' != *itr))
-               return false;
-
-            ++itr;
-            if (('f' != *itr) && ('F' != *itr))
-               return false;
-
-            ++itr;
-            if (end != itr) return false;
-
-            if (negative)
-               t = -std::numeric_limits<T>::infinity();
-            else
-               t =  std::numeric_limits<T>::infinity();
-
-            return true;
-         }
-         // Check for NaN (nan,NAN,NaN,nAn...)
-         else if (('n' == *itr) || ('N' == *itr))
+         if (('n' == *itr) || ('N' == *itr))
          {
             ++itr;
             if (('a' != *itr) && ('A' != *itr))
@@ -10487,6 +10451,66 @@ namespace strtk
             t = std::numeric_limits<T>::quiet_NaN();
 
             return true;
+         }
+         else
+            return false;
+      }
+
+      template<typename Iterator, typename T>
+      inline bool parse_inf(Iterator& itr, const Iterator end, T& t, bool negative)
+      {
+         static const char inf_uc[] = "INFINITY";
+         static const char inf_lc[] = "infinity";
+         static const std::size_t inf_length = 8;
+         if (std::distance(itr,end) > static_cast<int>(inf_length))
+            return false;
+         const char* lc_itr = inf_lc;
+         const char* uc_itr = inf_uc;
+         while (end != itr)
+         {
+            if ((*lc_itr == *itr) || (*uc_itr == *itr))
+            {
+               ++itr;
+               ++lc_itr;
+               ++uc_itr;
+               continue;
+            }
+            else
+               return false;
+         }
+
+         if (negative)
+            t = -std::numeric_limits<T>::infinity();
+         else
+            t =  std::numeric_limits<T>::infinity();
+
+         return true;
+      }
+
+      template<typename Iterator, typename T>
+      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, T& t, real_type_tag)
+      {
+         if (end == itr) return false;
+         double d = 0.0;
+         bool negative = false;
+         if ('+' == *itr)
+            ++itr;
+         else if ('-' == *itr)
+         {
+            ++itr;
+            negative = true;
+         }
+
+         if (end == itr)
+            return false;
+
+         if (('i' == *itr) || ('I' == *itr))
+         {
+            return parse_inf(itr,end,t,negative);
+         }
+         else if (('n' == *itr) || ('N' == *itr))
+         {
+            return parse_nan(itr,end,t);
          }
 
          bool instate = false;
@@ -10553,6 +10577,26 @@ namespace strtk
 
                if (('f' == c) || ('F' == c) || ('l' == c) || ('L' == c))
                   ++itr;
+               else if ('#' == c)
+               {
+                  ++itr;
+                  if (end == itr)
+                     return false;
+
+                  if ((10.0 != d) || (exponent != -1))
+                     return false;
+
+                  if (('i' == *itr) || ('I' == *itr))
+                  {
+                     return parse_inf(itr,end,t,negative);
+                  }
+                  else if (('n' == *itr) || ('N' == *itr))
+                  {
+                     return parse_nan(itr,end,t);
+                  }
+                  else
+                     return false;
+               }
             }
          }
 

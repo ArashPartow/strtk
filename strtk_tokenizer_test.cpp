@@ -732,7 +732,16 @@ bool test_double_convert()
               "-7.07", "-0.707", "-7.0707", "-0.70707", "-7.070707", "-0.7070707", "-7.07070707", "-7.707070707",
               "-8.08", "-0.808", "-8.0808", "-0.80808", "-8.080808", "-0.8080808", "-8.08080808", "-8.808080808",
               "-9.09", "-0.909", "-9.0909", "-0.90909", "-9.090909", "-0.9090909", "-9.09090909", "-9.909090909",
-               "+inf",   "-inf",     "NAN",      "nan"
+               "+inf",         "-inf",    
+               "+INF",         "-INF",    
+               "+1.0#inf", "-1.0#inf", 
+               "+1.0#INF", "-1.0#INF", 
+               "+infinity",         "-infinity",
+               "+INFINITY",         "-INFINITY",
+               "+1.0#infinity", "-1.0#infinity",
+               "+1.0#INFINITY", "-1.0#INFINITY",
+                    "NAN",    "nan",
+                "1.0#NAN", "1.0#nan"
                };
 
    static const double d[] =
@@ -858,10 +867,16 @@ bool test_double_convert()
          -7.07, -0.707, -7.0707, -0.70707, -7.070707, -0.7070707, -7.07070707, -7.707070707,
          -8.08, -0.808, -8.0808, -0.80808, -8.080808, -0.8080808, -8.08080808, -8.808080808,
          -9.09, -0.909, -9.0909, -0.90909, -9.090909, -0.9090909, -9.09090909, -9.909090909,
-         +std::numeric_limits<double>::infinity(),
-         -std::numeric_limits<double>::infinity(),
-          std::numeric_limits<double>::quiet_NaN(),
-          std::numeric_limits<double>::quiet_NaN()
+         +std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(),
+         +std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(),
+         +std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(),
+         +std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(),
+         +std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(),
+         +std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(),
+         +std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(),
+         +std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(),
+          std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+          std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
         };
 
    std::size_t d_size = sizeof(double_str) / sizeof(std::string);
