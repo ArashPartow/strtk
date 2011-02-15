@@ -10434,26 +10434,30 @@ namespace strtk
       template<typename Iterator, typename T>
       inline bool parse_nan(Iterator& itr, const Iterator end, T& t)
       {
-         if (('n' == *itr) || ('N' == *itr))
-         {
-            ++itr;
-            if (('a' != *itr) && ('A' != *itr))
-               return false;
+         static const char nan_uc[] = "NAN";
+         static const char nan_lc[] = "nan";
+         static const std::size_t nan_length = 3;
 
-            ++itr;
-            if (('n' != *itr) && ('N' != *itr))
-               return false;
-
-            ++itr;
-            if (end != itr)
-               return false;
-
-            t = std::numeric_limits<T>::quiet_NaN();
-
-            return true;
-         }
-         else
+         if (std::distance(itr,end) != static_cast<int>(nan_length))
             return false;
+
+         const char* nan_itr   = ('n' == *itr) ? nan_lc : nan_uc;
+
+         while (end != itr)
+         {
+            if (*nan_itr == *itr)
+            {
+               ++itr;
+               ++nan_itr;
+               continue;
+            }
+            else
+               return false;
+         }
+
+         t = std::numeric_limits<T>::quiet_NaN();
+
+         return true;
       }
 
       template<typename Iterator, typename T>
@@ -10462,22 +10466,29 @@ namespace strtk
          static const char inf_uc[] = "INFINITY";
          static const char inf_lc[] = "infinity";
          static const std::size_t inf_length = 8;
+
          if (std::distance(itr,end) > static_cast<int>(inf_length))
             return false;
-         const char* lc_itr = inf_lc;
-         const char* uc_itr = inf_uc;
+
+         const char* inf_itr   = ('i' == *itr) ? inf_lc : inf_uc;
+         const bool lower_case = ('i' == *itr);
+
          while (end != itr)
          {
-            if ((*lc_itr == *itr) || (*uc_itr == *itr))
+            if (*inf_itr == *itr)
             {
                ++itr;
-               ++lc_itr;
-               ++uc_itr;
+               ++inf_itr;
                continue;
             }
             else
                return false;
          }
+
+         const std::size_t length = static_cast<std::size_t>(std::distance(lower_case ? inf_lc : inf_uc,inf_itr));
+
+         if ((3 != length) && (inf_length != length))
+            return false;
 
          if (negative)
             t = -std::numeric_limits<T>::infinity();
