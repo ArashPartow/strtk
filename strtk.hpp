@@ -1338,10 +1338,10 @@ namespace strtk
    }
 
    template<typename InputIterator, typename OutputIterator>
-   std::size_t replace_pattern(const InputIterator s_begin, const InputIterator s_end, // input
-                               const InputIterator p_begin, const InputIterator p_end, // pattern
-                               const InputIterator r_begin, const InputIterator r_end, // replacement
-                               OutputIterator out)
+   inline std::size_t replace_pattern(const InputIterator s_begin, const InputIterator s_end, // input
+                                      const InputIterator p_begin, const InputIterator p_end, // pattern
+                                      const InputIterator r_begin, const InputIterator r_end, // replacement
+                                      OutputIterator out)
    {
       typedef typename std::iterator_traits<InputIterator>::value_type T;
 
@@ -5640,7 +5640,7 @@ namespace strtk
          mutable strtk::multiple_char_delimiter_predicate mdp_;
       };
 
-      bool load()
+      inline bool load()
       {
          if (load_from_file_ && !load_buffer_from_file())
             return false;
@@ -5695,7 +5695,7 @@ namespace strtk
          return true;
       }
 
-      bool load_buffer_from_file()
+      inline bool load_buffer_from_file()
       {
          std::ifstream stream(file_name_.c_str(),std::ios::binary);
          if (!stream)
@@ -8646,7 +8646,9 @@ namespace strtk
       if (0 == k) return 1;
       if (n == k) return 1;
       if (1 == k) return n;
+
       typedef unsigned long long value_type;
+
       class n_choose_k_impl
       {
       public:
@@ -8658,8 +8660,8 @@ namespace strtk
 
          inline value_type& lookup(const value_type& n, const value_type& k)
          {
-            const std::size_t index = static_cast<std::size_t>((dimension_ * n) + ((k < (n - k)) ? k : (n - k)));
-            return table_[index];
+            const std::size_t difference = static_cast<std::size_t>(n - k);
+            return table_[static_cast<std::size_t>((dimension_ * n) + ((k < difference) ? k : difference))];
          }
 
          inline value_type compute(const value_type& n, const value_type& k)
@@ -8678,11 +8680,13 @@ namespace strtk
          value_type* table_;
          const value_type dimension_;
       };
+
       std::size_t table_size = static_cast<std::size_t>(n * (n / 2) + (n & 1));
       value_type* table = new value_type[table_size];
       std::fill_n(table,table_size,0);
       value_type result = n_choose_k_impl(table,n).compute(n,k);
       delete [] table;
+
       return result;
    }
 
@@ -8697,10 +8701,10 @@ namespace strtk
       typedef unsigned long long value_type;
 
       std::vector<std::size_t> index_list(k,0);
-      value_type j;
+      value_type j = 0;
       value_type x = 0;
       ++n;
-      for (std::size_t i = 1; i <= (k - 1); i++)
+      for (std::size_t i = 1; i <= (k - 1); ++i)
       {
          index_list[i - 1] = 0;
          if (1 < i)
@@ -8711,10 +8715,10 @@ namespace strtk
          {
             index_list[i - 1] = index_list[i - 1] + 1;
             j = n_choose_k(r - index_list[i - 1], k - i);
-            x = x + j;
+            x += j;
          }
          while (n > x);
-         x = x - j;
+         x -= j;
       }
 
       index_list[k - 1] = index_list[k - 2] + static_cast<std::size_t>(n) - static_cast<std::size_t>(x);
