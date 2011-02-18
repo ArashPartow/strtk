@@ -732,10 +732,10 @@ bool test_double_convert()
               "-7.07", "-0.707", "-7.0707", "-0.70707", "-7.070707", "-0.7070707", "-7.07070707", "-7.707070707",
               "-8.08", "-0.808", "-8.0808", "-0.80808", "-8.080808", "-0.8080808", "-8.08080808", "-8.808080808",
               "-9.09", "-0.909", "-9.0909", "-0.90909", "-9.090909", "-0.9090909", "-9.09090909", "-9.909090909",
-               "+inf",         "-inf",    
-               "+INF",         "-INF",    
-               "+1.0#inf", "-1.0#inf", 
-               "+1.0#INF", "-1.0#INF", 
+               "+inf",         "-inf",
+               "+INF",         "-INF",
+               "+1.0#inf", "-1.0#inf",
+               "+1.0#INF", "-1.0#INF",
                "+infinity",         "-infinity",
                "+INFINITY",         "-INFINITY",
                "+1.0#infinity", "-1.0#infinity",
@@ -1674,6 +1674,56 @@ bool test_replace_pattern()
    return true;
 }
 
+bool test_n_choose_k()
+{
+   assert(strtk::n_choose_k(10, 0) ==   1LL);
+   assert(strtk::n_choose_k(10, 1) ==  10LL);
+   assert(strtk::n_choose_k(10, 2) ==  45LL);
+   assert(strtk::n_choose_k(10, 3) == 120LL);
+   assert(strtk::n_choose_k(10, 4) == 210LL);
+   assert(strtk::n_choose_k(10, 5) == 252LL);
+   assert(strtk::n_choose_k(10, 6) == 210LL);
+   assert(strtk::n_choose_k(10, 7) == 120LL);
+   assert(strtk::n_choose_k(10, 8) ==  45LL);
+   assert(strtk::n_choose_k(10, 9) ==  10LL);
+   assert(strtk::n_choose_k(10,10) ==   1LL);
+   assert(strtk::n_choose_k(11, 0) ==   1LL);
+   assert(strtk::n_choose_k(11, 1) ==  11LL);
+   assert(strtk::n_choose_k(11, 2) ==  55LL);
+   assert(strtk::n_choose_k(11, 3) == 165LL);
+   assert(strtk::n_choose_k(11, 4) == 330LL);
+   assert(strtk::n_choose_k(11, 5) == 462LL);
+   assert(strtk::n_choose_k(11, 6) == 462LL);
+   assert(strtk::n_choose_k(11, 7) == 330LL);
+   assert(strtk::n_choose_k(11, 8) == 165LL);
+   assert(strtk::n_choose_k(11, 9) ==  55LL);
+   assert(strtk::n_choose_k(11,10) ==  11LL);
+   assert(strtk::n_choose_k(11,11) ==   1LL);
+   assert(strtk::n_choose_k(100,   0) ==              1LL);
+   assert(strtk::n_choose_k(100,   1) ==            100LL);
+   assert(strtk::n_choose_k(100,   2) ==           4950LL);
+   assert(strtk::n_choose_k(100,   3) ==         161700LL);
+   assert(strtk::n_choose_k(100,   4) ==        3921225LL);
+   assert(strtk::n_choose_k(100,   5) ==       75287520LL);
+   assert(strtk::n_choose_k(100,   6) ==     1192052400LL);
+   assert(strtk::n_choose_k(100,   7) ==    16007560800LL);
+   assert(strtk::n_choose_k(100,   8) ==   186087894300LL);
+   assert(strtk::n_choose_k(100,   9) ==  1902231808400LL);
+   assert(strtk::n_choose_k(100,  10) == 17310309456440LL);
+   assert(strtk::n_choose_k(100, 100) ==              1LL);
+   assert(strtk::n_choose_k(100,  99) ==            100LL);
+   assert(strtk::n_choose_k(100,  98) ==           4950LL);
+   assert(strtk::n_choose_k(100,  97) ==         161700LL);
+   assert(strtk::n_choose_k(100,  96) ==        3921225LL);
+   assert(strtk::n_choose_k(100,  95) ==       75287520LL);
+   assert(strtk::n_choose_k(100,  94) ==     1192052400LL);
+   assert(strtk::n_choose_k(100,  93) ==    16007560800LL);
+   assert(strtk::n_choose_k(100,  92) ==   186087894300LL);
+   assert(strtk::n_choose_k(100,  91) ==  1902231808400LL);
+   assert(strtk::n_choose_k(100,  90) == 17310309456440LL);
+   return true;
+}
+
 int main()
 {
    bool result = true;
@@ -1690,5 +1740,6 @@ int main()
    result &= test_parse3();
    result &= test_parse4();
    result &= test_replace_pattern();
+   result &= test_n_choose_k();
    return (false == result ? 1 : 0);
 }
