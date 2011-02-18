@@ -1676,6 +1676,7 @@ bool test_replace_pattern()
 
 bool test_n_choose_k()
 {
+   strtk::initialize_n_choose_k();
    assert(strtk::n_choose_k(10, 0) ==   1LL);
    assert(strtk::n_choose_k(10, 1) ==  10LL);
    assert(strtk::n_choose_k(10, 2) ==  45LL);

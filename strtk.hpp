@@ -8711,7 +8711,7 @@ namespace strtk
       {
          dimension = n;
          table = new value_type[table_size];
-         std::fill_n(table,table_size,0);
+         std::fill_n(table,table_size,0LL);
       }
 
       value_type result = n_choose_k_impl(table,dimension).compute(n,k);
@@ -8720,6 +8720,18 @@ namespace strtk
          delete [] table;
 
       return result;
+   }
+
+   inline void initialize_n_choose_k()
+   {
+      const unsigned long long max_n = 100LL;
+      for (unsigned long long n = 0; n < max_n; ++n)
+      {
+         for (unsigned long long k = 0; k < max_n; ++k)
+         {
+            n_choose_k(n,k);
+         }
+      }
    }
 
    template<typename OutputIterator>
