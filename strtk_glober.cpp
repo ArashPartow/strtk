@@ -35,6 +35,7 @@
                M?kef*le matched Makefile
                *.txt matched readme.txt
                *.cpp matched strtk_combinations.cpp
+               *.cpp matched strtk_combinator_example.cpp
                *.cpp matched strtk_converters_example.cpp
                *.cpp matched strtk_examples.cpp
                *.cpp matched strtk_glober.cpp
@@ -42,6 +43,7 @@
                *.hpp matched strtk.hpp
                *.cpp matched strtk_ipv4_parser.cpp
                *.cpp matched strtk_keyvalue_example.cpp
+               *.cpp matched strtk_nth_combination_example.cpp
                *.cpp matched strtk_numstats.cpp
                *.cpp matched strtk_parse_test.cpp
                *.cpp matched strtk_period_parser.cpp
@@ -54,6 +56,8 @@
                *.cpp matched strtk_tokengrid_example.cpp
                *.cpp matched strtk_tokenizer_cmp.cpp
                *.cpp matched strtk_tokenizer_test.cpp
+               *.cpp matched strtk_wordfreq.cpp
+
 */
 
 
@@ -77,7 +81,7 @@ public:
       std::sort(pattern_list_.begin(),pattern_list_.end());
    }
 
-   void operator()(const std::string& s) const
+   inline void operator()(const std::string& s) const
    {
       for (std::size_t i = 0; i < pattern_list_.size(); ++i)
       {
