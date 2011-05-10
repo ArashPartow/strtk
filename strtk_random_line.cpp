@@ -54,7 +54,7 @@ public:
    inline void operator()(const std::string& s)
    {
       if (rng_() < (1.0 / line_count_))
-            line_ = s;
+         line_ = s;
       ++line_count_;
    }
 

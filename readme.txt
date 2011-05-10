@@ -18,12 +18,12 @@ http://www.opensource.org/licenses/cpl1.0.php
 [DOWNLOADS & UPDATES]
 All updates  and the most recent version of the C++ String Toolkit can
 be found at:
- (1) http://www.partow.net/programming/strtk/index.html
- (2) http://strtk.partow.net
+(1) http://www.partow.net/programming/strtk/index.html
+(2) http://strtk.partow.net
 
 Code repository:
- (1) http://code.google.com/p/strtk/
- (2) svn checkout http://strtk.googlecode.com/svn/trunk/ strtk
+(1) http://code.google.com/p/strtk/
+(2) svn checkout http://strtk.googlecode.com/svn/trunk/ strtk
 
 
 [INSTALLATION]
@@ -38,10 +38,10 @@ is included or as a compiler switch:
 
 (3) It is advisable to have either Boost installed or a TR1  compliant
 C++ standard library. Installation of Boost on:
-   (*) Win32  : http://www.boostpro.com/download
-   (*) Ubuntu : boost packages via apt-get or synaptic
-   (*) Fedora : yum -y install boost-devel
-   (*) http://www.boost.org/doc/libs/release/more/getting_started/index.html
+(*) Win32  : http://www.boostpro.com/download
+(*) Ubuntu : boost packages via apt-get or synaptic
+(*) Fedora : yum -y install boost-devel
+(*) http://www.boost.org/doc/libs/release/more/getting_started/index.html
 
 
 [COMPILATION]

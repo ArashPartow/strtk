@@ -10127,14 +10127,14 @@ namespace strtk
       template<> struct numeric<short>              { enum { length =  5, size = 16, bound_length =  4}; };
       template<> struct numeric<unsigned short>     { enum { length =  5, size = 16, bound_length =  4}; };
 
-      template<> struct numeric<int>                { enum { length = 10, size = 16, bound_length =  8}; };
-      template<> struct numeric<unsigned int>       { enum { length = 10, size = 16, bound_length =  8}; };
+      template<> struct numeric<int>                { enum { length = 10, size = 16, bound_length =  9}; };
+      template<> struct numeric<unsigned int>       { enum { length = 10, size = 16, bound_length =  9}; };
 
-      template<> struct numeric<long>               { enum { length = 10, size = 16, bound_length =  8}; };
-      template<> struct numeric<unsigned long>      { enum { length = 10, size = 16, bound_length =  8}; };
+      template<> struct numeric<long>               { enum { length = 10, size = 16, bound_length =  9}; };
+      template<> struct numeric<unsigned long>      { enum { length = 10, size = 16, bound_length =  9}; };
 
       template<> struct numeric<long long>          { enum { length = 19, size = 24, bound_length = 18}; };
-      template<> struct numeric<unsigned long long> { enum { length = 19, size = 24, bound_length = 18}; };
+      template<> struct numeric<unsigned long long> { enum { length = 20, size = 24, bound_length = 19}; };
 
       template<> struct numeric<float>              { enum { min_exp =  -38, max_exp =  +38, precision = 10}; };
       template<> struct numeric<double>             { enum { min_exp = -308, max_exp = +308, precision = 15}; };
@@ -10319,10 +10319,12 @@ namespace strtk
 
          T t = 0;
 
+         static const std::size_t bound_length = numeric<T>::bound_length;
+
          if (0 != length)
          {
             static const std::size_t radix = 10;
-            const Iterator interim_end = itr + length - std::min<std::size_t>(numeric<T>::bound_length,length);
+            const Iterator interim_end = itr + std::min<std::size_t>(bound_length,length);
             T digit = 0;
 
             while (interim_end != itr)
@@ -10339,20 +10341,28 @@ namespace strtk
 
             if (interim_end != end)
             {
-               const T tmp = t;
-               while (end != itr)
+               if (1 == std::distance(interim_end,end))
                {
+                  typedef unsigned long long num_type;
+                  static const num_type max               = static_cast<num_type>(std::numeric_limits<T>::max());
+                  static const num_type penultimate_bound = static_cast<num_type>(max / 10);
+                  static const num_type final_digit       = static_cast<num_type>(max % 10);
+
                   digit = static_cast<T>(digit_table[static_cast<unsigned int>(*itr)]);
                   if (is_valid_digit(digit))
                   {
+                     if (t > penultimate_bound)
+                        return false;
+                     else if ((penultimate_bound == t) && (final_digit < digit))
+                        return false;
                      t = (t * radix) + digit;
                      ++itr;
                   }
                   else
                      return false;
                }
-
-               if (tmp > t) return false;
+               else
+                  return false;
             }
          }
 
@@ -10385,10 +10395,12 @@ namespace strtk
 
          T t = 0;
 
+         static const std::size_t bound_length = numeric<T>::bound_length;
+
          if (0 != length)
          {
             static const std::size_t radix = 10;
-            const Iterator interim_end = itr + length - std::min<std::size_t>(numeric<T>::bound_length,length);
+            const Iterator interim_end = itr + std::min<std::size_t>(bound_length,length);
             T digit = 0;
 
             while (interim_end != itr)
@@ -10405,21 +10417,50 @@ namespace strtk
 
             if (interim_end != end)
             {
-               const T tmp = t;
-               while (end != itr)
+               if (1 == std::distance(interim_end,end))
                {
+                  typedef unsigned long long num_type;
+                  static const num_type max = static_cast<num_type>(std::numeric_limits<T>::max());
+                  static const num_type min = static_cast<num_type>(static_cast<long long>(-1) * std::numeric_limits<T>::min());
+                  static const num_type positive_penultimate_bound = static_cast<num_type>(max / 10);
+                  static const num_type negative_penultimate_bound = static_cast<num_type>(min / 10);
+                  static const num_type positive_final_digit = static_cast<num_type>(max % 10);
+                  static const num_type negative_final_digit = static_cast<num_type>(min % 10);
+
                   digit = static_cast<T>(digit_table[static_cast<unsigned int>(*itr)]);
                   if (is_valid_digit(digit))
                   {
+                     if (negative)
+                     {
+                        if (static_cast<num_type>(t) > negative_penultimate_bound)
+                           return false;
+                        else if (
+                                 (negative_penultimate_bound == static_cast<num_type>(t)) &&
+                                 (negative_final_digit < static_cast<num_type>(digit))
+                                )
+                           return false;
+                     }
+                     else
+                     {
+                        if (static_cast<num_type>(t) > positive_penultimate_bound)
+                           return false;
+                        else if (
+                                 (positive_penultimate_bound == static_cast<num_type>(t)) &&
+                                 (positive_final_digit < static_cast<num_type>(digit))
+                                )
+                           return false;
+                     }
+
                      t = (t * radix) + digit;
                      ++itr;
                   }
                   else
                      return false;
                }
-
-               if (tmp > t) return false;
+               else
+                  return false;
             }
+
          }
 
          result = static_cast<T>((negative) ? -t : t);
@@ -10492,7 +10533,7 @@ namespace strtk
          if (std::distance(itr,end) != static_cast<int>(nan_length))
             return false;
 
-         const char* nan_itr   = ('n' == *itr) ? nan_lc : nan_uc;
+         const char* nan_itr = ('n' == *itr) ? nan_lc : nan_uc;
 
          while (end != itr)
          {
@@ -13320,6 +13361,5 @@ namespace strtk
    } // namespace information
 
 } // namespace strtk
-
 
 #endif

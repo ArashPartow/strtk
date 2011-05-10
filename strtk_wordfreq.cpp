@@ -59,7 +59,7 @@ public:
       strtk::split(p_,s,*this,strtk::split_options::compress_delimiters);
    }
 
-   void operator=(const strtk::std_string::iterator_type& r)
+   inline void operator=(const strtk::std_string::iterator_type& r)
    {
       if (r.first == r.second) return;
       ++word_count_;
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
 
    while (word_list.end() != itr)
    {
-      printf("%s %10d %10.9f\n",
+      printf("%s %10ud %10.9f\n",
              strtk::text::right_align(15,' ',itr->first).c_str(),
              itr->second,
              (1.0 * itr->second) / word_count);
