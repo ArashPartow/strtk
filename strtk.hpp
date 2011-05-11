@@ -8688,6 +8688,14 @@ namespace strtk
 
          value_type* table_;
          const value_type dimension_;
+
+      private:
+
+         inline n_choose_k_impl& operator=(const n_choose_k_impl&)
+         {
+            return *this;
+         }
+
       };
 
       static const std::size_t static_table_dim = 100;
@@ -10263,6 +10271,17 @@ namespace strtk
       #define strtk_register_userdef_type_sink(T)\
       namespace strtk { namespace details { strtk_register_sink_type_tag(T) }}
 
+      template<typename T>
+      struct precision
+      {  static void set(std::iostream&) {}  };
+
+      #define strtk_register_iostream_precision(T)\
+      template<> struct precision<T> { static void set(std::iostream& s, const std::size_t& p = 10) { s.precision(p);} };
+
+      strtk_register_iostream_precision(float)
+      strtk_register_iostream_precision(double)
+      strtk_register_iostream_precision(long double)
+
       template<typename Iterator, typename T, typename Tag>
       inline bool string_to_type_converter_impl(Iterator& begin, const Iterator end, T& t, not_supported_type_tag)
       {
@@ -10843,6 +10862,7 @@ namespace strtk
             try
             {
                std::stringstream ss;
+               precision<T>::set(ss);
                ss << t;
                s = ss.str();
             }

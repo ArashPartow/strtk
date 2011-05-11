@@ -35,6 +35,7 @@
 #include <list>
 #include <limits>
 #include <cmath>
+#include <cassert>
 
 #include "strtk.hpp"
 
