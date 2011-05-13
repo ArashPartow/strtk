@@ -10342,20 +10342,61 @@ namespace strtk
 
          if (0 != length)
          {
-            static const std::size_t radix = 10;
-            const Iterator interim_end = itr + std::min<std::size_t>(bound_length,length);
-            T digit = 0;
+            static const T radix[] = {
+                                        static_cast<T>(1),
+                                        static_cast<T>(10),
+                                        static_cast<T>(100),
+                                        static_cast<T>(1000),
+                                        static_cast<T>(10000)
+                                     };
+
+            std::size_t interim_length = std::min<std::size_t>(bound_length,length);
+            const Iterator interim_end = itr + interim_length;
+
+            unsigned int digit[4];
+
+            while (interim_length >= 4)
+            {
+               digit[0] = static_cast<unsigned int>((*(itr + 0)) - '0');
+               digit[1] = static_cast<unsigned int>((*(itr + 1)) - '0');
+               digit[2] = static_cast<unsigned int>((*(itr + 2)) - '0');
+               digit[3] = static_cast<unsigned int>((*(itr + 3)) - '0');
+
+               if (digit[0] > 9) return false;
+               if (digit[1] > 9) return false;
+               if (digit[2] > 9) return false;
+               if (digit[3] > 9) return false;
+
+               t = static_cast<T>(digit[0] * radix[3]) + static_cast<T>(digit[1] * radix[2]) +
+                   static_cast<T>(digit[2] * radix[1]) + static_cast<T>(digit[3]) +
+                   (t * radix[4]);
+
+               itr += 4;
+               interim_length -= 4;
+            }
+
+            while (interim_length >= 2)
+            {
+               digit[0] = static_cast<unsigned int>((*(itr + 0)) - '0');
+               digit[1] = static_cast<unsigned int>((*(itr + 1)) - '0');
+
+               if (digit[0] > 9) return false;
+               if (digit[1] > 9) return false;
+
+               t = static_cast<T>(digit[0] * radix[1]) +
+                   static_cast<T>(digit[1]) +
+                   (t * radix[2]);
+
+               itr += 2;
+               interim_length -= 2;
+            }
 
             while (interim_end != itr)
             {
-               digit = static_cast<T>(digit_table[static_cast<unsigned int>(*itr)]);
-               if (is_valid_digit(digit))
-               {
-                  t = (t * radix) + digit;
-                  ++itr;
-               }
-               else
-                  return false;
+               digit[0] = static_cast<unsigned int>((*(itr + 0)) - '0');
+               if (digit[0] > 9) return false;
+               t = static_cast<T>(digit[0]) + (t * radix[1]);
+               ++itr;
             }
 
             if (interim_end != end)
@@ -10367,14 +10408,14 @@ namespace strtk
                   static const num_type penultimate_bound = static_cast<num_type>(max / 10);
                   static const num_type final_digit       = static_cast<num_type>(max % 10);
 
-                  digit = static_cast<T>(digit_table[static_cast<unsigned int>(*itr)]);
+                  T digit = static_cast<T>(digit_table[static_cast<unsigned int>(*itr)]);
                   if (is_valid_digit(digit))
                   {
                      if (t > penultimate_bound)
                         return false;
                      else if ((penultimate_bound == t) && (final_digit < digit))
                         return false;
-                     t = (t * radix) + digit;
+                     t = (t * radix[1]) + digit;
                      ++itr;
                   }
                   else
@@ -10418,20 +10459,61 @@ namespace strtk
 
          if (0 != length)
          {
-            static const std::size_t radix = 10;
-            const Iterator interim_end = itr + std::min<std::size_t>(bound_length,length);
-            T digit = 0;
+            static const T radix[] = {
+                                        static_cast<T>(1),
+                                        static_cast<T>(10),
+                                        static_cast<T>(100),
+                                        static_cast<T>(1000),
+                                        static_cast<T>(10000)
+                                     };
+
+            std::size_t interim_length = std::min<std::size_t>(bound_length,length);
+            const Iterator interim_end = itr + interim_length;
+
+            unsigned int digit[4];
+
+            while (interim_length >= 4)
+            {
+               digit[0] = static_cast<unsigned int>((*(itr + 0)) - '0');
+               digit[1] = static_cast<unsigned int>((*(itr + 1)) - '0');
+               digit[2] = static_cast<unsigned int>((*(itr + 2)) - '0');
+               digit[3] = static_cast<unsigned int>((*(itr + 3)) - '0');
+
+               if (digit[0] > 9) return false;
+               if (digit[1] > 9) return false;
+               if (digit[2] > 9) return false;
+               if (digit[3] > 9) return false;
+
+               t = static_cast<T>(digit[0] * radix[3]) + static_cast<T>(digit[1] * radix[2]) +
+                   static_cast<T>(digit[2] * radix[1]) + static_cast<T>(digit[3]) +
+                   (t * radix[4]);
+
+               itr += 4;
+               interim_length -= 4;
+            }
+
+            while (interim_length >= 2)
+            {
+               digit[0] = static_cast<unsigned int>((*(itr + 0)) - '0');
+               digit[1] = static_cast<unsigned int>((*(itr + 1)) - '0');
+
+               if (digit[0] > 9) return false;
+               if (digit[1] > 9) return false;
+
+               t = static_cast<T>(digit[0] * radix[1]) +
+                   static_cast<T>(digit[1]) +
+                   (t * radix[2]);
+
+               itr += 2;
+               interim_length -= 2;
+            }
 
             while (interim_end != itr)
             {
-               digit = static_cast<T>(digit_table[static_cast<unsigned int>(*itr)]);
-               if (is_valid_digit(digit))
-               {
-                  t = (t * radix) + digit;
-                  ++itr;
-               }
-               else
-                  return false;
+               digit[0] = static_cast<unsigned int>((*(itr + 0)) - '0');
+               if (digit[0] > 9) return false;
+               t = static_cast<T>(digit[0]) + (t * radix[1]);
+               ++itr;
             }
 
             if (interim_end != end)
@@ -10446,7 +10528,7 @@ namespace strtk
                   static const num_type positive_final_digit = static_cast<num_type>(max % 10);
                   static const num_type negative_final_digit = static_cast<num_type>(min % 10);
 
-                  digit = static_cast<T>(digit_table[static_cast<unsigned int>(*itr)]);
+                  T digit = static_cast<T>(digit_table[static_cast<unsigned int>(*itr)]);
                   if (is_valid_digit(digit))
                   {
                      if (negative)
@@ -10470,7 +10552,7 @@ namespace strtk
                            return false;
                      }
 
-                     t = (t * radix) + digit;
+                     t = (t * radix[1]) + digit;
                      ++itr;
                   }
                   else

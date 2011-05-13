@@ -1165,7 +1165,7 @@ bool test_int_uint_convert()
 
          if (i != t)
          {
-            std::cout << "test_int_uint_convert() - Failed i == t @ " << i << std::endl;
+            std::cout << "test_int_uint_convert() - Failed (int) i == t @ " << i << std::endl;
             return false;
          }
 
@@ -1191,7 +1191,7 @@ bool test_int_uint_convert()
 
          if (i != t)
          {
-            std::cout << "test_int_uint_convert() - Failed i == t @ " << i << std::endl;
+            std::cout << "test_int_uint_convert() - Failed (uint) i == t @ " << i << std::endl;
             return false;
          }
 
