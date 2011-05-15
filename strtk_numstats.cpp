@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 
    str_list.clear();
 
-   strtk::token_grid grid(buffer.c_str(),
+   strtk::token_grid grid(buffer.data(),
                           buffer.size(),
                           strtk::token_grid::options());
 

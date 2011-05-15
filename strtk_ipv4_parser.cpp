@@ -44,7 +44,7 @@ public:
 
    inline bool operator()(const std::string& data, unsigned char octet[4])
    {
-      tokenizer_.assign(data.c_str(),data.c_str() + data.size());
+      tokenizer_.assign(data.data(),data.data() + data.size());
       tokenizer_type::iterator itr = tokenizer_.begin();
       tokenizer_type::const_iterator end = tokenizer_.end();
       std::size_t octet_count = 0;

@@ -739,7 +739,7 @@ namespace strtk
 
       static inline adapter<const char> type(const std::string& s)
       {
-         return adapter<const char>(s.c_str(),s.size());
+         return adapter<const char>(s.data(),s.size());
       }
 
       template<typename T,
@@ -3298,8 +3298,8 @@ namespace strtk
 
    inline void lexicographically_canonicalize(std::string& str)
    {
-      lexicographically_canonicalize(const_cast<char*>(str.c_str()),
-                                     const_cast<char*>(str.c_str() + str.size()));
+      lexicographically_canonicalize(const_cast<char*>(str.data()),
+                                     const_cast<char*>(str.data() + str.size()));
    }
 
    template<typename T,
@@ -3389,7 +3389,7 @@ namespace strtk
       output.resize(binary_data.size() * 2);
       convert_bin_to_hex(binary_data.data(),
                          binary_data.data() + binary_data.size(),
-                         const_cast<char*>(output.c_str()));
+                         const_cast<char*>(output.data()));
    }
 
    inline bool convert_hex_to_bin(const unsigned char* begin, const unsigned char* end, unsigned char* out)
@@ -3456,7 +3456,7 @@ namespace strtk
       output.resize(hex_data.size() >> 1);
       return convert_hex_to_bin(hex_data.data(),
                                 hex_data.data() + hex_data.size(),
-                                const_cast<char*>(output.c_str()));
+                                const_cast<char*>(output.data()));
    }
 
    inline std::size_t convert_bin_to_base64(const unsigned char* begin, const unsigned char* end, unsigned char* out)
@@ -3516,7 +3516,7 @@ namespace strtk
       output.resize(std::max<std::size_t>(4,binary_data.size() << 1));
       std::size_t resize = convert_bin_to_base64(binary_data.data(),
                                                  binary_data.data() + binary_data.size(),
-                                                 const_cast<char*>(output.c_str()));
+                                                 const_cast<char*>(output.data()));
       output.resize(resize);
    }
 
@@ -3619,7 +3619,7 @@ namespace strtk
       output.resize(binary_data.size());
       std::size_t resize = convert_base64_to_bin(binary_data.data(),
                                                  binary_data.data() + binary_data.size(),
-                                                 const_cast<char*>(output.c_str()));
+                                                 const_cast<char*>(output.data()));
       output.resize(resize);
    }
 
@@ -3670,8 +3670,8 @@ namespace strtk
 
    inline void convert_to_printable_chars(std::string& str)
    {
-      convert_to_printable_chars(reinterpret_cast<unsigned char*>(const_cast<char*>(str.c_str())),
-                                 reinterpret_cast<unsigned char*>(const_cast<char*>(str.c_str() + str.size())));
+      convert_to_printable_chars(reinterpret_cast<unsigned char*>(const_cast<char*>(str.data())),
+                                 reinterpret_cast<unsigned char*>(const_cast<char*>(str.data() + str.size())));
    }
 
    inline void convert_to_uppercase(unsigned char* begin, unsigned char* end)
@@ -3696,8 +3696,8 @@ namespace strtk
 
    inline void convert_to_uppercase(std::string& str)
    {
-      convert_to_uppercase(reinterpret_cast<unsigned char*>(const_cast<char*>(str.c_str())),
-                           reinterpret_cast<unsigned char*>(const_cast<char*>(str.c_str() + str.size())));
+      convert_to_uppercase(reinterpret_cast<unsigned char*>(const_cast<char*>(str.data())),
+                           reinterpret_cast<unsigned char*>(const_cast<char*>(str.data() + str.size())));
    }
 
    inline void convert_to_lowercase(unsigned char* begin, unsigned char* end)
@@ -3722,8 +3722,8 @@ namespace strtk
 
    inline void convert_to_lowercase(std::string& str)
    {
-      convert_to_lowercase(reinterpret_cast<unsigned char*>(const_cast<char*>(str.c_str())),
-                           reinterpret_cast<unsigned char*>(const_cast<char*>(str.c_str() + str.size())));
+      convert_to_lowercase(reinterpret_cast<unsigned char*>(const_cast<char*>(str.data())),
+                           reinterpret_cast<unsigned char*>(const_cast<char*>(str.data() + str.size())));
    }
 
    inline bool twoway_bitwise_interleave(const unsigned char* begin1, const unsigned char* end1,
@@ -3805,7 +3805,7 @@ namespace strtk
       out.resize(str1.size());
       return twoway_bitwise_interleave(str1.data(),str1.data() + str1.size(),
                                        str2.data(),str2.data() + str2.size(),
-                                       const_cast<char*>(out.c_str()));
+                                       const_cast<char*>(out.data()));
    }
 
    template<std::size_t n>
@@ -3870,7 +3870,7 @@ namespace strtk
       bitwise_transform(operation,
                         str1.data(),str1.data() + str1.size(),
                         str2.data(),
-                        const_cast<char*>(out.c_str()));
+                        const_cast<char*>(out.data()));
    }
 
    inline std::size_t high_bit_count(const unsigned char c)
@@ -9020,7 +9020,7 @@ namespace strtk
             output.resize(length);
             std::copy(buffer_,
                       buffer_ + length,
-                      const_cast<char*>(output.c_str()));
+                      const_cast<char*>(output.data()));
             buffer_ += length;
             read_buffer_size_ += length;
             return true;
@@ -9036,7 +9036,7 @@ namespace strtk
             output.s.resize(size);
             std::copy(buffer_,
                       buffer_ + size,
-                      const_cast<char*>(output.s.c_str()));
+                      const_cast<char*>(output.s.data()));
             buffer_ += size;
             read_buffer_size_ += size;
             return true;
@@ -10336,7 +10336,10 @@ namespace strtk
          if (length > numeric<T>::length)
             return false;
 
-         T t = 0;
+         T t  = 0;
+         T t1 = 0;
+         T t2 = 0;
+         T t3 = 0;
 
          static const std::size_t bound_length = numeric<T>::bound_length;
 
@@ -10357,45 +10360,45 @@ namespace strtk
 
             while (interim_length >= 4)
             {
-               digit[0] = static_cast<unsigned int>((*(itr + 0)) - '0');
-               digit[1] = static_cast<unsigned int>((*(itr + 1)) - '0');
-               digit[2] = static_cast<unsigned int>((*(itr + 2)) - '0');
-               digit[3] = static_cast<unsigned int>((*(itr + 3)) - '0');
+               digit[0] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
+               digit[1] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
+               digit[2] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
+               digit[3] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
 
-               if (digit[0] > 9) return false;
-               if (digit[1] > 9) return false;
-               if (digit[2] > 9) return false;
-               if (digit[3] > 9) return false;
+               if ( (digit[0] >= 10) ||
+                    (digit[1] >= 10) ||
+                    (digit[2] >= 10) ||
+                    (digit[3] >= 10) ) return false;
 
-               t = static_cast<T>(digit[0] * radix[3]) + static_cast<T>(digit[1] * radix[2]) +
-                   static_cast<T>(digit[2] * radix[1]) + static_cast<T>(digit[3]) +
-                   (t * radix[4]);
+               t1 = static_cast<T>(digit[0] * radix[3]) + static_cast<T>(digit[1] * radix[2]);
+               t2 = static_cast<T>(digit[2] * radix[1]) + static_cast<T>(digit[3]);
+               t3 = (t * radix[4]);
+               t  = t1 + t2 + t3;
 
-               itr += 4;
                interim_length -= 4;
             }
 
             while (interim_length >= 2)
             {
-               digit[0] = static_cast<unsigned int>((*(itr + 0)) - '0');
-               digit[1] = static_cast<unsigned int>((*(itr + 1)) - '0');
+               digit[0] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
+               digit[1] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
 
-               if (digit[0] > 9) return false;
-               if (digit[1] > 9) return false;
+               if ( (digit[0] >= 10) ||
+                    (digit[1] >= 10) ) return false;
 
-               t = static_cast<T>(digit[0] * radix[1]) +
-                   static_cast<T>(digit[1]) +
-                   (t * radix[2]);
+               t1 = static_cast<T>(digit[0] * radix[1]) + static_cast<T>(digit[1]);
+               t2 = (t * radix[2]);
+               t  = t1 + t2;
 
-               itr += 2;
                interim_length -= 2;
             }
 
             while (interim_end != itr)
             {
-               digit[0] = static_cast<unsigned int>((*(itr + 0)) - '0');
-               if (digit[0] > 9) return false;
-               t = static_cast<T>(digit[0]) + (t * radix[1]);
+               digit[0] = static_cast<unsigned int>((*(itr)) - '0');
+               if (digit[0] >= 10) return false;
+               t1 = (t * radix[1]);
+               t = static_cast<T>(digit[0]) + t1;
                ++itr;
             }
 
@@ -10453,7 +10456,10 @@ namespace strtk
          if (length > numeric<T>::length)
             return false;
 
-         T t = 0;
+         T t  = 0;
+         T t1 = 0;
+         T t2 = 0;
+         T t3 = 0;
 
          static const std::size_t bound_length = numeric<T>::bound_length;
 
@@ -10474,45 +10480,45 @@ namespace strtk
 
             while (interim_length >= 4)
             {
-               digit[0] = static_cast<unsigned int>((*(itr + 0)) - '0');
-               digit[1] = static_cast<unsigned int>((*(itr + 1)) - '0');
-               digit[2] = static_cast<unsigned int>((*(itr + 2)) - '0');
-               digit[3] = static_cast<unsigned int>((*(itr + 3)) - '0');
+               digit[0] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
+               digit[1] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
+               digit[2] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
+               digit[3] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
 
-               if (digit[0] > 9) return false;
-               if (digit[1] > 9) return false;
-               if (digit[2] > 9) return false;
-               if (digit[3] > 9) return false;
+               if ( (digit[0] >= 10) ||
+                    (digit[1] >= 10) ||
+                    (digit[2] >= 10) ||
+                    (digit[3] >= 10) ) return false;
 
-               t = static_cast<T>(digit[0] * radix[3]) + static_cast<T>(digit[1] * radix[2]) +
-                   static_cast<T>(digit[2] * radix[1]) + static_cast<T>(digit[3]) +
-                   (t * radix[4]);
+               t1 = static_cast<T>(digit[0] * radix[3]) + static_cast<T>(digit[1] * radix[2]);
+               t2 = static_cast<T>(digit[2] * radix[1]) + static_cast<T>(digit[3]);
+               t3 = (t * radix[4]);
+               t  = t1 + t2 + t3;
 
-               itr += 4;
                interim_length -= 4;
             }
 
             while (interim_length >= 2)
             {
-               digit[0] = static_cast<unsigned int>((*(itr + 0)) - '0');
-               digit[1] = static_cast<unsigned int>((*(itr + 1)) - '0');
+               digit[0] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
+               digit[1] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
 
-               if (digit[0] > 9) return false;
-               if (digit[1] > 9) return false;
+               if ( (digit[0] >= 10) ||
+                    (digit[1] >= 10) ) return false;
 
-               t = static_cast<T>(digit[0] * radix[1]) +
-                   static_cast<T>(digit[1]) +
-                   (t * radix[2]);
+               t1 = static_cast<T>(digit[0] * radix[1]) + static_cast<T>(digit[1]);
+               t2 = (t * radix[2]);
+               t  = t1 + t2;
 
-               itr += 2;
                interim_length -= 2;
             }
 
             while (interim_end != itr)
             {
-               digit[0] = static_cast<unsigned int>((*(itr + 0)) - '0');
-               if (digit[0] > 9) return false;
-               t = static_cast<T>(digit[0]) + (t * radix[1]);
+               digit[0] = static_cast<unsigned int>((*(itr)) - '0');
+               if (digit[0] >= 10) return false;
+               t1 = (t * radix[1]);
+               t = static_cast<T>(digit[0]) + t1;
                ++itr;
             }
 
@@ -10528,8 +10534,9 @@ namespace strtk
                   static const num_type positive_final_digit = static_cast<num_type>(max % 10);
                   static const num_type negative_final_digit = static_cast<num_type>(min % 10);
 
-                  T digit = static_cast<T>(digit_table[static_cast<unsigned int>(*itr)]);
-                  if (is_valid_digit(digit))
+                  digit[0] = static_cast<unsigned int>((*(itr)) - '0');
+
+                  if (digit[0] <= 9)
                   {
                      if (negative)
                      {
@@ -10537,7 +10544,7 @@ namespace strtk
                            return false;
                         else if (
                                  (negative_penultimate_bound == static_cast<num_type>(t)) &&
-                                 (negative_final_digit < static_cast<num_type>(digit))
+                                 (negative_final_digit < digit[0])
                                 )
                            return false;
                      }
@@ -10547,12 +10554,13 @@ namespace strtk
                            return false;
                         else if (
                                  (positive_penultimate_bound == static_cast<num_type>(t)) &&
-                                 (positive_final_digit < static_cast<num_type>(digit))
+                                 (positive_final_digit < digit[0])
                                 )
                            return false;
                      }
 
-                     t = (t * radix[1]) + digit;
+                     t1 = (t * radix[1]);
+                     t = static_cast<T>(digit[0]) + t1;
                      ++itr;
                   }
                   else
@@ -11535,7 +11543,7 @@ namespace strtk
       inline bool load_file(const std::string& file_name, std::string& buffer)
       {
          buffer.resize(file_size(file_name));
-         return load_file(file_name,const_cast<char*>(buffer.c_str()),buffer.size());
+         return load_file(file_name,const_cast<char*>(buffer.data()),buffer.size());
       }
 
       inline bool write_file(const std::string& file_name, char* buffer, const std::size_t& buffer_size)
@@ -12059,7 +12067,7 @@ namespace strtk
          buffer.resize(buffer_size);
          return read_at_offset(stream,
                                offset,
-                               const_cast<char*>(buffer.c_str()),
+                               const_cast<char*>(buffer.data()),
                                buffer_size);
       }
 

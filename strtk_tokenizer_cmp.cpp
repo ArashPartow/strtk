@@ -108,7 +108,7 @@ void boost_tokenizer_timed_test()
    strtk::replicate(tokenizer_replicate_count,base,s);
    s.resize(s.size() - 1);
    typedef boost::tokenizer<boost::char_separator<char> > tokenizer_type;
-   tokenizer_type tokenizer(s,boost::char_separator<char>(delimiters.c_str()));
+   tokenizer_type tokenizer(s,boost::char_separator<char>(delimiters.data()));
    tokenizer_type::iterator itr = tokenizer.begin();
    tokenizer_type::const_iterator end = tokenizer.end();
    unsigned int token_count = 0;
@@ -428,7 +428,7 @@ inline bool qi_string_to_int(const std::string& str, int & value)
 {
   using namespace boost::spirit;
   using boost::spirit::qi::parse;
-  char* begin = const_cast<char*>(str.c_str());
+  char* begin = const_cast<char*>(str.data());
   char* end = begin + str.size();
   return parse(begin,end, int_, value);
 }
@@ -728,7 +728,7 @@ inline bool qi_string_to_double(const std::string& str, double& value)
 {
   using namespace boost::spirit;
   using boost::spirit::qi::parse;
-  char* begin = const_cast<char*>(str.c_str());
+  char* begin = const_cast<char*>(str.data());
   char* end = begin + str.size();
   return parse(begin,end, double_, value);
 }

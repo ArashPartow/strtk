@@ -45,7 +45,7 @@ public:
    {
       if (s.empty())
          return false;
-      return operator ()(const_cast<char*>(s.c_str()),const_cast<char*>(s.c_str() + s.size()),period);
+      return operator ()(const_cast<char*>(s.data()),const_cast<char*>(s.data() + s.size()),period);
    }
 
    template<typename Iterator>
