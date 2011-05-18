@@ -800,7 +800,94 @@ bool test05(char* buffer, const unsigned int buffer_size)
    return true;
 }
 
-bool test06(char* buffer)
+bool test06(char* buffer, const unsigned int buffer_size)
+{
+   std::string s = "abc123";
+
+   {
+      std::fill_n(buffer,buffer_size,0);
+      strtk::binary::pascal_string ps;
+      strtk::binary::short_string  ss;
+
+      strtk::binary::writer writer(buffer,buffer_size);
+
+      if (!writer(ps.set(s)))
+      {
+         std::cout << "test06() - Failed to write Pascal String " << s << std::endl;
+         return false;
+      }
+
+      if (!writer(ss.set(s)))
+      {
+         std::cout << "test06() - Failed to write Short String " << s << std::endl;
+         return false;
+      }
+
+      std::string r1; r1.clear();
+      std::string r2; r2.clear();
+
+      strtk::binary::reader reader(buffer,buffer_size);
+
+      if (!reader(ps.set(r1)))
+      {
+         std::cout << "test06() - Failed to read Pascal String " << s << std::endl;
+         return false;
+      }
+
+      if (!reader(ss.set(r2)))
+      {
+         std::cout << "test06() - Failed to read Short String " << s << std::endl;
+         return false;
+      }
+
+      std::cout << "Pascal String: [" << r1 << "]" << std::endl;
+      std::cout << "Short String: [" << r2 << "]" << std::endl;
+   }
+
+   {
+      std::fill_n(buffer,buffer_size,0);
+      strtk::binary::pascal_string ps;
+      strtk::binary::short_string  ss;
+
+      strtk::binary::writer writer(buffer,buffer_size);
+
+      if (!writer(strtk::binary::pascal_string(s)))
+      {
+         std::cout << "test06() - Failed to write Pascal String " << s << std::endl;
+         return false;
+      }
+
+      if (!writer(strtk::binary::short_string(s)))
+      {
+         std::cout << "test06() - Failed to write Short String " << s << std::endl;
+         return false;
+      }
+
+      std::string r1; r1.clear();
+      std::string r2; r2.clear();
+
+      strtk::binary::reader reader(buffer,buffer_size);
+
+      if (!reader(strtk::binary::pascal_string(r1)))
+      {
+         std::cout << "test06() - Failed to read Pascal String " << s << std::endl;
+         return false;
+      }
+
+      if (!reader(strtk::binary::short_string(r2)))
+      {
+         std::cout << "test06() - Failed to read Short String " << s << std::endl;
+         return false;
+      }
+
+      std::cout << "Pascal String: [" << r1 << "]" << std::endl;
+      std::cout << "Short String: [" << r2 << "]" << std::endl;
+   }
+
+   return true;
+}
+
+bool test07(char* buffer)
 {
    char in_char = -17;
    unsigned char in_uchar = 200;
@@ -869,7 +956,7 @@ bool test06(char* buffer)
    return true;
 }
 
-bool test07(char* buffer)
+bool test08(char* buffer)
 {
    const size_t size = 10;
    const int intlst[size] = { -1, 2, -3, 4, -5, 6, -7, 8, -9, 10 };
@@ -933,8 +1020,9 @@ int main()
    test03(buffer,max_buffer_size);
    test04(buffer,max_buffer_size);
    test05(buffer,max_buffer_size);
-   test06(buffer);
+   test06(buffer,max_buffer_size);
    test07(buffer);
+   test08(buffer);
    delete[] buffer;
    return 0;
 }

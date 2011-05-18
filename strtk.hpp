@@ -8934,29 +8934,15 @@ namespace strtk
 
    namespace binary
    {
-      class ushort_string_adptr
-      {
-      public:
-
-         ushort_string_adptr(std::string& str)
-         : s(str)
-         {}
-
-         std::string& s;
-
-     private:
-        ushort_string_adptr operator=(const ushort_string_adptr&);
-      };
 
       class reader
       {
-      private:
+      public:
 
          // should be sourced from cstdint
          typedef unsigned int uint32_t;
          typedef unsigned short uint16_t;
-
-      public:
+         typedef unsigned char uint8_t;
 
          template<typename T>
          reader(T* buffer,
@@ -9023,22 +9009,6 @@ namespace strtk
                       const_cast<char*>(output.data()));
             buffer_ += length;
             read_buffer_size_ += length;
-            return true;
-         }
-
-         inline bool operator()(ushort_string_adptr& output)
-         {
-            uint16_t size = 0;
-            if (!operator()(size))
-               return false;
-            if (!buffer_capacity_ok(size))
-               return false;
-            output.s.resize(size);
-            std::copy(buffer_,
-                      buffer_ + size,
-                      const_cast<char*>(output.s.data()));
-            buffer_ += size;
-            read_buffer_size_ += size;
             return true;
          }
 
@@ -9155,7 +9125,13 @@ namespace strtk
          template<typename T>
          inline bool operator()(T& output)
          {
-            return selector<T,typename details::is_pod<T>::result_t>::run(*this,output);
+            return selector<T,typename strtk::details::is_pod<T>::result_t>::run(*this,output);
+         }
+
+         template<typename T>
+         inline bool operator()(const T& output)
+         {
+            return selector<T,typename strtk::details::is_pod<T>::result_t>::run(*this,const_cast<T&>(output));
          }
 
       private:
@@ -9205,17 +9181,17 @@ namespace strtk
          char* buffer_;
          std::size_t buffer_length_;
          std::size_t read_buffer_size_;
+
       };
 
       class writer
       {
-      private:
+      public:
 
          // should be sourced from cstdint
          typedef unsigned int uint32_t;
          typedef unsigned short uint16_t;
-
-      public:
+         typedef unsigned char uint8_t;
 
          template<typename T>
          writer(T* buffer, const std::size_t& buffer_length)
@@ -9250,9 +9226,9 @@ namespace strtk
          }
 
          template<typename T>
-         inline bool operator()(const T* data, const uint32_t& length)
+         inline bool operator()(const T* data, const uint32_t& length, const bool write_length = true)
          {
-            if (!operator()(length))
+            if (write_length && !operator()(length))
                return false;
 
             const std::size_t raw_size = length * sizeof(T);
@@ -9280,26 +9256,6 @@ namespace strtk
          inline bool operator()(const std::string& input)
          {
             return operator()(input.data(),input.size());
-         }
-
-         inline bool operator()(const ushort_string_adptr& input)
-         {
-            if (input.s.size() > std::numeric_limits<uint16_t>::max())
-               return false;
-
-            const uint16_t size = static_cast<unsigned short>(input.s.size());
-            if (!operator()(size))
-               return false;
-
-            const std::size_t raw_size = size * sizeof(std::string::value_type);
-            if (!buffer_capacity_ok(raw_size))
-               return false;
-
-            const char* ptr = input.s.data();
-            std::copy(ptr, ptr + raw_size, buffer_);
-            buffer_ += raw_size;
-            written_buffer_size_ += raw_size;
-            return true;
          }
 
          template<typename T,
@@ -9359,7 +9315,7 @@ namespace strtk
          template<typename T>
          inline bool operator()(const T& input)
          {
-            return selector<T,typename details::is_pod<T>::result_t>::run(*this,input);
+            return selector<T,typename strtk::details::is_pod<T>::result_t>::run(*this,input);
          }
 
       private:
@@ -9411,6 +9367,7 @@ namespace strtk
          char* buffer_;
          std::size_t buffer_length_;
          std::size_t written_buffer_size_;
+
       };
 
       #define strtk_binary_reader_begin()\
@@ -9432,6 +9389,69 @@ namespace strtk
 
       #define strtk_binary_writer_end()\
       ;}\
+
+      namespace details
+      {
+         template<typename size_type>
+         class short_string_impl
+         {
+         public:
+
+            short_string_impl()
+            :s(0)
+            {}
+
+            short_string_impl(std::string& str)
+            : s(&str)
+            {}
+
+            inline void clear()
+            {
+               s = 0;
+            }
+
+            inline short_string_impl<size_type>& set(std::string& str)
+            {
+               s = &str;
+               return *this;
+            }
+
+            inline bool operator()(reader& r)
+            {
+               if (0 == s)
+                  return false;
+              size_type size = 0;
+              if (!r(size))
+                 return false;
+               s->resize(size);
+               if(!r(const_cast<char*>(s->data()),size))
+                  return false;
+               return true;
+            }
+
+            inline bool operator()(writer& w) const
+            {
+               if (0 == s)
+                  return false;
+               if (s->size() > std::numeric_limits<size_type>::max())
+                  return false;
+               const size_type size = static_cast<size_type>(s->size());
+               if (!w(size))
+                  return false;
+               if(!w(s->data(),size,false))
+                  return false;
+               return true;
+            }
+
+         private:
+
+            short_string_impl operator=(const short_string_impl&);
+            mutable std::string* s;
+         };
+      }
+
+      typedef details::short_string_impl<reader::uint16_t> short_string;
+      typedef details::short_string_impl<reader::uint8_t> pascal_string;
 
    } // namespace binary
 
@@ -10360,10 +10380,10 @@ namespace strtk
 
             while (interim_length >= 4)
             {
-               digit[0] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
-               digit[1] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
-               digit[2] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
-               digit[3] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
+               digit[0] = static_cast<unsigned int>(*itr - '0'); ++itr;
+               digit[1] = static_cast<unsigned int>(*itr - '0'); ++itr;
+               digit[2] = static_cast<unsigned int>(*itr - '0'); ++itr;
+               digit[3] = static_cast<unsigned int>(*itr - '0'); ++itr;
 
                if ( (digit[0] >= 10) ||
                     (digit[1] >= 10) ||
@@ -10380,8 +10400,8 @@ namespace strtk
 
             while (interim_length >= 2)
             {
-               digit[0] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
-               digit[1] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
+               digit[0] = static_cast<unsigned int>(*itr - '0'); ++itr;
+               digit[1] = static_cast<unsigned int>(*itr - '0'); ++itr;
 
                if ( (digit[0] >= 10) ||
                     (digit[1] >= 10) ) return false;
@@ -10395,7 +10415,7 @@ namespace strtk
 
             while (interim_end != itr)
             {
-               digit[0] = static_cast<unsigned int>((*(itr)) - '0');
+               digit[0] = static_cast<unsigned int>(*itr - '0');
                if (digit[0] >= 10) return false;
                t1 = (t * radix[1]);
                t = static_cast<T>(digit[0]) + t1;
@@ -10411,15 +10431,15 @@ namespace strtk
                   static const num_type penultimate_bound = static_cast<num_type>(max / 10);
                   static const num_type final_digit       = static_cast<num_type>(max % 10);
 
-                  T digit = static_cast<T>(digit_table[static_cast<unsigned int>(*itr)]);
-                  if (is_valid_digit(digit))
+                  digit[0] = static_cast<unsigned int>(*itr - '0');
+                  if (digit[0] <= 9)
                   {
                      if (t > penultimate_bound)
                         return false;
-                     else if ((penultimate_bound == t) && (final_digit < digit))
+                     else if ((penultimate_bound == t) && (final_digit < digit[0]))
                         return false;
-                     t = (t * radix[1]) + digit;
-                     ++itr;
+                     t1 = (t * radix[1]);
+                     t = static_cast<T>(digit[0]) + t1;
                   }
                   else
                      return false;
@@ -10480,10 +10500,10 @@ namespace strtk
 
             while (interim_length >= 4)
             {
-               digit[0] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
-               digit[1] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
-               digit[2] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
-               digit[3] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
+               digit[0] = static_cast<unsigned int>(*itr - '0'); ++itr;
+               digit[1] = static_cast<unsigned int>(*itr - '0'); ++itr;
+               digit[2] = static_cast<unsigned int>(*itr - '0'); ++itr;
+               digit[3] = static_cast<unsigned int>(*itr - '0'); ++itr;
 
                if ( (digit[0] >= 10) ||
                     (digit[1] >= 10) ||
@@ -10500,8 +10520,8 @@ namespace strtk
 
             while (interim_length >= 2)
             {
-               digit[0] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
-               digit[1] = static_cast<unsigned int>((*(itr)) - '0'); ++itr;
+               digit[0] = static_cast<unsigned int>(*itr - '0'); ++itr;
+               digit[1] = static_cast<unsigned int>(*itr - '0'); ++itr;
 
                if ( (digit[0] >= 10) ||
                     (digit[1] >= 10) ) return false;
@@ -10515,7 +10535,7 @@ namespace strtk
 
             while (interim_end != itr)
             {
-               digit[0] = static_cast<unsigned int>((*(itr)) - '0');
+               digit[0] = static_cast<unsigned int>(*itr - '0');
                if (digit[0] >= 10) return false;
                t1 = (t * radix[1]);
                t = static_cast<T>(digit[0]) + t1;
@@ -10534,7 +10554,7 @@ namespace strtk
                   static const num_type positive_final_digit = static_cast<num_type>(max % 10);
                   static const num_type negative_final_digit = static_cast<num_type>(min % 10);
 
-                  digit[0] = static_cast<unsigned int>((*(itr)) - '0');
+                  digit[0] = static_cast<unsigned int>(*itr - '0');
 
                   if (digit[0] <= 9)
                   {
@@ -10561,7 +10581,6 @@ namespace strtk
 
                      t1 = (t * radix[1]);
                      t = static_cast<T>(digit[0]) + t1;
-                     ++itr;
                   }
                   else
                      return false;
