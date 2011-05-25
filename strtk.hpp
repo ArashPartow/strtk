@@ -10015,6 +10015,97 @@ namespace strtk
 
    } // namespace text
 
+
+   namespace details
+   {
+      template<typename Iterator,typename Predicate>
+      inline Iterator find_n_consecutive_values(const std::size_t n,
+                                                Predicate p,
+                                                Iterator itr,
+                                                const Iterator end)
+      {
+         if (static_cast<unsigned int>(std::distance(itr,end)) < n)
+            return end;
+         std::size_t count = n;
+         while (end != itr)
+         {
+            if (p(*itr))
+            {
+               if (0 != --count)
+                  ++itr;
+               else
+               {
+                  std::advance(itr,1 - n);
+                  return itr;
+               }
+            }
+            else
+            {
+               ++itr;
+               while ((end != itr) && !p(*itr))
+                  ++itr;
+               count = n;
+            }
+         }
+         return end;
+      }
+   }
+
+   template<typename Iterator>
+   inline Iterator find_n_consecutive_digits(const std::size_t n,
+                                             Iterator itr,
+                                             const Iterator end)
+   {
+      return details::find_n_consecutive_values<Iterator>(n,
+                                                          strtk::text::is_digit,
+                                                          itr,
+                                                          end);
+   }
+
+   template<typename Iterator>
+   inline Iterator find_n_consecutive_lowercase_letters(const std::size_t n,
+                                                        Iterator itr,
+                                                        const Iterator end)
+   {
+      return details::find_n_consecutive_values<Iterator>(n,
+                                                          strtk::text::is_lowercase_letter,
+                                                          itr,
+                                                          end);
+   }
+
+   template<typename Iterator>
+   inline Iterator find_n_consecutive_uppercase_letters(const std::size_t n,
+                                                        Iterator itr,
+                                                        const Iterator end)
+   {
+      return details::find_n_consecutive_values<Iterator>(n,
+                                                          strtk::text::is_uppercase_letter,
+                                                          itr,
+                                                          end);
+   }
+
+   template<typename Iterator>
+   inline Iterator find_n_consecutive_letters(const std::size_t n,
+                                              Iterator itr,
+                                              const Iterator end)
+   {
+      return details::find_n_consecutive_values<Iterator>(n,
+                                                          strtk::text::is_letter,
+                                                          itr,
+                                                          end);
+   }
+
+   template<typename Iterator>
+   inline Iterator find_n_consecutive_letters_or_digits(const std::size_t n,
+                                                        Iterator itr,
+                                                        const Iterator end)
+   {
+      return details::find_n_consecutive_values<Iterator>(n,
+                                                          strtk::text::is_letter_or_digit,
+                                                          itr,
+                                                          end);
+   }
+
    namespace details
    {
       static const unsigned char digit_table[] =
@@ -10365,13 +10456,13 @@ namespace strtk
 
          if (0 != length)
          {
-            static const T radix[] = {
-                                        static_cast<T>(1),
-                                        static_cast<T>(10),
-                                        static_cast<T>(100),
-                                        static_cast<T>(1000),
-                                        static_cast<T>(10000)
-                                     };
+            static const unsigned int radix[] =  {
+                                                  1,
+                                                  10,
+                                                  100,
+                                                  1000,
+                                                  10000
+                                                 };
 
             std::size_t interim_length = std::min<std::size_t>(bound_length,length);
             const Iterator interim_end = itr + interim_length;
@@ -10392,7 +10483,7 @@ namespace strtk
 
                t1 = static_cast<T>(digit[0] * radix[3]) + static_cast<T>(digit[1] * radix[2]);
                t2 = static_cast<T>(digit[2] * radix[1]) + static_cast<T>(digit[3]);
-               t3 = (t * radix[4]);
+               t3 = static_cast<T>(t * radix[4]);
                t  = t1 + t2 + t3;
 
                interim_length -= 4;
@@ -10407,7 +10498,7 @@ namespace strtk
                     (digit[1] >= 10) ) return false;
 
                t1 = static_cast<T>(digit[0] * radix[1]) + static_cast<T>(digit[1]);
-               t2 = (t * radix[2]);
+               t2 = static_cast<T>(t * radix[2]);
                t  = t1 + t2;
 
                interim_length -= 2;
@@ -10417,8 +10508,8 @@ namespace strtk
             {
                digit[0] = static_cast<unsigned int>(*itr - '0');
                if (digit[0] >= 10) return false;
-               t1 = (t * radix[1]);
-               t = static_cast<T>(digit[0]) + t1;
+               t1 = static_cast<T>(t * radix[1]);
+               t  = static_cast<T>(digit[0]) + t1;
                ++itr;
             }
 
@@ -10438,8 +10529,8 @@ namespace strtk
                         return false;
                      else if ((penultimate_bound == t) && (final_digit < digit[0]))
                         return false;
-                     t1 = (t * radix[1]);
-                     t = static_cast<T>(digit[0]) + t1;
+                     t1 = static_cast<T>(t * radix[1]);
+                     t  = static_cast<T>(digit[0]) + t1;
                   }
                   else
                      return false;
@@ -10485,13 +10576,13 @@ namespace strtk
 
          if (0 != length)
          {
-            static const T radix[] = {
-                                        static_cast<T>(1),
-                                        static_cast<T>(10),
-                                        static_cast<T>(100),
-                                        static_cast<T>(1000),
-                                        static_cast<T>(10000)
-                                     };
+            static const unsigned int radix[] =  {
+                                                  1,
+                                                  10,
+                                                  100,
+                                                  1000,
+                                                  10000
+                                                 };
 
             std::size_t interim_length = std::min<std::size_t>(bound_length,length);
             const Iterator interim_end = itr + interim_length;
@@ -10512,7 +10603,7 @@ namespace strtk
 
                t1 = static_cast<T>(digit[0] * radix[3]) + static_cast<T>(digit[1] * radix[2]);
                t2 = static_cast<T>(digit[2] * radix[1]) + static_cast<T>(digit[3]);
-               t3 = (t * radix[4]);
+               t3 = static_cast<T>(t * radix[4]);
                t  = t1 + t2 + t3;
 
                interim_length -= 4;
@@ -10527,7 +10618,7 @@ namespace strtk
                     (digit[1] >= 10) ) return false;
 
                t1 = static_cast<T>(digit[0] * radix[1]) + static_cast<T>(digit[1]);
-               t2 = (t * radix[2]);
+               t2 = static_cast<T>(t * radix[2]);
                t  = t1 + t2;
 
                interim_length -= 2;
@@ -10537,7 +10628,7 @@ namespace strtk
             {
                digit[0] = static_cast<unsigned int>(*itr - '0');
                if (digit[0] >= 10) return false;
-               t1 = (t * radix[1]);
+               t1 = static_cast<T>(t * radix[1]);
                t = static_cast<T>(digit[0]) + t1;
                ++itr;
             }
@@ -10579,7 +10670,7 @@ namespace strtk
                            return false;
                      }
 
-                     t1 = (t * radix[1]);
+                     t1 = static_cast<T>(t * radix[1]);
                      t = static_cast<T>(digit[0]) + t1;
                   }
                   else
@@ -10752,8 +10843,8 @@ namespace strtk
             while ((end != itr) && ('0' == *itr)) ++itr;
             while (end != itr)
             {
-               const unsigned int digit = details::digit_table[static_cast<unsigned int>(*itr)];
-               if (is_valid_digit(digit))
+               const unsigned int digit = static_cast<unsigned int>(*itr - '0');
+               if (digit < 10)
                   d = (d * 10.0) + digit;
                else
                   break;
@@ -10772,8 +10863,8 @@ namespace strtk
                const Iterator curr = itr;
                while (end != itr)
                {
-                  const unsigned int digit = details::digit_table[static_cast<unsigned int>(*itr)];
-                  if (is_valid_digit(digit))
+                  const unsigned int digit = static_cast<unsigned int>(*itr - '0');
+                  if (digit < 10)
                      d = (d * 10.0) + digit;
                   else
                      break;
@@ -10989,8 +11080,8 @@ namespace strtk
          static const std::size_t radix = 10;
          static const std::size_t radix_sqr = radix * radix;
          static const std::size_t radix_cube = radix * radix * radix;
-         char buffer[numeric<T>::size];
-         char* itr = buffer + (numeric<T>::size - 1);
+         unsigned char buffer[numeric<T>::size];
+         unsigned char* itr = buffer + (numeric<T>::size - 1);
          T remainder = 0;
          std::size_t index = 0;
 
@@ -11001,9 +11092,9 @@ namespace strtk
                remainder  = value % radix_cube;
                value     /= radix_cube;
                index = remainder * 3;
-               *(itr--) = static_cast<char>(details::rev_3digit_lut[index + 0]);
-               *(itr--) = static_cast<char>(details::rev_3digit_lut[index + 1]);
-               *(itr--) = static_cast<char>(details::rev_3digit_lut[index + 2]);
+               *(itr--) = details::rev_3digit_lut[index + 0];
+               *(itr--) = details::rev_3digit_lut[index + 1];
+               *(itr--) = details::rev_3digit_lut[index + 2];
             }
 
             while (value >= static_cast<T>(radix))
@@ -11011,8 +11102,8 @@ namespace strtk
                remainder  = value % radix_sqr;
                value     /= radix_sqr;
                index = remainder << 1;
-               *(itr--) = static_cast<char>(details::rev_2digit_lut[index + 0]);
-               *(itr--) = static_cast<char>(details::rev_2digit_lut[index + 1]);
+               *(itr--) = details::rev_2digit_lut[index + 0];
+               *(itr--) = details::rev_2digit_lut[index + 1];
             }
 
             if (0 != value)
@@ -11026,7 +11117,7 @@ namespace strtk
             *(itr--) = '0';
 
          itr++;
-         result.assign(itr, (buffer + numeric<T>::size) - itr);
+         result.assign(reinterpret_cast<char*>(itr), (buffer + numeric<T>::size) - itr);
          return true;
       }
 
@@ -11036,8 +11127,8 @@ namespace strtk
          static const std::size_t radix = 10;
          static const std::size_t radix_sqr = radix * radix;
          static const std::size_t radix_cube = radix * radix * radix;
-         char buffer[strtk::details::numeric<T>::size];
-         char* itr = buffer + (strtk::details::numeric<T>::size - 1);
+         unsigned char buffer[strtk::details::numeric<T>::size];
+         unsigned char* itr = buffer + (strtk::details::numeric<T>::size - 1);
          bool negative = (value < 0);
          if (negative)
             value = static_cast<T>(-1 * value);
@@ -11052,9 +11143,9 @@ namespace strtk
                remainder  = value % radix_cube;
                value     /= radix_cube;
                index    = static_cast<std::size_t>(remainder * 3);
-               *(itr--) = static_cast<char>(details::rev_3digit_lut[index + 0]);
-               *(itr--) = static_cast<char>(details::rev_3digit_lut[index + 1]);
-               *(itr--) = static_cast<char>(details::rev_3digit_lut[index + 2]);
+               *(itr--) = details::rev_3digit_lut[index    ];
+               *(itr--) = details::rev_3digit_lut[index + 1];
+               *(itr--) = details::rev_3digit_lut[index + 2];
             }
 
             while (value >= static_cast<T>(radix))
@@ -11062,8 +11153,8 @@ namespace strtk
                remainder  = value % radix_sqr;
                value     /= radix_sqr;
                index    = static_cast<std::size_t>(remainder) << 1;
-               *(itr--) = static_cast<char>(details::rev_2digit_lut[index + 0]);
-               *(itr--) = static_cast<char>(details::rev_2digit_lut[index + 1]);
+               *(itr--) = details::rev_2digit_lut[index    ];
+               *(itr--) = details::rev_2digit_lut[index + 1];
             }
 
             if (0 != value)
@@ -11078,7 +11169,7 @@ namespace strtk
 
          if (negative) *(itr--) = '-';
          itr++;
-         result.assign(itr, (buffer + strtk::details::numeric<T>::size) - itr);
+         result.assign(reinterpret_cast<char*>(itr), (buffer + numeric<T>::size) - itr);
          return true;
       }
 
@@ -11850,7 +11941,6 @@ namespace strtk
                            Sequence<T,Allocator>& sequence)
       {
          T t;
-
          for (std::size_t i = 0; i < count; ++i)
          {
             if (details::read_pod_proxy(stream,t))
@@ -11858,7 +11948,6 @@ namespace strtk
             else
                return false;
          }
-
          return true;
       }
 
@@ -11870,7 +11959,6 @@ namespace strtk
                            std::set<T,Comparator,Allocator>& set)
       {
          T t;
-
          for (std::size_t i = 0; i < count; ++i)
          {
             if (details::read_pod_proxy(stream,t))
@@ -11878,7 +11966,6 @@ namespace strtk
             else
                return false;
          }
-
          return true;
       }
 

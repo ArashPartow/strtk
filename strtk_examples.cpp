@@ -1574,6 +1574,51 @@ void translation_table_example()
    }
 }
 
+void find_n_consecutive_example()
+{
+   {
+      std::string s = "1121231234123451234561234567123456781234567891234567890";
+
+      const char* itr = s.data();
+      const char* end = s.data() + s.size();
+
+      std::size_t n = 1;
+      while(end != itr)
+      {
+         itr = strtk::find_n_consecutive_digits(n,itr,end);
+         if (end == itr)
+            break;
+         else
+            std::cout << "Result-" << strtk::text::right_align(2,'0',n) << ": [" << std::string(itr,itr + n) << "]" << std::endl;
+         itr += n;
+         ++n;
+         if (n > 10)
+            break;
+      }
+   }
+
+   {
+      std::string s = "aababcabcdabcdeabcdefabcdefgabcdefghabcdefghiabcdefghijabcdefghijk";
+
+      const char* itr = s.data();
+      const char* end = s.data() + s.size();
+
+      std::size_t n = 1;
+      while(end != itr)
+      {
+         itr = strtk::find_n_consecutive_letters(n,itr,end);
+         if (end == itr)
+            break;
+         else
+            std::cout << "Result-" << strtk::text::right_align(2,'0',n) << ": [" << std::string(itr,itr + n) << "]" << std::endl;
+         itr += n;
+         ++n;
+         if (n > 12)
+            break;
+      }
+   }
+}
+
 int main()
 {
    information();
@@ -1645,5 +1690,6 @@ int main()
    ext_string_example();
    non_repeated_char_example();
    translation_table_example();
+   find_n_consecutive_example();
    return 0;
 }
