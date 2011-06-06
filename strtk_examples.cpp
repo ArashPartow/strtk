@@ -327,7 +327,7 @@ void split_regex_example01()
    std::list<std::string> token_list;
    strtk::split_regex("\\(.*?\\)",
                       s,
-                      std::back_inserter(token_list),
+                      strtk::range_to_type_back_inserter(token_list),
                       strtk::regex_match_mode::match_1);
    std::cout << strtk::join("\t",token_list) << std::endl;
    #endif
@@ -416,7 +416,10 @@ void split_regex_n_example01()
    std::string s = "(token1)(token2)(token3)(token4)(token5)";
    std::list<std::string> token_list;
    const std::size_t token_count = 4;
-   strtk::split_regex_n("\\(.*?\\)",s,token_count,std::back_inserter(token_list));
+   strtk::split_regex_n("\\(.*?\\)",
+                        s,
+                        token_count,
+                        strtk::range_to_type_back_inserter(token_list));
    std::cout << strtk::join("\t",token_list) << std::endl;
    #endif
 }
@@ -840,8 +843,8 @@ void uri_extractor_example01()
    std::string text = "someone@somewhere.com http://www.test.net some.place.com any.one@any.where.com ftp://123.abcxyz.org";
    std::list<std::string> email_list;
    std::list<std::string> url_list;
-   strtk::split_regex(strtk::email_expression,text,std::back_inserter(email_list));
-   strtk::split_regex(strtk::uri_expression,text,std::back_inserter(url_list));
+   strtk::split_regex(strtk::email_expression,text,strtk::range_to_type_back_inserter(email_list));
+   strtk::split_regex(strtk::uri_expression,text,strtk::range_to_type_back_inserter(url_list));
    std::cout << "emails: " << strtk::join(" ",email_list) << std::endl;
    std::cout << "urls: " << strtk::join(" ",url_list) << std::endl;
    #endif
@@ -1577,44 +1580,66 @@ void translation_table_example()
 void find_n_consecutive_example()
 {
    {
-      std::string s = "1121231234123451234561234567123456781234567891234567890";
+      std::string s = "1 22 333 4444 55555 666666 7777777 88888888 999999999";
 
-      const char* itr = s.data();
-      const char* end = s.data() + s.size();
+      char* begin = const_cast<char*>(s.data());
+      char* end   = const_cast<char*>(s.data() + s.size());
 
-      std::size_t n = 1;
-      while(end != itr)
+      typedef char* iterator_type;
+      typedef strtk::details::range_type<iterator_type>::type range_type;
+      range_type range(begin,end);
+
+      for (std::size_t n = 1; n <= 9; ++n)
       {
-         itr = strtk::find_n_consecutive_digits(n,itr,end);
-         if (end == itr)
+         range_type found_itr = strtk::find_n_consecutive<iterator_type>(n,
+                                                                         strtk::find_type::digits,
+                                                                         strtk::find_mode::exactly_n,
+                                                                         range);
+         if ((end == found_itr.first) && (found_itr.first == found_itr.second))
+         {
+            std::cout << "No strings found for " << n << " consecutive values!" << std::endl;
             break;
+         }
          else
-            std::cout << "Result-" << strtk::text::right_align(2,'0',n) << ": [" << std::string(itr,itr + n) << "]" << std::endl;
-         itr += n;
-         ++n;
-         if (n > 10)
-            break;
+         {
+            std::cout << "Result-"       << strtk::text::right_align(2,'0',n)
+                      << ": ["           << std::string(found_itr.first,found_itr.second)
+                      << "] Location: [" << std::distance(begin,found_itr.first) << "]"
+                      <<  "] Length: ["  << std::distance(found_itr.first,found_itr.second) << "]" << std::endl;
+            range.first = found_itr.second + 1;
+         }
       }
    }
 
    {
-      std::string s = "aababcabcdabcdeabcdefabcdefgabcdefghabcdefghiabcdefghijabcdefghijk";
+      std::string s = "a bB cCc dDdD EeEeE fFfFfF gGgGgGg HhHhHhHh IiIiIiIiI";
 
-      const char* itr = s.data();
-      const char* end = s.data() + s.size();
+      char* begin = const_cast<char*>(s.data());
+      char* end   = const_cast<char*>(s.data() + s.size());
 
-      std::size_t n = 1;
-      while(end != itr)
+      typedef char* iterator_type;
+      typedef strtk::details::range_type<iterator_type>::type range_type;
+      range_type range(begin,end);
+
+      for (std::size_t n = 1; n <= 9; ++n)
       {
-         itr = strtk::find_n_consecutive_letters(n,itr,end);
-         if (end == itr)
+         range_type found_itr = strtk::find_n_consecutive<iterator_type>(n,
+                                                                         strtk::find_type::letters,
+                                                                         strtk::find_mode::exactly_n,
+                                                                         range);
+         if ((end == found_itr.first) && (found_itr.first == found_itr.second))
+         {
+            std::cout << "No strings found for " << n << " consecutive values!" << std::endl;
             break;
+         }
          else
-            std::cout << "Result-" << strtk::text::right_align(2,'0',n) << ": [" << std::string(itr,itr + n) << "]" << std::endl;
-         itr += n;
-         ++n;
-         if (n > 12)
-            break;
+         {
+            std::cout << "Result-"       << strtk::text::right_align(2,'0',n)
+                      << ": ["           << std::string(found_itr.first,found_itr.second)
+                      << "] Location: [" << std::distance(begin,found_itr.first) << "]"
+                      <<  "] Length: ["  << std::distance(found_itr.first,found_itr.second) << "]" << std::endl;
+            range.first = found_itr.second + 1;
+         }
       }
    }
 }

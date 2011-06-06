@@ -2829,18 +2829,17 @@ namespace strtk
                                   const InputIterator begin,
                                   const InputIterator end,
                                   OutputIterator out,
-                                  const regex_match_mode::type mode = regex_match_mode::match_all,
-                                  const std::size_t& buffer_size = one_kilobyte)
+                                  const regex_match_mode::type mode = regex_match_mode::match_all)
    {
-      boost::sregex_iterator itr(begin,end,delimiter_expression);
-      boost::sregex_iterator itr_end;
-      std::string token;
-      token.reserve(buffer_size);
+      boost::regex_iterator<InputIterator> itr(begin,end,delimiter_expression);
+      boost::regex_iterator<InputIterator> itr_end;
+      std::pair<InputIterator,InputIterator> range(begin,begin);
       std::size_t match_count = 0;
       while (itr_end != itr)
       {
-         token.assign((*itr)[mode].first,(*itr)[mode].second);
-         *out = token;
+         range.first = (*itr)[mode].first;
+         range.second = (*itr)[mode].second;
+         *out = range;
          ++out;
          ++itr;
          ++match_count;
@@ -2853,43 +2852,37 @@ namespace strtk
                                   const InputIterator begin,
                                   const InputIterator end,
                                   OutputIterator out,
-                                  const regex_match_mode::type mode = regex_match_mode::match_all,
-                                  const std::size_t& buffer_size = one_kilobyte)
+                                  const regex_match_mode::type mode = regex_match_mode::match_all)
    {
       const boost::regex regex_expression(delimiter_expression);
       return split_regex(regex_expression,
                          begin,end,
                          out,
-                         mode,
-                         buffer_size);
+                         mode);
    }
 
    template<typename OutputIterator>
    inline std::size_t split_regex(const std::string& delimiter_expression,
                                   const std::string& text,
                                   OutputIterator out,
-                                  const regex_match_mode::type mode = regex_match_mode::match_all,
-                                  const std::size_t& buffer_size = one_kilobyte)
+                                  const regex_match_mode::type mode = regex_match_mode::match_all)
    {
       return split_regex(delimiter_expression,
                          text.begin(),text.end(),
                          out,
-                         mode,
-                         buffer_size);
+                         mode);
    }
 
    template<typename OutputIterator>
    inline std::size_t split_regex(const boost::regex& delimiter_expression,
                                   const std::string& text,
                                   OutputIterator out,
-                                  const regex_match_mode::type mode = regex_match_mode::match_all,
-                                  const std::size_t& buffer_size = one_kilobyte)
+                                  const regex_match_mode::type mode = regex_match_mode::match_all)
    {
       return split_regex(delimiter_expression,
                          text.begin(),text.end(),
                          out,
-                         mode,
-                         buffer_size);
+                         mode);
    }
 
    template<typename InputIterator, typename OutputIterator>
@@ -2898,18 +2891,17 @@ namespace strtk
                                     const InputIterator end,
                                     const std::size_t& token_count,
                                     OutputIterator out,
-                                    const regex_match_mode::type mode = regex_match_mode::match_all,
-                                    const std::size_t& buffer_size = one_kilobyte)
+                                    const regex_match_mode::type mode = regex_match_mode::match_all)
    {
       boost::sregex_iterator itr(begin,end,delimiter_expression);
       const boost::sregex_iterator itr_end;
-      std::string token;
-      token.reserve(buffer_size);
+      std::pair<InputIterator,InputIterator> range(begin,begin);
       std::size_t match_count = 0;
       while (itr_end != itr)
       {
-         token.assign((*itr)[mode].first,(*itr)[mode].second);
-         *out = token;
+         range.first = (*itr)[mode].first;
+         range.second = (*itr)[mode].second;
+         *out = range;
          ++out;
          ++itr;
          if (++match_count >= token_count)
@@ -2924,16 +2916,14 @@ namespace strtk
                                     const InputIterator end,
                                     const std::size_t& token_count,
                                     OutputIterator out,
-                                    const regex_match_mode::type mode = regex_match_mode::match_all,
-                                    const std::size_t& buffer_size = one_kilobyte)
+                                    const regex_match_mode::type mode = regex_match_mode::match_all)
    {
       const boost::regex regex_expression(delimiter_expression);
       return split_regex_n(regex_expression,
                            begin,end,
                            token_count,
                            out,
-                           mode,
-                           buffer_size);
+                           mode);
    }
 
    template<typename OutputIterator>
@@ -2941,15 +2931,13 @@ namespace strtk
                                     const std::string& text,
                                     const std::size_t& token_count,
                                     OutputIterator out,
-                                    const regex_match_mode::type mode = regex_match_mode::match_all,
-                                    const std::size_t& buffer_size = one_kilobyte)
+                                    const regex_match_mode::type mode = regex_match_mode::match_all)
    {
       return split_regex_n(delimiter_expression,
                            text.begin(),text.end(),
                            token_count,
                            out,
-                           mode,
-                           buffer_size);
+                           mode);
    }
 
    template<typename OutputIterator>
@@ -2957,15 +2945,13 @@ namespace strtk
                                     const std::string& text,
                                     const std::size_t& token_count,
                                     OutputIterator out,
-                                    const regex_match_mode::type mode = regex_match_mode::match_all,
-                                    const std::size_t& buffer_size = one_kilobyte)
+                                    const regex_match_mode::type mode = regex_match_mode::match_all)
    {
       return split_regex_n(delimiter_expression,
                            text.begin(),text.end(),
                            token_count,
                            out,
-                           mode,
-                           buffer_size);
+                           mode);
    }
 
    #endif // strtk_enable_regex
@@ -10015,17 +10001,44 @@ namespace strtk
 
    } // namespace text
 
+   namespace find_mode
+   {
+      enum type
+      {
+         exactly_n,
+         atleast_n
+      };
+   }
+
+   namespace find_type
+   {
+      enum type
+      {
+         digits,
+         letters,
+         lowercase_letters,
+         uppercase_letters,
+         letters_digits
+      };
+   }
 
    namespace details
    {
-      template<typename Iterator,typename Predicate>
-      inline Iterator find_n_consecutive_values(const std::size_t n,
-                                                Predicate p,
-                                                Iterator itr,
-                                                const Iterator end)
+
+      template<typename Iterator>
+      struct range_type
+      {
+         typedef typename std::pair<Iterator,Iterator> type;
+      };
+
+      template<typename Iterator, typename Predicate>
+      inline typename range_type<Iterator>::type find_exactly_n_consecutive_values(const std::size_t n,
+                                                                                   Predicate p,
+                                                                                   Iterator itr,
+                                                                                   const Iterator end)
       {
          if (static_cast<unsigned int>(std::distance(itr,end)) < n)
-            return end;
+            return typename range_type<Iterator>::type(end,end);
          std::size_t count = n;
          while (end != itr)
          {
@@ -10036,7 +10049,7 @@ namespace strtk
                else
                {
                   std::advance(itr,1 - n);
-                  return itr;
+                  return typename range_type<Iterator>::type(itr,itr + n);
                }
             }
             else
@@ -10047,63 +10060,200 @@ namespace strtk
                count = n;
             }
          }
-         return end;
+         return typename range_type<Iterator>::type(end,end);
+      }
+
+      template<typename Iterator, typename Predicate>
+      inline typename range_type<Iterator>::type find_atleast_n_consecutive_values(const std::size_t n,
+                                                                                   Predicate p,
+                                                                                   Iterator itr,
+                                                                                   const Iterator end)
+      {
+         if (static_cast<unsigned int>(std::distance(itr,end)) < n)
+            return typename range_type<Iterator>::type(end,end);
+         std::size_t count = 0;
+         while (end != itr)
+         {
+            if (p(*itr))
+            {
+               ++count;
+               ++itr;
+            }
+            else
+            {
+               if (count >= n)
+               {
+                  std::advance(itr,-static_cast<int>(count));
+                  return typename range_type<Iterator>::type(itr,itr + count);
+               }
+
+               while ((end != itr) && !p(*itr))
+                  ++itr;
+               count = 0;
+            }
+         }
+
+         if (count >= n)
+         {
+            std::advance(itr,-static_cast<int>(count));
+            return typename range_type<Iterator>::type(itr,itr + count);
+         }
+         else
+            return typename range_type<Iterator>::type(end,end);
+      }
+
+      template<typename Iterator, typename Predicate>
+      inline typename range_type<Iterator>::type find_n_consecutive_values(const std::size_t n,
+                                                                           find_mode::type mode,
+                                                                           Predicate p,
+                                                                           Iterator itr,
+                                                                           const Iterator end)
+      {
+         switch(mode)
+         {
+            case find_mode::exactly_n : return find_exactly_n_consecutive_values(n,p,itr,end);
+            case find_mode::atleast_n : return find_atleast_n_consecutive_values(n,p,itr,end);
+            default                   : return typename range_type<Iterator>::type(end,end);
+         }
+      }
+
+      template<typename Iterator,typename Predicate>
+      inline bool match_exactly_n_consecutive_values(const std::size_t n,
+                                                     Predicate p,
+                                                     Iterator itr,
+                                                     const Iterator end)
+      {
+         if (static_cast<unsigned int>(std::distance(itr,end)) < n)
+            return false;
+         std::size_t count = n;
+         while (end != itr)
+         {
+            if (p(*itr))
+            {
+               if (0 == --count)
+                  return true;
+               else
+                  ++itr;
+            }
+            else
+               return false;
+         }
+         return false;
+      }
+
+      template<typename Iterator,typename Predicate>
+      inline bool match_atleast_n_consecutive_values(const std::size_t n,
+                                                     Predicate p,
+                                                     Iterator itr,
+                                                     const Iterator end)
+      {
+         if (static_cast<unsigned int>(std::distance(itr,end)) < n)
+            return false;
+         std::size_t count = 0;
+         while (end != itr)
+         {
+            if (p(*itr))
+            {
+               ++count;
+               ++itr;
+            }
+            else if (count >= n)
+               return true;
+            else
+               return false;
+         }
+         return false;
+      }
+
+      template<typename Iterator,typename Predicate>
+      inline bool match_n_consecutive_values(const std::size_t n,
+                                             find_mode::type mode,
+                                             Predicate p,
+                                             Iterator itr,
+                                             const Iterator end)
+      {
+         switch(mode)
+         {
+            case find_mode::exactly_n : return match_exactly_n_consecutive_values(n,p,itr,end);
+            case find_mode::atleast_n : return match_atleast_n_consecutive_values(n,p,itr,end);
+            default                   : return false;
+         }
+      }
+
+   }
+
+   template<typename Iterator>
+   inline typename details::range_type<Iterator>::type find_n_consecutive(const std::size_t n,
+                                                                          find_type::type type,
+                                                                          find_mode::type mode,
+                                                                          typename details::range_type<Iterator>::type range)
+   {
+      switch(type)
+      {
+         case find_type::digits  : return details::find_n_consecutive_values<Iterator>(n,
+                                                                                       mode,
+                                                                                       strtk::text::is_digit,
+                                                                                       range.first,range.second);
+
+         case find_type::letters : return details::find_n_consecutive_values<Iterator>(n,
+                                                                                       mode,
+                                                                                       strtk::text::is_letter,
+                                                                                       range.first,range.second);
+
+         case find_type::lowercase_letters : return details::find_n_consecutive_values<Iterator>(n,
+                                                                                                 mode,
+                                                                                                 strtk::text::is_lowercase_letter,
+                                                                                                 range.first,range.second);
+
+         case find_type::uppercase_letters : return details::find_n_consecutive_values<Iterator>(n,
+                                                                                                 mode,
+                                                                                                 strtk::text::is_uppercase_letter,
+                                                                                                 range.first,range.second);
+
+         case find_type::letters_digits    : return details::find_n_consecutive_values<Iterator>(n,
+                                                                                                 mode,
+                                                                                                 strtk::text::is_letter_or_digit,
+                                                                                                 range.first,range.second);
+
+         default : return typename details::range_type<Iterator>::type(range.second,range.second);
       }
    }
 
    template<typename Iterator>
-   inline Iterator find_n_consecutive_digits(const std::size_t n,
-                                             Iterator itr,
-                                             const Iterator end)
+   inline bool match_n_consecutive(const std::size_t n,
+                                   find_type::type type,
+                                   find_mode::type mode,
+                                   typename details::range_type<Iterator>::type range)
    {
-      return details::find_n_consecutive_values<Iterator>(n,
-                                                          strtk::text::is_digit,
-                                                          itr,
-                                                          end);
-   }
+      switch(type)
+      {
+         case find_type::digits  : return details::match_n_consecutive_values<Iterator>(n,
+                                                                                       mode,
+                                                                                       strtk::text::is_digit,
+                                                                                       range.first,range.second);
 
-   template<typename Iterator>
-   inline Iterator find_n_consecutive_lowercase_letters(const std::size_t n,
-                                                        Iterator itr,
-                                                        const Iterator end)
-   {
-      return details::find_n_consecutive_values<Iterator>(n,
-                                                          strtk::text::is_lowercase_letter,
-                                                          itr,
-                                                          end);
-   }
+         case find_type::letters : return details::match_n_consecutive_values<Iterator>(n,
+                                                                                        mode,
+                                                                                        strtk::text::is_letter,
+                                                                                        range.first,range.second);
 
-   template<typename Iterator>
-   inline Iterator find_n_consecutive_uppercase_letters(const std::size_t n,
-                                                        Iterator itr,
-                                                        const Iterator end)
-   {
-      return details::find_n_consecutive_values<Iterator>(n,
-                                                          strtk::text::is_uppercase_letter,
-                                                          itr,
-                                                          end);
-   }
+         case find_type::lowercase_letters : return details::match_n_consecutive_values<Iterator>(n,
+                                                                                                  mode,
+                                                                                                  strtk::text::is_lowercase_letter,
+                                                                                                  range.first,range.second);
 
-   template<typename Iterator>
-   inline Iterator find_n_consecutive_letters(const std::size_t n,
-                                              Iterator itr,
-                                              const Iterator end)
-   {
-      return details::find_n_consecutive_values<Iterator>(n,
-                                                          strtk::text::is_letter,
-                                                          itr,
-                                                          end);
-   }
+         case find_type::uppercase_letters : return details::match_n_consecutive_values<Iterator>(n,
+                                                                                                  mode,
+                                                                                                  strtk::text::is_uppercase_letter,
+                                                                                                  range.first,range.second);
 
-   template<typename Iterator>
-   inline Iterator find_n_consecutive_letters_or_digits(const std::size_t n,
-                                                        Iterator itr,
-                                                        const Iterator end)
-   {
-      return details::find_n_consecutive_values<Iterator>(n,
-                                                          strtk::text::is_letter_or_digit,
-                                                          itr,
-                                                          end);
+         case find_type::letters_digits    : return details::match_n_consecutive_values<Iterator>(n,
+                                                                                                  mode,
+                                                                                                  strtk::text::is_letter_or_digit,
+                                                                                                  range.first,range.second);
+
+         default : return false;
+      }
    }
 
    namespace details
