@@ -2006,7 +2006,7 @@ namespace strtk
       template<typename Iterator>
       inline range_to_type_back_inserter_iterator& operator=(const std::pair<Iterator,Iterator>& r)
       {
-         T t;
+         T t = T();
          if (string_to_type_converter(r.first,r.second,t))
             sequence_.push_back(t);
          return (*this);
@@ -2014,7 +2014,7 @@ namespace strtk
 
       inline range_to_type_back_inserter_iterator& operator=(const std::string& s)
       {
-         T t;
+         T t = T();
          if (string_to_type_converter(s.data(),s.data() + s.size(),t))
             sequence_.push_back(t);
          return (*this);
@@ -8735,6 +8735,7 @@ namespace strtk
                                         const bool complete_index = true)
    {
       //Compute the indicies for the n'th combination of r-choose-k
+      //n must be in the range [0,r-choose-k)
       typedef unsigned long long value_type;
 
       std::vector<std::size_t> index_list(k,0);

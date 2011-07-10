@@ -381,7 +381,7 @@ bool test_tokenizer_options()
       tokenizer_type::iterator itr = tokenizer.begin();
       tokenizer_type::iterator end = tokenizer.end();
 
-      while(end != itr)
+      while (end != itr)
       {
          token_list.push_back(std::string((*itr).first,(*itr).second));
          ++itr;
@@ -393,7 +393,7 @@ bool test_tokenizer_options()
          return false;
       }
 
-      for(std::size_t i = 0; i < expected_token_size; ++i)
+      for (std::size_t i = 0; i < expected_token_size; ++i)
       {
          if (expected_token[i] != token_list[i])
          {
@@ -418,7 +418,7 @@ bool test_tokenizer_options()
       tokenizer_type::iterator itr = tokenizer.begin();
       tokenizer_type::iterator end = tokenizer.end();
 
-      while(end != itr)
+      while (end != itr)
       {
          token_list.push_back(std::string((*itr).first,(*itr).second));
          ++itr;
@@ -430,7 +430,7 @@ bool test_tokenizer_options()
          return false;
       }
 
-      for(std::size_t i = 0; i < expected_token_size; ++i)
+      for (std::size_t i = 0; i < expected_token_size; ++i)
       {
          if (expected_token[i] != token_list[i])
          {
@@ -466,7 +466,7 @@ bool test_split_options()
          return false;
       }
 
-      for(std::size_t i = 0; i < expected_token_size; ++i)
+      for (std::size_t i = 0; i < expected_token_size; ++i)
       {
          if (expected_token[i] != token_list[i])
          {
@@ -496,7 +496,7 @@ bool test_split_options()
          return false;
       }
 
-      for(std::size_t i = 0; i < expected_token_size; ++i)
+      for (std::size_t i = 0; i < expected_token_size; ++i)
       {
          if (expected_token[i] != token_list[i])
          {
@@ -887,7 +887,7 @@ bool test_double_convert()
    for (std::size_t i = 0; i < d_size; ++i)
    {
       v = 0.0;
-      if(!strtk::string_to_type_converter(double_str[i],v))
+      if (!strtk::string_to_type_converter(double_str[i],v))
       {
          std::cout << "test_double_convert() double convert[" << i << "]" << std::endl;
          return false;
@@ -1000,7 +1000,7 @@ bool test_double_convert()
       std::string s;
       s.reserve(256);
       double tmp = 0.0;
-      for(int i = 0; i < 1000000; ++i)
+      for (int i = 0; i < 1000000; ++i)
       {
          std_double_to_string(d1,s);
          if (!strtk::string_to_type_converter(s,tmp))
@@ -1054,7 +1054,6 @@ bool test_construct_and_parse()
 
    strtk::construct(output,"|",i.d1,i.d2,i.d3,i.d4,i.d5,i.d6,i.d7,i.d8,i.d9,i.d10);
    data_block o = i;
-
 
    bool result = true;
 
