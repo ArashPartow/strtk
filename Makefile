@@ -27,6 +27,7 @@ LINKER_OPT       = -L/usr/lib -lstdc++
 
 BUILD_LIST+=strtk_examples
 BUILD_LIST+=strtk_tokenizer_test
+BUILD_LIST+=strtk_bloom_filter_example
 BUILD_LIST+=strtk_combinations
 BUILD_LIST+=strtk_combinator_example
 BUILD_LIST+=strtk_converters_example
@@ -80,6 +81,9 @@ strtk_ipv4_parser: strtk_ipv4_parser.cpp strtk.hpp
 strtk_hexview: strtk_hexview.cpp strtk.hpp
 	$(COMPILER) $(OPTIONS) strtk_hexview strtk_hexview.cpp $(LINKER_OPT)
 
+strtk_bloom_filter_example: strtk_bloom_filter_example.cpp strtk.hpp
+	$(COMPILER) $(OPTIONS) strtk_bloom_filter_example strtk_bloom_filter_example.cpp $(LINKER_OPT)
+
 strtk_converters_example: strtk_converters_example.cpp strtk.hpp
 	$(COMPILER) $(OPTIONS) strtk_converters_example strtk_converters_example.cpp $(LINKER_OPT)
 
@@ -122,18 +126,22 @@ pgo: strtk_parse_test.cpp strtk_tokenizer_cmp.cpp strtk.hpp
 	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -pg -fprofile-generate -o strtk_serializer_example strtk_serializer_example.cpp $(LINKER_OPT)
 	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -pg -fprofile-generate -o strtk_search_trie_example strtk_search_trie_example.cpp $(LINKER_OPT)
 	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -pg -fprofile-generate -o strtk_converters_example strtk_converters_example.cpp $(LINKER_OPT)
+	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -pg -fprofile-generate -o strtk_bloom_filter_example strtk_bloom_filter_example.cpp $(LINKER_OPT)
 	./strtk_tokenizer_cmp
 	./strtk_parse_test
 	./strtk_serializer_example
 	./strtk_search_trie_example
 	./strtk_converters_example
+	./strtk_bloom_filter_example
 	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -fprofile-use -DUSE_SPIRIT -o strtk_tokenizer_cmp strtk_tokenizer_cmp.cpp $(LINKER_OPT)
 	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -fprofile-use -o strtk_parse_test strtk_parse_test.cpp $(LINKER_OPT)
 	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -fprofile-use -o strtk_serializer_example strtk_serializer_example.cpp $(LINKER_OPT)
 	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -fprofile-use -o strtk_search_trie_example strtk_search_trie_example.cpp $(LINKER_OPT)
 	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -fprofile-use -o strtk_converters_example strtk_converters_example.cpp $(LINKER_OPT)
+	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -fprofile-use -o strtk_bloom_filter_example strtk_bloom_filter_example.cpp $(LINKER_OPT)
 
 strip_bin:
+	strip -s strtk_bloom_filter_example
 	strip -s strtk_converters_example
 	strip -s strtk_combinations
 	strip -s strtk_combinator_example
@@ -158,6 +166,7 @@ strip_bin:
 	strip -s strtk_wordfreq
 
 valgrind_check:
+	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_bloom_filter_example
 	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_converters_example
 	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_combinations
 	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_combinator_example

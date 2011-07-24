@@ -36,6 +36,11 @@
 #include "strtk.hpp"
 
 
+/*
+   Note: For performance reasons, if TR1 is available then the
+         following definition of std::map should be replaced
+         with std::unordered_map.
+*/
 typedef std::map<std::string,unsigned int> map_t;
 
 template<typename Predicate>
@@ -73,6 +78,8 @@ public:
    inline line_parser& operator*()     { return (*this); }
 
 private:
+
+   inline line_parser& operator=(const line_parser&);
 
    unsigned long long& word_count_;
    map_t& map_;

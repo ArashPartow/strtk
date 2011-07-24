@@ -850,7 +850,7 @@ namespace strtk
 
       multiple_char_delimiter_predicate(const std::string& s)
       {
-         setup_delimiter_table(s.begin(),s.end());
+         setup_delimiter_table(s.data(),s.data() + s.size());
       }
 
       inline bool operator()(const unsigned char& c) const
@@ -927,8 +927,8 @@ namespace strtk
    inline void remove_inplace(const std::string::value_type c, std::string& s)
    {
       const std::size_t removal_count = remove_inplace(single_delimiter_predicate<std::string::value_type>(c),
-                                                       s.begin(),
-                                                       s.end());
+                                                       const_cast<char*>(s.data()),
+                                                       const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
       {
          s.resize(s.size() - removal_count);
@@ -938,7 +938,9 @@ namespace strtk
    template<typename Predicate>
    inline void remove_inplace(Predicate predicate, std::string& s)
    {
-      const std::size_t removal_count = remove_inplace(predicate,s.begin(),s.end());
+      const std::size_t removal_count = remove_inplace(predicate,
+                                                       const_cast<char*>(s.data()),
+                                                       const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
       {
          s.resize(s.size() - removal_count);
@@ -989,8 +991,8 @@ namespace strtk
    {
       if (s.empty()) return;
       const std::size_t removal_count = remove_consecutives_inplace(single_delimiter_predicate<std::string::value_type>(c),
-                                                                    s.begin(),
-                                                                    s.end());
+                                                                    const_cast<char*>(s.data()),
+                                                                    const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
       {
          s.resize(s.size() - removal_count);
@@ -1001,8 +1003,8 @@ namespace strtk
    {
       if (s.empty()) return;
       const std::size_t removal_count = remove_consecutives_inplace(multiple_char_delimiter_predicate(rem_chars),
-                                                                    s.begin(),
-                                                                    s.end());
+                                                                    const_cast<char*>(s.data()),
+                                                                    const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
       {
          s.resize(s.size() - removal_count);
@@ -1035,8 +1037,8 @@ namespace strtk
       const std::size_t removal_count = remove_consecutives_inplace(multiple_char_delimiter_predicate(
                                                                     rem_chars,
                                                                     rem_chars + details::strnlen(rem_chars,256)),
-                                                                    s.begin(),
-                                                                    s.end());
+                                                                    const_cast<char*>(s.data()),
+                                                                    const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
       {
          s.resize(s.size() - removal_count);
@@ -1047,7 +1049,9 @@ namespace strtk
    inline void remove_consecutives_inplace(Predicate predicate, std::string& s)
    {
       if (s.empty()) return;
-      const std::size_t removal_count = remove_consecutives_inplace(predicate,s.begin(),s.end());
+      const std::size_t removal_count = remove_consecutives_inplace(predicate,
+                                                                    const_cast<char*>(s.data()),
+                                                                    const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
       {
          s.resize(s.size() - removal_count);
@@ -1104,7 +1108,8 @@ namespace strtk
 
    inline void remove_consecutives_inplace(std::string& s)
    {
-      std::size_t removal_count = remove_consecutives_inplace(s.begin(),s.end());
+      std::size_t removal_count = remove_consecutives_inplace(const_cast<char*>(s.data()),
+                                                              const_cast<char*>(s.data() + s.size()));
 
       if (removal_count > 0)
       {
@@ -1142,8 +1147,8 @@ namespace strtk
    {
       if (s.empty()) return;
       const std::size_t removal_count = remove_trailing(single_delimiter_predicate<std::string::value_type>(c),
-                                                        s.begin(),
-                                                        s.end());
+                                                        const_cast<char*>(s.data()),
+                                                        const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
       {
          s.resize(s.size() - removal_count);
@@ -1154,8 +1159,8 @@ namespace strtk
    {
       if (s.empty()) return;
       const std::size_t removal_count = remove_trailing(multiple_char_delimiter_predicate(rem_chars),
-                                                        s.begin(),
-                                                        s.end());
+                                                        const_cast<char*>(s.data()),
+                                                        const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
       {
          s.resize(s.size() - removal_count);
@@ -1167,8 +1172,8 @@ namespace strtk
       const std::size_t removal_count = remove_trailing(multiple_char_delimiter_predicate(
                                                         rem_chars,
                                                         rem_chars + details::strnlen(rem_chars,256)),
-                                                        s.begin(),
-                                                        s.end());
+                                                        const_cast<char*>(s.data()),
+                                                        const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
       {
          s.resize(s.size() - removal_count);
@@ -1179,7 +1184,9 @@ namespace strtk
    inline void remove_trailing(Predicate predicate, std::string& s)
    {
       if (s.empty()) return;
-      const std::size_t removal_count = remove_trailing(predicate,s.begin(),s.end());
+      const std::size_t removal_count = remove_trailing(predicate,
+                                                        const_cast<char*>(s.data()),
+                                                        const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
       {
          s.resize(s.size() - removal_count);
@@ -1217,8 +1224,8 @@ namespace strtk
    {
       if (s.empty()) return;
       const std::size_t removal_count = remove_leading(single_delimiter_predicate<std::string::value_type>(c),
-                                                       s.begin(),
-                                                       s.end());
+                                                       const_cast<char*>(s.data()),
+                                                       const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
       {
          s.resize(s.size() - removal_count);
@@ -1229,8 +1236,8 @@ namespace strtk
    {
       if (s.empty()) return;
       const std::size_t removal_count = remove_leading(multiple_char_delimiter_predicate(rem_chars),
-                                                       s.begin(),
-                                                       s.end());
+                                                       const_cast<char*>(s.data()),
+                                                       const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
       {
          s.resize(s.size() - removal_count);
@@ -1243,8 +1250,8 @@ namespace strtk
       const std::size_t removal_count = remove_leading(multiple_char_delimiter_predicate(
                                                        rem_chars,
                                                        rem_chars + details::strnlen(rem_chars,256)),
-                                                       s.begin(),
-                                                       s.end());
+                                                       const_cast<char*>(s.data()),
+                                                       const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
       {
          s.resize(s.size() - removal_count);
@@ -1255,7 +1262,9 @@ namespace strtk
    inline void remove_leading(Predicate predicate, std::string& s)
    {
       if (s.empty()) return;
-      const std::size_t removal_count = remove_leading(predicate,s.begin(),s.end());
+      const std::size_t removal_count = remove_leading(predicate,
+                                                       const_cast<char*>(s.data()),
+                                                       const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
       {
          s.resize(s.size() - removal_count);
@@ -1311,8 +1320,11 @@ namespace strtk
       }
 
       n.resize(delta_list.size() * inc + s.size(), 0x00);
-      std::string::const_iterator s_itr = s.begin();
-      std::string::iterator n_itr = n.begin();
+      char* n_itr = const_cast<char*>(n.data());
+      const char* s_end = s.data() + s.size();
+      const char* s_itr = s.data();
+      const char* r_begin = r.data();
+      const char* r_end = r.data() + r_size;
       const std::size_t delta_list_size = delta_list.size();
       std::size_t i = 0;
       std::size_t delta = delta_list[0];
@@ -1322,16 +1334,16 @@ namespace strtk
          std::copy(s_itr, s_itr + delta, n_itr);
          s_itr += p_size + delta;
          n_itr += delta;
-         std::copy(r.begin(), r.end(), n_itr);
+         std::copy(r_begin, r_end, n_itr);
          n_itr += r_size;
          if (++i >= delta_list_size)
             break;
          delta =  delta_list[i] - (delta_list[i - 1] + p_size);
       }
 
-      if (s.end() != s_itr)
+      if (s_end != s_itr)
       {
-         std::copy(s_itr, s.end(), n_itr);
+         std::copy(s_itr, s_end, n_itr);
       }
    }
 
@@ -1510,8 +1522,10 @@ namespace strtk
          * : Zero or more match
          ? : Zero or one match
       */
-      return match(wild_card.data(),wild_card.data() + wild_card.size(),
-                   str.data(),str.data() + str.size(),
+      return match(wild_card.data(),
+                   wild_card.data() + wild_card.size(),
+                   str.data(),
+                   str.data() + str.size(),
                    '*',
                    '?');
    }
@@ -1556,7 +1570,10 @@ namespace strtk
 
    inline bool imatch(const std::string& s1, const std::string s2)
    {
-      return imatch(s1.begin(),s1.end(),s2.begin(),s2.end());
+      return imatch(s1.data(),
+                    s1.data() + s1.size(),
+                    s2.data(),
+                    s2.data() + s2.size());
    }
 
    template<typename Iterator>
@@ -2454,7 +2471,7 @@ namespace strtk
    {
    public:
 
-      explicit inline functional_inserter_iterator(Function& function)
+      explicit inline functional_inserter_iterator(Function function)
       : function_(function)
       {}
 
@@ -2501,7 +2518,7 @@ namespace strtk
 
    private:
 
-      Function& function_;
+      Function function_;
    };
 
    template<typename Function>
@@ -3334,8 +3351,8 @@ namespace strtk
 
    inline const unsigned char* first_non_repeated_char(const unsigned char* begin, const unsigned char* end)
    {
-      const char * b = const_cast<const char*>(reinterpret_cast<char*>(const_cast<unsigned char*>(begin)));
-      const char * e = const_cast<const char*>(reinterpret_cast<char*>(const_cast<unsigned char*>(end)));
+      char * b = reinterpret_cast<char*>(const_cast<unsigned char*>(begin));
+      char * e = reinterpret_cast<char*>(const_cast<unsigned char*>(end));
       return const_cast<const unsigned char*>(reinterpret_cast<unsigned char*>(const_cast<char*>(first_non_repeated_char(b,e))));
    }
 
@@ -8144,7 +8161,7 @@ namespace strtk
             template<typename,typename> class Sequence>
    inline void iota(Sequence<T,Allocator>& sequence, const T& value)
    {
-      iota(sequence.begin(),sequence.end(),value);
+      strtk::iota(sequence.begin(),sequence.end(),value);
    }
 
    template<typename T,
@@ -8152,7 +8169,7 @@ namespace strtk
             typename Allocator>
    inline void iota(std::set<T,Comparator,Allocator>& set, const T& value)
    {
-      iota(set.begin(),set.end(),value);
+      strtk::iota(set.begin(),set.end(),value);
    }
 
    template<typename InputIterator, typename OutputIterator>
@@ -8847,11 +8864,33 @@ namespace strtk
          }
       }
 
+      explicit inline combination_iterator(const std::size_t& k,
+                                           std::string& str,
+                                           const bool sorted = true)
+      : begin_(const_cast<char*>(str.data())),
+        end_(const_cast<char*>(str.data() + str.size())),
+        middle_(begin_ + k),
+        current_combination_(begin_,middle_)
+      {
+         if (!sorted)
+         {
+            std::sort(begin_,end_);
+         }
+      }
+
+
       inline combination_iterator(iterator end)
       : begin_(end),
         end_(end),
         middle_(end),
         current_combination_(end,end)
+      {}
+
+      inline combination_iterator(const std::string& str)
+      : begin_(const_cast<char*>(str.data() + str.size())),
+        end_(begin_),
+        middle_(end_),
+        current_combination_(end_,end_)
       {}
 
       template<typename T,
@@ -13023,6 +13062,511 @@ namespace strtk
       typedef trie::prefix<unsigned char*,ValueType> uchar_ptr;
       typedef trie::prefix<const unsigned char*,ValueType> const_uchar_ptr;
    };
+
+   namespace bloom
+   {
+
+      static const std::size_t bits_per_char = 0x08;    // 8 bits in 1 char(unsigned)
+      static const unsigned char bit_mask[bits_per_char] = {
+                                                             0x01,  //00000001
+                                                             0x02,  //00000010
+                                                             0x04,  //00000100
+                                                             0x08,  //00001000
+                                                             0x10,  //00010000
+                                                             0x20,  //00100000
+                                                             0x40,  //01000000
+                                                             0x80   //10000000
+                                                           };
+
+
+      class filter
+      {
+      protected:
+
+         typedef unsigned int bloom_type;
+         typedef unsigned char cell_type;
+
+      public:
+
+         filter(const std::size_t& predicted_inserted_element_count,
+                const double& false_positive_probability,
+                const std::size_t& random_seed)
+         : bit_table_(0),
+           predicted_inserted_element_count_(predicted_inserted_element_count),
+           inserted_element_count_(0),
+           random_seed_((random_seed) ? random_seed : 0xA5A5A5A5),
+           desired_false_positive_probability_(false_positive_probability)
+         {
+            find_optimal_parameters();
+            generate_unique_salt();
+            raw_table_size_ = table_size_ / bits_per_char;
+            bit_table_ = new cell_type[raw_table_size_];
+            std::fill_n(bit_table_,raw_table_size_,0x00);
+         }
+
+         filter(const filter& filter)
+         {
+            this->operator=(filter);
+         }
+
+         filter& operator = (const filter& f)
+         {
+            salt_count_ = f.salt_count_;
+            table_size_ = f.table_size_;
+            raw_table_size_ = f.raw_table_size_;
+            predicted_inserted_element_count_ = f.predicted_inserted_element_count_;
+            inserted_element_count_ = f.inserted_element_count_;
+            random_seed_ = f.random_seed_;
+            desired_false_positive_probability_ = f.desired_false_positive_probability_;
+            delete[] bit_table_;
+            bit_table_ = new cell_type[raw_table_size_];
+            std::copy(f.bit_table_,f.bit_table_ + raw_table_size_,bit_table_);
+            salt_ = f.salt_;
+            return *this;
+         }
+
+         virtual ~filter()
+         {
+            delete[] bit_table_;
+         }
+
+         inline bool operator!() const
+         {
+            return (0 == table_size_);
+         }
+
+         inline void clear()
+         {
+            std::fill_n(bit_table_,raw_table_size_,0x00);
+            inserted_element_count_ = 0;
+         }
+
+         inline void insert(const unsigned char* key_begin, const std::size_t& length)
+         {
+            std::size_t bit_index = 0;
+            std::size_t bit = 0;
+            for (std::size_t i = 0; i < salt_.size(); ++i)
+            {
+               compute_indices(hash_ap(key_begin,length,salt_[i]),bit_index,bit);
+               bit_table_[bit_index / bits_per_char] |= bit_mask[bit];
+            }
+            ++inserted_element_count_;
+         }
+
+         template<typename T>
+         inline void insert(const T& t)
+         {
+            // Note: T must be a C++ POD type.
+            insert(reinterpret_cast<const unsigned char*>(&t),sizeof(T));
+         }
+
+         inline void insert(const std::string& key)
+         {
+            insert(reinterpret_cast<const unsigned char*>(key.c_str()),key.size());
+         }
+
+         inline void insert(const char* data, const std::size_t& length)
+         {
+            insert(reinterpret_cast<const unsigned char*>(data),length);
+         }
+
+         template<typename InputIterator>
+         inline void insert(const InputIterator begin, const InputIterator end)
+         {
+            InputIterator itr = begin;
+            while (end != itr)
+            {
+               insert(*(itr++));
+            }
+         }
+
+         inline virtual bool contains(const unsigned char* key_begin, const std::size_t length) const
+         {
+            std::size_t bit_index = 0;
+            std::size_t bit = 0;
+            for (std::size_t i = 0; i < salt_.size(); ++i)
+            {
+               compute_indices(hash_ap(key_begin,length,salt_[i]),bit_index,bit);
+               if ((bit_table_[bit_index / bits_per_char] & bit_mask[bit]) != bit_mask[bit])
+               {
+                  return false;
+               }
+            }
+            return true;
+         }
+
+         template<typename T>
+         inline bool contains(const T& t) const
+         {
+            return contains(reinterpret_cast<const unsigned char*>(&t),static_cast<std::size_t>(sizeof(T)));
+         }
+
+         inline bool contains(const std::string& key) const
+         {
+            return contains(reinterpret_cast<const unsigned char*>(key.c_str()),key.size());
+         }
+
+         inline bool contains(const char* data, const std::size_t& length) const
+         {
+            return contains(reinterpret_cast<const unsigned char*>(data),length);
+         }
+
+         template<typename InputIterator>
+         inline InputIterator contains_all(const InputIterator begin, const InputIterator end) const
+         {
+            InputIterator itr = begin;
+            while (end != itr)
+            {
+               if (!contains(*itr))
+               {
+                  return itr;
+               }
+               ++itr;
+            }
+            return end;
+         }
+
+         template<typename InputIterator>
+         inline InputIterator contains_none(const InputIterator begin, const InputIterator end) const
+         {
+            InputIterator itr = begin;
+            while (end != itr)
+            {
+               if (contains(*itr))
+               {
+                  return itr;
+               }
+               ++itr;
+            }
+            return end;
+         }
+
+         inline virtual std::size_t size() const
+         {
+            return table_size_;
+         }
+
+         inline std::size_t element_count() const
+         {
+            return inserted_element_count_;
+         }
+
+         inline double effective_fpp() const
+         {
+            /*
+              Note:
+              The effective false positive probability is calculated using the
+              designated table size and hash function count in conjunction with
+              the current number of inserted elements - not the user defined
+              predicated/expected number of inserted elements.
+            */
+            return std::pow(1.0 - std::exp(-1.0 * salt_.size() * inserted_element_count_ / size()), 1.0 * salt_.size());
+         }
+
+         inline filter& operator &= (const filter& f)
+         {
+            /* intersection */
+            if (
+                (salt_count_  == f.salt_count_) &&
+                (table_size_  == f.table_size_) &&
+                (random_seed_ == f.random_seed_)
+               )
+            {
+               for (std::size_t i = 0; i < raw_table_size_; ++i)
+               {
+                  bit_table_[i] &= f.bit_table_[i];
+               }
+            }
+            return *this;
+         }
+
+         inline filter& operator |= (const filter& f)
+         {
+            /* union */
+            if (
+                (salt_count_  == f.salt_count_) &&
+                (table_size_  == f.table_size_) &&
+                (random_seed_ == f.random_seed_)
+               )
+            {
+               for (std::size_t i = 0; i < raw_table_size_; ++i)
+               {
+                  bit_table_[i] |= f.bit_table_[i];
+               }
+            }
+            return *this;
+         }
+
+         inline filter& operator ^= (const filter& f)
+         {
+            /* difference */
+            if (
+                (salt_count_  == f.salt_count_) &&
+                (table_size_  == f.table_size_) &&
+                (random_seed_ == f.random_seed_)
+               )
+            {
+               for (std::size_t i = 0; i < raw_table_size_; ++i)
+               {
+                  bit_table_[i] ^= f.bit_table_[i];
+               }
+            }
+            return *this;
+         }
+
+         inline const cell_type* table() const
+         {
+            return bit_table_;
+         }
+
+      protected:
+
+         inline virtual void compute_indices(const bloom_type& hash, std::size_t& bit_index, std::size_t& bit) const
+         {
+            bit_index = hash % table_size_;
+            bit = bit_index % bits_per_char;
+         }
+
+         void generate_unique_salt()
+         {
+            /*
+              Note:
+              A distinct hash function need not be implementation-wise
+              distinct. In the current implementation "seeding" a common
+              hash function with different values seems to be adequate.
+            */
+            const unsigned int predef_salt_count = 128;
+            static const bloom_type predef_salt[predef_salt_count] =
+                                       {
+                                          0xAAAAAAAA, 0x55555555, 0x33333333, 0xCCCCCCCC,
+                                          0x66666666, 0x99999999, 0xB5B5B5B5, 0x4B4B4B4B,
+                                          0xAA55AA55, 0x55335533, 0x33CC33CC, 0xCC66CC66,
+                                          0x66996699, 0x99B599B5, 0xB54BB54B, 0x4BAA4BAA,
+                                          0xAA33AA33, 0x55CC55CC, 0x33663366, 0xCC99CC99,
+                                          0x66B566B5, 0x994B994B, 0xB5AAB5AA, 0xAAAAAA33,
+                                          0x555555CC, 0x33333366, 0xCCCCCC99, 0x666666B5,
+                                          0x9999994B, 0xB5B5B5AA, 0xFFFFFFFF, 0xFFFF0000,
+                                          0xB823D5EB, 0xC1191CDF, 0xF623AEB3, 0xDB58499F,
+                                          0xC8D42E70, 0xB173F616, 0xA91A5967, 0xDA427D63,
+                                          0xB1E8A2EA, 0xF6C0D155, 0x4909FEA3, 0xA68CC6A7,
+                                          0xC395E782, 0xA26057EB, 0x0CD5DA28, 0x467C5492,
+                                          0xF15E6982, 0x61C6FAD3, 0x9615E352, 0x6E9E355A,
+                                          0x689B563E, 0x0C9831A8, 0x6753C18B, 0xA622689B,
+                                          0x8CA63C47, 0x42CC2884, 0x8E89919B, 0x6EDBD7D3,
+                                          0x15B6796C, 0x1D6FDFE4, 0x63FF9092, 0xE7401432,
+                                          0xEFFE9412, 0xAEAEDF79, 0x9F245A31, 0x83C136FC,
+                                          0xC3DA4A8C, 0xA5112C8C, 0x5271F491, 0x9A948DAB,
+                                          0xCEE59A8D, 0xB5F525AB, 0x59D13217, 0x24E7C331,
+                                          0x697C2103, 0x84B0A460, 0x86156DA9, 0xAEF2AC68,
+                                          0x23243DA5, 0x3F649643, 0x5FA495A8, 0x67710DF8,
+                                          0x9A6C499E, 0xDCFB0227, 0x46A43433, 0x1832B07A,
+                                          0xC46AFF3C, 0xB9C8FFF0, 0xC9500467, 0x34431BDF,
+                                          0xB652432B, 0xE367F12B, 0x427F4C1B, 0x224C006E,
+                                          0x2E7E5A89, 0x96F99AA5, 0x0BEB452A, 0x2FD87C39,
+                                          0x74B2E1FB, 0x222EFD24, 0xF357F60C, 0x440FCB1E,
+                                          0x8BBE030F, 0x6704DC29, 0x1144D12F, 0x948B1355,
+                                          0x6D8FD7E9, 0x1C11A014, 0xADD1592F, 0xFB3C712E,
+                                          0xFC77642F, 0xF9C4CE8C, 0x31312FB9, 0x08B0DD79,
+                                          0x318FA6E7, 0xC040D23D, 0xC0589AA7, 0x0CA5C075,
+                                          0xF874B172, 0x0CF914D5, 0x784D3280, 0x4E8CFEBC,
+                                          0xC569F575, 0xCDB2A091, 0x2CC016B4, 0x5C5F4421
+                                       };
+
+            if (salt_count_ <= predef_salt_count)
+            {
+               std::copy(predef_salt,
+                         predef_salt + salt_count_,
+                         std::back_inserter(salt_));
+                for (unsigned int i = 0; i < salt_.size(); ++i)
+                {
+                  /*
+                    Note:
+                    This is done to integrate the user defined random seed,
+                    so as to allow for the generation of unique bloom filter
+                    instances.
+                  */
+                  salt_[i] = salt_[i] * salt_[(i + 3) % salt_.size()] + random_seed_;
+                }
+            }
+            else
+            {
+               std::copy(predef_salt,predef_salt + predef_salt_count,std::back_inserter(salt_));
+               srand(static_cast<unsigned int>(random_seed_));
+               while (salt_.size() < salt_count_)
+               {
+                  bloom_type current_salt = static_cast<bloom_type>(rand()) * static_cast<bloom_type>(rand());
+                  if (0 == current_salt) continue;
+                  if (salt_.end() == std::find(salt_.begin(), salt_.end(), current_salt))
+                  {
+                     salt_.push_back(current_salt);
+                  }
+               }
+            }
+         }
+
+         void find_optimal_parameters()
+         {
+            /*
+              Note:
+              The following will attempt to find the number of hash functions
+              and minimum amount of storage bits required to construct a bloom
+              filter consistent with the user defined false positive probability
+              and estimated element insertion count.
+            */
+
+            double min_m = std::numeric_limits<double>::infinity();
+            double min_k = 0.0;
+            double curr_m = 0.0;
+            double k = 1.0;
+
+            while (k < 1000.0)
+            {
+               double numerator   = (- k * predicted_inserted_element_count_);
+               double denominator = std::log(1.0 - std::pow(desired_false_positive_probability_, 1.0 / k));
+               curr_m = numerator / denominator;
+
+               if (curr_m < min_m)
+               {
+                  min_m = curr_m;
+                  min_k = k;
+               }
+               k += 1.0;
+            }
+
+            salt_count_ = static_cast<std::size_t>(min_k);
+            table_size_ = static_cast<std::size_t>(min_m);
+            table_size_ += (((table_size_ % bits_per_char) != 0) ? (bits_per_char - (table_size_ % bits_per_char)) : 0);
+         }
+
+         inline bloom_type hash_ap(const unsigned char* begin, std::size_t remaining_length, bloom_type hash) const
+         {
+            const unsigned char* itr = begin;
+
+            while (remaining_length >= 4)
+            {
+               hash ^=    (hash <<  7) ^  (*itr++) * (hash >> 3);
+               hash ^= (~((hash << 11) + ((*itr++) ^ (hash >> 5))));
+               hash ^=    (hash <<  7) ^  (*itr++) * (hash >> 3);
+               hash ^= (~((hash << 11) + ((*itr++) ^ (hash >> 5))));
+               remaining_length -= 4;
+            }
+
+            while (remaining_length >= 2)
+            {
+               hash ^=    (hash <<  7) ^  (*itr++) * (hash >> 3);
+               hash ^= (~((hash << 11) + ((*itr++) ^ (hash >> 5))));
+               remaining_length -= 2;
+            }
+
+            if (remaining_length)
+            {
+               hash ^= (hash <<  7) ^ (*itr) * (hash >> 3);
+            }
+
+            return hash;
+         }
+
+         std::vector<bloom_type> salt_;
+         unsigned char*          bit_table_;
+         std::size_t             salt_count_;
+         std::size_t             table_size_;
+         std::size_t             raw_table_size_;
+         std::size_t             predicted_inserted_element_count_;
+         std::size_t             inserted_element_count_;
+         std::size_t             random_seed_;
+         double                  desired_false_positive_probability_;
+      };
+
+      inline filter operator & (const filter& a, const filter& b)
+      {
+         filter result = a;
+         result &= b;
+         return result;
+      }
+
+      inline filter operator | (const filter& a, const filter& b)
+      {
+         filter result = a;
+         result |= b;
+         return result;
+      }
+
+      inline filter operator ^ (const filter& a, const filter& b)
+      {
+         filter result = a;
+         result ^= b;
+         return result;
+      }
+
+
+      class compressible_filter : public filter
+      {
+      public:
+
+         compressible_filter(const std::size_t& predicted_element_count,
+                             const double& false_positive_probability,
+                             const std::size_t& random_seed)
+         : filter(predicted_element_count,false_positive_probability,random_seed)
+         {
+            size_list.push_back(table_size_);
+         }
+
+         inline virtual std::size_t size() const
+         {
+            return size_list.back();
+         }
+
+         inline bool compress(const double& percentage)
+         {
+            if ((0.0 >= percentage) || (percentage >= 100.0))
+            {
+               return false;
+            }
+
+            std::size_t original_table_size = size_list.back();
+            std::size_t new_table_size = static_cast<std::size_t>((size_list.back() * (1.0 - (percentage / 100.0))));
+            new_table_size -= (((new_table_size % bits_per_char) != 0) ? (new_table_size % bits_per_char) : 0);
+
+            if ((bits_per_char > new_table_size) || (new_table_size >= original_table_size))
+            {
+               return false;
+            }
+
+            desired_false_positive_probability_ = effective_fpp();
+            cell_type* tmp = new cell_type[new_table_size / bits_per_char];
+            std::copy(bit_table_, bit_table_ + (new_table_size / bits_per_char), tmp);
+            cell_type* itr = bit_table_ + (new_table_size / bits_per_char);
+            cell_type* end = bit_table_ + (original_table_size / bits_per_char);
+            cell_type* itr_tmp = tmp;
+
+            while (end != itr)
+            {
+               *(itr_tmp++) |= (*itr++);
+            }
+
+            delete[] bit_table_;
+            bit_table_ = tmp;
+            size_list.push_back(new_table_size);
+
+            return true;
+         }
+
+      private:
+
+         inline virtual void compute_indices(const bloom_type& hash, std::size_t& bit_index, std::size_t& bit) const
+         {
+            bit_index = hash;
+            for (std::size_t i = 0; i < size_list.size(); ++i)
+            {
+               bit_index %= size_list[i];
+            }
+            bit = bit_index % bits_per_char;
+         }
+
+         std::vector<std::size_t> size_list;
+      };
+
+   }
 
    namespace details
    {
