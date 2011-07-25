@@ -1579,6 +1579,8 @@ void translation_table_example()
 
 void find_n_consecutive_example()
 {
+   std::cout << "find_n_consecutive_example" << std::endl;
+
    {
       std::string s = "1 22 333 4444 55555 666666 7777777 88888888 999999999";
 
@@ -1606,7 +1608,7 @@ void find_n_consecutive_example()
                       << ": ["           << std::string(found_itr.first,found_itr.second)
                       << "] Location: [" << std::distance(begin,found_itr.first) << "]"
                       <<  "] Length: ["  << std::distance(found_itr.first,found_itr.second) << "]" << std::endl;
-            range.first = found_itr.second + 1;
+            range.first = found_itr.second;
          }
       }
    }
@@ -1638,8 +1640,48 @@ void find_n_consecutive_example()
                       << ": ["           << std::string(found_itr.first,found_itr.second)
                       << "] Location: [" << std::distance(begin,found_itr.first) << "]"
                       <<  "] Length: ["  << std::distance(found_itr.first,found_itr.second) << "]" << std::endl;
-            range.first = found_itr.second + 1;
+            range.first = found_itr.second;
          }
+      }
+   }
+}
+
+void split_on_consecutive_example()
+{
+   std::cout << "split_on_consecutive_example" << std::endl;
+
+   std::string data = "1 A 22 BB 333 CCC 4444 DDDD 55555 EEEEE 666666 FFFFFF 7777777 GGGGGGG "
+                      "8 H 99 II 000 JJJ 1111 KKKK 22222 LLLLL 333333 MMMMMM 4444444 NNNNNNN ";
+
+   std::deque<std::string> token_list;
+
+   {
+      for (std::size_t i = 0; i < 7; ++i)
+      {
+         token_list.clear();
+         strtk::split_on_consecutive(i,
+                                     strtk::find_type::digits,
+                                     strtk::find_mode::exactly_n,
+                                     data,
+                                     strtk::range_to_type_back_inserter(token_list));
+         if (token_list.empty())
+            continue;
+         std::cout << i << " Consecutive digits: " << strtk::join(" ",token_list) << std::endl;      
+      }
+   }
+
+   {
+      for (std::size_t i = 0; i < 7; ++i)
+      {
+         token_list.clear();
+         strtk::split_on_consecutive(i,
+                                     strtk::find_type::letters,
+                                     strtk::find_mode::exactly_n,
+                                     data,
+                                     strtk::range_to_type_back_inserter(token_list));
+         if (token_list.empty())
+            continue;
+         std::cout << i << " Consecutive letters: " << strtk::join(" ",token_list) << std::endl;
       }
    }
 }
@@ -1716,5 +1758,6 @@ int main()
    non_repeated_char_example();
    translation_table_example();
    find_n_consecutive_example();
+   split_on_consecutive_example();
    return 0;
 }

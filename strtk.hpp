@@ -10294,6 +10294,169 @@ namespace strtk
       }
    }
 
+   template<typename InputIterator, typename OutputIterator>
+   inline std::size_t split_on_consecutive(const std::size_t& n,
+                                           const find_type::type type,
+                                           const find_mode::type mode,
+                                           char* begin,
+                                           char* end,
+                                           OutputIterator out)
+   {
+      if (0 == n) return 0;
+      typedef char* iterator_type;
+      typedef details::range_type<iterator_type>::type range_type;
+      range_type itr_range(begin,end);
+      std::size_t match_count = 0;
+      while (end != itr_range.first)
+      {
+         range_type found_itr = find_n_consecutive<iterator_type>(n,type,mode,itr_range);
+         if ((end == found_itr.first) && (found_itr.first == found_itr.second))
+         {
+            break;
+         }
+         else
+         {
+            *out = found_itr;
+            ++out;
+            ++match_count;
+            itr_range.first = found_itr.second;
+         }
+      }
+      return match_count;
+   }
+
+   template<typename InputIterator, typename OutputIterator>
+   inline std::size_t split_on_consecutive_n(const std::size_t& n,
+                                             const std::size_t& m,
+                                             const find_type::type type,
+                                             const find_mode::type mode,
+                                             char* begin,
+                                             char* end,
+                                             OutputIterator out)
+   {
+      if (0 == n) return 0;
+      typedef char* iterator_type;
+      typedef details::range_type<iterator_type>::type range_type;
+      range_type itr_range(begin,end);
+      std::size_t match_count = 0;
+      while ((end != itr_range.first) && (match_count <= n))
+      {
+         range_type found_itr = find_n_consecutive<iterator_type>(m,type,mode,itr_range);
+         if ((end == found_itr.first) && (found_itr.first == found_itr.second))
+         {
+            break;
+         }
+         else
+         {
+            *out = found_itr;
+            ++out;
+            ++match_count;
+            itr_range.first = found_itr.second;
+         }
+      }
+      return match_count;
+   }
+
+   template<typename OutputIterator>
+   inline std::size_t split_on_consecutive(const std::size_t& n,
+                                           const find_type::type type,
+                                           const find_mode::type mode,
+                                           const char* begin,
+                                           const char* end,
+                                           OutputIterator out)
+   {
+      return split_on_consecutive<char*,OutputIterator>(n,
+                                                        type,
+                                                        mode,
+                                                        const_cast<char*>(begin),
+                                                        const_cast<char*>(end),
+                                                        out);
+   }
+
+   template<typename OutputIterator>
+   inline std::size_t split_on_consecutive(const std::size_t& n,
+                                           const find_type::type type,
+                                           const find_mode::type mode,
+                                           const unsigned char* begin,
+                                           const unsigned char* end,
+                                           OutputIterator out)
+   {
+      return split_on_consecutive<OutputIterator>(n,
+                                                  type,
+                                                  mode,
+                                                  reinterpret_cast<const char*>(begin),
+                                                  reinterpret_cast<const char*>(end),
+                                                  out);
+   }
+
+   template<typename OutputIterator>
+   inline std::size_t split_on_consecutive(const std::size_t& n,
+                                           const find_type::type type,
+                                           const find_mode::type mode,
+                                           const std::string& str,
+                                           OutputIterator out)
+   {
+      return split_on_consecutive<OutputIterator>(n,
+                                                  type,
+                                                  mode,
+                                                  str.data(),
+                                                  str.data() + str.size(),
+                                                  out);
+   }
+
+   template<typename OutputIterator>
+   inline std::size_t split_on_consecutive_n(const std::size_t& n,
+                                             const std::size_t& m,
+                                             const find_type::type type,
+                                             const find_mode::type mode,
+                                             const char* begin,
+                                             const char* end,
+                                             OutputIterator out)
+   {
+      return split_on_consecutive_n<char*,OutputIterator>(n,
+                                                          m,
+                                                          type,
+                                                          mode,
+                                                          const_cast<char*>(begin),
+                                                          const_cast<char*>(end),
+                                                          out);
+   }
+
+   template<typename OutputIterator>
+   inline std::size_t split_on_consecutive_n(const std::size_t& n,
+                                             const std::size_t& m,
+                                             const find_type::type type,
+                                             const find_mode::type mode,
+                                             const unsigned char* begin,
+                                             const unsigned char* end,
+                                             OutputIterator out)
+   {
+      return split_on_consecutive_n<OutputIterator>(n,
+                                                    m,
+                                                    type,
+                                                    mode,
+                                                    reinterpret_cast<const char*>(begin),
+                                                    reinterpret_cast<const char*>(end),
+                                                    out);
+   }
+
+   template<typename OutputIterator>
+   inline std::size_t split_on_consecutive_n(const std::size_t& n,
+                                             const std::size_t& m,
+                                             const find_type::type type,
+                                             const find_mode::type mode,
+                                             const std::string& str,
+                                             OutputIterator out)
+   {
+      return split_on_consecutive_n<OutputIterator>(n,
+                                                    m,
+                                                    type,
+                                                    mode,
+                                                    str.data(),
+                                                    str.data() + str.size(),
+                                                    out);
+   }
+
    namespace details
    {
       static const unsigned char digit_table[] =
