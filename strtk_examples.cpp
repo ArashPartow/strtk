@@ -1666,7 +1666,7 @@ void split_on_consecutive_example()
                                      strtk::range_to_type_back_inserter(token_list));
          if (token_list.empty())
             continue;
-         std::cout << i << " Consecutive digits: " << strtk::join(" ",token_list) << std::endl;      
+         std::cout << i << " Consecutive digits: " << strtk::join(" ",token_list) << std::endl;
       }
    }
 

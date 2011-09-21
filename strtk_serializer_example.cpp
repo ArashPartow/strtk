@@ -88,7 +88,7 @@ public:
 
 };
 
-bool test01(char* buffer, const unsigned int buffer_size)
+bool example01(char* buffer, const unsigned int buffer_size)
 {
    person p_out;
    person p_in;
@@ -114,14 +114,14 @@ bool test01(char* buffer, const unsigned int buffer_size)
 
    if (p_in != p_out)
    {
-      std::cout << "test01() - Failed p-in to p-out comparison!" << std::endl;
+      std::cout << "example01() - Failed p-in to p-out comparison!" << std::endl;
       return false;
    }
 
    return true;
 }
 
-bool test02(char* buffer, const unsigned int buffer_size)
+bool example02(char* buffer, const unsigned int buffer_size)
 {
    {
       strtk::binary::writer writer(buffer,buffer_size);
@@ -145,7 +145,7 @@ bool test02(char* buffer, const unsigned int buffer_size)
          p_out.is_insane = !p_out.is_insane;
          if (!writer(p_out))
          {
-            std::cout << "test02() - Failed to write person:" << i << std::endl;
+            std::cout << "example02() - Failed to write person:" << i << std::endl;
             return false;
          }
       }
@@ -172,13 +172,13 @@ bool test02(char* buffer, const unsigned int buffer_size)
          p_expected.is_insane = !p_expected.is_insane;
          if (!reader(p_in))
          {
-            std::cout << "test02() - Failed to read person:" << i << std::endl;
+            std::cout << "example02() - Failed to read person:" << i << std::endl;
             return false;
          }
 
          if (p_in != p_expected)
          {
-            std::cout << "test02() - Comparison between expected and read failed @ " << i << std::endl;
+            std::cout << "example02() - Comparison between expected and read failed @ " << i << std::endl;
             return false;
          }
       }
@@ -187,7 +187,7 @@ bool test02(char* buffer, const unsigned int buffer_size)
    return true;
 }
 
-bool test03(char* buffer, const unsigned int buffer_size)
+bool example03(char* buffer, const unsigned int buffer_size)
 {
    const std::string file_name = "data.txt";
    const std::size_t rounds = 1000;
@@ -208,7 +208,7 @@ bool test03(char* buffer, const unsigned int buffer_size)
       {
          if (!writer(p))
          {
-            std::cout << "test03() - Failed to write person:" << i << std::endl;
+            std::cout << "example03() - Failed to write person:" << i << std::endl;
             return false;
          }
          p.id++;
@@ -221,7 +221,7 @@ bool test03(char* buffer, const unsigned int buffer_size)
       std::ofstream o_stream(file_name.c_str(),std::ios::binary);
       if (!o_stream)
       {
-         std::cout << "test03() - ERROR Could not open file!(1)" << std::endl;
+         std::cout << "example03() - ERROR Could not open file!(1)" << std::endl;
          return false;
       }
 
@@ -238,7 +238,7 @@ bool test03(char* buffer, const unsigned int buffer_size)
       std::ifstream i_stream(file_name.c_str(),std::ios::binary);
       if (!i_stream)
       {
-         std::cout << "test03() - ERROR Could not open file!(2)" << std::endl;
+         std::cout << "example03() - ERROR Could not open file!(2)" << std::endl;
          return false;
       }
 
@@ -260,13 +260,13 @@ bool test03(char* buffer, const unsigned int buffer_size)
          p_in.clear();
          if (!reader(p_in))
          {
-            std::cout << "test03() - Failed to read person:" << i << std::endl;
+            std::cout << "example03() - Failed to read person:" << i << std::endl;
             return false;
          }
 
          if (p_in != p_expected)
          {
-            std::cout << "test03() - Comparison between expected and read failed @ " << i << std::endl;
+            std::cout << "example03() - Comparison between expected and read failed @ " << i << std::endl;
             return false;
          }
          p_expected.id++;
@@ -280,7 +280,7 @@ bool test03(char* buffer, const unsigned int buffer_size)
    return true;
 }
 
-bool test04(char* buffer, const unsigned int buffer_size)
+bool example04(char* buffer, const unsigned int buffer_size)
 {
    {
       // Write out and then read back in an array of unsigned ints.
@@ -293,7 +293,7 @@ bool test04(char* buffer, const unsigned int buffer_size)
          for (unsigned int i = 0; i < max_count; lst.push_back(i++)) ;
          if (!writer(lst))
          {
-            std::cout << "test04() - Failed to write list of 'unsigned int'" << std::endl;
+            std::cout << "example04() - Failed to write list of 'unsigned int'" << std::endl;
             return false;
          }
          lst.clear();
@@ -303,14 +303,14 @@ bool test04(char* buffer, const unsigned int buffer_size)
          strtk::binary::reader reader(buffer,buffer_size);
          if (!reader(lst))
          {
-            std::cout << "test04() - Failed to read list of 'unsigned int'" << std::endl;
+            std::cout << "example04() - Failed to read list of 'unsigned int'" << std::endl;
             return false;
          }
          for (unsigned int i = 0; i < max_count; ++i)
          {
             if (lst[i] != i)
             {
-               std::cout << "test04() - 'unsigned int' failure at index: " << i << std::endl;
+               std::cout << "example04() - 'unsigned int' failure at index: " << i << std::endl;
                return false;
             }
          }
@@ -336,7 +336,7 @@ bool test04(char* buffer, const unsigned int buffer_size)
          }
          if (!writer(lst))
          {
-            std::cout << "test04() - Failed to write list of " << strtk::type_name(lst) << std::endl;
+            std::cout << "example04() - Failed to write list of " << strtk::type_name(lst) << std::endl;
             return false;
          }
          lst.clear();
@@ -346,7 +346,7 @@ bool test04(char* buffer, const unsigned int buffer_size)
          strtk::binary::reader reader(buffer,buffer_size);
          if (!reader(lst))
          {
-            std::cout << "test04() - Failed to read list of " << strtk::type_name(lst) << std::endl;
+            std::cout << "example04() - Failed to read list of " << strtk::type_name(lst) << std::endl;
             return false;
          }
 
@@ -355,7 +355,7 @@ bool test04(char* buffer, const unsigned int buffer_size)
             const float d = magic[i % magic_count] * i;
             if (lst[i] != d)
             {
-               std::cout << "test04() - 'float' failure at index: " << i
+               std::cout << "example04() - 'float' failure at index: " << i
                          << " expected value: "                     << d << std::endl;
                return false;
             }
@@ -382,7 +382,7 @@ bool test04(char* buffer, const unsigned int buffer_size)
          }
          if (!writer(lst))
          {
-            std::cout << "test04() - Failed to write list of " << strtk::type_name(lst) << std::endl;
+            std::cout << "example04() - Failed to write list of " << strtk::type_name(lst) << std::endl;
             return false;
          }
          lst.clear();
@@ -392,7 +392,7 @@ bool test04(char* buffer, const unsigned int buffer_size)
          strtk::binary::reader reader(buffer,buffer_size);
          if (!reader(lst))
          {
-            std::cout << "test04() - Failed to read list of " << strtk::type_name(lst) << std::endl;
+            std::cout << "example04() - Failed to read list of " << strtk::type_name(lst) << std::endl;
             return false;
          }
 
@@ -402,7 +402,7 @@ bool test04(char* buffer, const unsigned int buffer_size)
             const double d = magic[i % magic_count] * i;
             if (*itr != d)
             {
-               std::cout << "test04() - 'double' failure at index: " << i
+               std::cout << "example04() - 'double' failure at index: " << i
                          << " expected value: "                      << d << std::endl;
                return false;
             }
@@ -423,7 +423,7 @@ bool test04(char* buffer, const unsigned int buffer_size)
          }
          if (!writer(lst))
          {
-            std::cout << "test04() - Failed to write list of " << strtk::type_name(lst) << std::endl;
+            std::cout << "example04() - Failed to write list of " << strtk::type_name(lst) << std::endl;
             return false;
          }
          lst.clear();
@@ -433,7 +433,7 @@ bool test04(char* buffer, const unsigned int buffer_size)
          strtk::binary::reader reader(buffer,buffer_size);
          if (!reader(lst))
          {
-            std::cout << "test04() - Failed to read list of " << strtk::type_name(lst) << std::endl;
+            std::cout << "example04() - Failed to read list of " << strtk::type_name(lst) << std::endl;
             return false;
          }
          int i = -(max_count / 2);
@@ -442,7 +442,7 @@ bool test04(char* buffer, const unsigned int buffer_size)
          {
             if (i != *itr)
             {
-               std::cout << "test04() - expected value: " << i
+               std::cout << "example04() - expected value: " << i
                          << " read value: " << *itr << std::endl;
                return false;
 
@@ -469,25 +469,25 @@ bool test04(char* buffer, const unsigned int buffer_size)
 
       if (!writer(p1_out))
       {
-         std::cout << "test04() - Failed to write type: " << strtk::type_name(p1_out) << std::endl;
+         std::cout << "example04() - Failed to write type: " << strtk::type_name(p1_out) << std::endl;
          return false;
       }
 
       if (!writer(p2_out))
       {
-         std::cout << "test04() - Failed to write type: " << strtk::type_name(p2_out) << std::endl;
+         std::cout << "example04() - Failed to write type: " << strtk::type_name(p2_out) << std::endl;
          return false;
       }
 
       if (!writer(p3_out))
       {
-         std::cout << "test04() - Failed to write type: " << strtk::type_name(p3_out) << std::endl;
+         std::cout << "example04() - Failed to write type: " << strtk::type_name(p3_out) << std::endl;
          return false;
       }
 
       if (!writer(p4_out))
       {
-         std::cout << "test04() - Failed to write type: " << strtk::type_name(p4_out) << std::endl;
+         std::cout << "example04() - Failed to write type: " << strtk::type_name(p4_out) << std::endl;
          return false;
       }
 
@@ -500,49 +500,49 @@ bool test04(char* buffer, const unsigned int buffer_size)
 
       if (!reader(p1_in))
       {
-         std::cout << "test04() - Failed to read type: " << strtk::type_name(p1_in) << std::endl;
+         std::cout << "example04() - Failed to read type: " << strtk::type_name(p1_in) << std::endl;
          return false;
       }
 
       if (!reader(p2_in))
       {
-         std::cout << "test04() - Failed to read type: " << strtk::type_name(p2_in) << std::endl;
+         std::cout << "example04() - Failed to read type: " << strtk::type_name(p2_in) << std::endl;
          return false;
       }
 
       if (!reader(p3_in))
       {
-         std::cout << "test04() - Failed to read type: " << strtk::type_name(p3_in) << std::endl;
+         std::cout << "example04() - Failed to read type: " << strtk::type_name(p3_in) << std::endl;
          return false;
       }
 
       if (!reader(p4_in))
       {
-         std::cout << "test04() - Failed to read type: " << strtk::type_name(p4_in) << std::endl;
+         std::cout << "example04() - Failed to read type: " << strtk::type_name(p4_in) << std::endl;
          return false;
       }
 
       if (p1_in != p1_out)
       {
-         std::cout << "test04() - Comparison between p1_in and p1_out failed." << std::endl;
+         std::cout << "example04() - Comparison between p1_in and p1_out failed." << std::endl;
          return false;
       }
 
       if (p2_in != p2_out)
       {
-         std::cout << "test04() - Comparison between p2_in and p2_out failed." << std::endl;
+         std::cout << "example04() - Comparison between p2_in and p2_out failed." << std::endl;
          return false;
       }
 
       if (p3_in != p3_out)
       {
-         std::cout << "test04() - Comparison between p3_in and p3_out failed." << std::endl;
+         std::cout << "example04() - Comparison between p3_in and p3_out failed." << std::endl;
          return false;
       }
 
       if (p4_in != p4_out)
       {
-         std::cout << "test04() - Comparison between p4_in and p4_out failed." << std::endl;
+         std::cout << "example04() - Comparison between p4_in and p4_out failed." << std::endl;
          return false;
       }
    }
@@ -571,7 +571,7 @@ bool test04(char* buffer, const unsigned int buffer_size)
          strtk::binary::writer writer (buffer,buffer_size);
          if (!writer(p_out_list))
          {
-            std::cout << "test04() - Failed to write type: " << strtk::type_name(p_out_list) << std::endl;
+            std::cout << "example04() - Failed to write type: " << strtk::type_name(p_out_list) << std::endl;
             return false;
          }
       }
@@ -580,23 +580,20 @@ bool test04(char* buffer, const unsigned int buffer_size)
          strtk::binary::reader reader(buffer,buffer_size);
          if (!reader(p_in_list))
          {
-            std::cout << "test04() - Failed to read type: " << strtk::type_name(p_in_list) << std::endl;
+            std::cout << "example04() - Failed to read type: " << strtk::type_name(p_in_list) << std::endl;
             return false;
          }
       }
 
       if (p_out_list.size() != p_in_list.size())
       {
-         std::cout << "test04() - Failure between sizes of p_out_list and p_in_list!" << std::endl;
+         std::cout << "example04() - Failure between sizes of p_out_list and p_in_list!" << std::endl;
          return false;
       }
 
-      std::vector< std::pair<unsigned long long,person> >::iterator itr1 = p_out_list.begin();
-      std::deque< std::pair<unsigned long long,person> >::iterator itr2 = p_in_list.begin();
-
       if (!std::equal(p_out_list.begin(),p_out_list.end(),p_in_list.begin()))
       {
-         std::cout << "test04() - Failure in comparison between p_out_list and p_in_list!" << std::endl;
+         std::cout << "example04() - Failure in comparison between p_out_list and p_in_list!" << std::endl;
          return false;
       }
    }
@@ -604,7 +601,7 @@ bool test04(char* buffer, const unsigned int buffer_size)
    return true;
 }
 
-bool test05(char* buffer, const unsigned int buffer_size)
+bool example05(char* buffer, const unsigned int buffer_size)
 {
    const std::size_t rounds = 100000;
    const std::size_t person_count = 1000;
@@ -628,15 +625,15 @@ bool test05(char* buffer, const unsigned int buffer_size)
          {
             if (!writer(p))
             {
-               std::cout << "test05() - Failed to write index " << i << " @ round " << r << std::endl;
+               std::cout << "example05() - Failed to write index " << i << " @ round " << r << std::endl;
                return false;
             }
          }
-         total_written += writer.write_size();
+         total_written += writer.amount_written();
       }
       t.stop();
 
-      printf("[strtk::binary::writer] Person Count:%10llu  Total time:%8.4f  Rate:%14.4fpersons/s %8.3fMB/s\n",
+      printf("[strtk::binary::writer] Person Count:%10llu  Total time:%8.4f  Rate:%18.4fpersons/s %9.3fMB/s\n",
              static_cast<unsigned long long>(rounds * person_count),
              t.time(),
              (rounds * person_count) / t.time(),
@@ -655,14 +652,14 @@ bool test05(char* buffer, const unsigned int buffer_size)
          {
             if (!reader(p))
             {
-               std::cout << "test05() - Failed to read index " << i << " @ round " << r << std::endl;
+               std::cout << "example05() - Failed to read index " << i << " @ round " << r << std::endl;
                return false;
             }
          }
-         total_read += reader.read_size();
+         total_read += reader.amount_read();
       }
       t.stop();
-      printf("[strtk::binary::reader] Person Count:%10llu  Total time:%8.4f  Rate:%14.4fpersons/s %8.3fMB/s\n",
+      printf("[strtk::binary::reader] Person Count:%10llu  Total time:%8.4f  Rate:%18.4fpersons/s %9.3fMB/s\n",
              static_cast<unsigned long long>(rounds * person_count),
              t.time(),
              (rounds * person_count) / t.time(),
@@ -670,8 +667,8 @@ bool test05(char* buffer, const unsigned int buffer_size)
    }
 
    {
-      const std::size_t rounds = 100000;
-      const std::size_t max_count = 8000;
+      const std::size_t rounds = 10000;
+      const std::size_t max_count = 160000;
       const double magic[] = {
                                 111.111, 333.333, 555.555,
                                 777.777, 135.531, 357.753
@@ -696,14 +693,14 @@ bool test05(char* buffer, const unsigned int buffer_size)
             writer.reset();
             if (!writer(dbl_list))
             {
-               std::cout << "test05() - Failed to write " << strtk::type_name(dbl_list) << " @ round " << r << std::endl;
+               std::cout << "example05() - Failed to write " << strtk::type_name(dbl_list) << " @ round " << r << std::endl;
                return false;
             }
-            total_written += writer.write_size();
+            total_written += writer.amount_written();
          }
          t.stop();
 
-         printf("[strtk::binary::writer] Double Count:%10llu  Total time:%8.4f  Rate:%17.4fdbls/s %8.3fMB/s\n",
+         printf("[strtk::binary::writer] Double Count:%10llu  Total time:%8.4f  Rate:%18.4fdoubles/s %9.3fMB/s\n",
                 static_cast<unsigned long long>(rounds * max_count),
                 t.time(),
                 (rounds * max_count) / t.time(),
@@ -713,6 +710,7 @@ bool test05(char* buffer, const unsigned int buffer_size)
       {
          strtk::binary::reader reader(buffer,buffer_size);
          unsigned long long total_read = 0;
+         dbl_list.clear();
          strtk::util::timer t;
          t.start();
          for(std::size_t r = 0; r < rounds; ++r)
@@ -720,15 +718,15 @@ bool test05(char* buffer, const unsigned int buffer_size)
             reader.reset();
             if (!reader(dbl_list))
             {
-               std::cout << "test05() - Failed to read " << strtk::type_name(dbl_list) << " @ round " << r << std::endl;
+               std::cout << "example05() - Failed to read " << strtk::type_name(dbl_list) << " @ round " << r << std::endl;
                return false;
             }
             dbl_list.clear();
-            total_read += reader.read_size();
+            total_read += reader.amount_read();
          }
          t.stop();
 
-         printf("[strtk::binary::reader] Double Count:%10llu  Total time:%8.4f  Rate:%17.4fdbls/s %8.3fMB/s\n",
+         printf("[strtk::binary::reader] Double Count:%10llu  Total time:%8.4f  Rate:%18.4fdoubles/s %9.3fMB/s\n",
                 static_cast<unsigned long long>(rounds * max_count),
                 t.time(),
                 (rounds * max_count) / t.time(),
@@ -757,10 +755,10 @@ bool test05(char* buffer, const unsigned int buffer_size)
             writer.reset();
             if (!writer(str_list))
             {
-               std::cout << "test05() - Failed to write string permutation " << strtk::type_name(str_list) << " @ round " << r << std::endl;
+               std::cout << "example05() - Failed to write string permutation " << strtk::type_name(str_list) << " @ round " << r << std::endl;
                return false;
             }
-            total_written += writer.write_size();
+            total_written += writer.amount_written();
          }
          t.stop();
 
@@ -782,10 +780,10 @@ bool test05(char* buffer, const unsigned int buffer_size)
             reader.reset();
             if (!reader(str_list))
             {
-               std::cout << "test05() - Failed to read string permutation " << strtk::type_name(str_list) << " @ round " << r << std::endl;
+               std::cout << "example05() - Failed to read string permutation " << strtk::type_name(str_list) << " @ round " << r << std::endl;
                return false;
             }
-            total_read += reader.read_size();
+            total_read += reader.amount_read();
          }
          t.stop();
 
@@ -800,7 +798,7 @@ bool test05(char* buffer, const unsigned int buffer_size)
    return true;
 }
 
-bool test06(char* buffer, const unsigned int buffer_size)
+bool example06(char* buffer, const unsigned int buffer_size)
 {
    std::string s = "abc123";
 
@@ -813,13 +811,13 @@ bool test06(char* buffer, const unsigned int buffer_size)
 
       if (!writer(ps.set(s)))
       {
-         std::cout << "test06() - Failed to write Pascal String " << s << std::endl;
+         std::cout << "example06() - Failed to write Pascal String " << s << std::endl;
          return false;
       }
 
       if (!writer(ss.set(s)))
       {
-         std::cout << "test06() - Failed to write Short String " << s << std::endl;
+         std::cout << "example06() - Failed to write Short String " << s << std::endl;
          return false;
       }
 
@@ -830,13 +828,13 @@ bool test06(char* buffer, const unsigned int buffer_size)
 
       if (!reader(ps.set(r1)))
       {
-         std::cout << "test06() - Failed to read Pascal String " << s << std::endl;
+         std::cout << "example06() - Failed to read Pascal String " << s << std::endl;
          return false;
       }
 
       if (!reader(ss.set(r2)))
       {
-         std::cout << "test06() - Failed to read Short String " << s << std::endl;
+         std::cout << "example06() - Failed to read Short String " << s << std::endl;
          return false;
       }
 
@@ -853,13 +851,13 @@ bool test06(char* buffer, const unsigned int buffer_size)
 
       if (!writer(strtk::binary::pascal_string(s)))
       {
-         std::cout << "test06() - Failed to write Pascal String " << s << std::endl;
+         std::cout << "example06() - Failed to write Pascal String " << s << std::endl;
          return false;
       }
 
       if (!writer(strtk::binary::short_string(s)))
       {
-         std::cout << "test06() - Failed to write Short String " << s << std::endl;
+         std::cout << "example06() - Failed to write Short String " << s << std::endl;
          return false;
       }
 
@@ -870,13 +868,13 @@ bool test06(char* buffer, const unsigned int buffer_size)
 
       if (!reader(strtk::binary::pascal_string(r1)))
       {
-         std::cout << "test06() - Failed to read Pascal String " << s << std::endl;
+         std::cout << "example06() - Failed to read Pascal String " << s << std::endl;
          return false;
       }
 
       if (!reader(strtk::binary::short_string(r2)))
       {
-         std::cout << "test06() - Failed to read Short String " << s << std::endl;
+         std::cout << "example06() - Failed to read Short String " << s << std::endl;
          return false;
       }
 
@@ -887,7 +885,59 @@ bool test06(char* buffer, const unsigned int buffer_size)
    return true;
 }
 
-bool test07(char* buffer)
+bool example07(char* buffer, const unsigned int buffer_size)
+{
+   strtk::binary::writer writer(buffer,buffer_size);
+   strtk::binary::reader reader(buffer,buffer_size);
+
+   int i = 123;
+   int j = 0;
+   if (!writer(i,4,strtk::binary::writer::left_padding,'0'))
+   {
+      std::cout << "Failed to write padded 4 char int!" << std::endl;
+      return false;
+   }
+
+   if (!reader(j,4))
+   {
+      std::cout << "Failed to read 4 char int!" << std::endl;
+      return false;
+   }
+
+   if (i != j)
+      return false;
+
+   return true;
+}
+
+bool example08(char* buffer, const unsigned int buffer_size)
+{
+   {
+      strtk::binary::writer writer(buffer,buffer_size);
+      writer.reset(true);
+      std::vector<int> v;
+      std::deque<double> d;
+      std::list<char> c;
+      strtk::util::push_back(v,1,2,3,4,5);
+      strtk::util::push_back(d,1.1,2.2,3.3,4.4,5.5);
+      strtk::util::push_back(c,'A','B','C','D','E','F');
+      writer(v);
+      writer(d);
+      writer(c);
+   }
+   {
+      strtk::binary::reader reader(buffer,buffer_size);
+      std::vector<int> v;
+      std::deque<double> d;
+      std::list<char> c;
+      reader(v);
+      reader(d);
+      reader(c);
+   }
+   return true;
+}
+
+bool example09(char* buffer)
 {
    char in_char = -17;
    unsigned char in_uchar = 200;
@@ -941,22 +991,22 @@ bool test07(char* buffer)
                    out_double,
                    out_ldouble);
 
-   if (in_char    != out_char)    { std::cout << "test06() - Failed char"    << std::endl; return false; }
-   if (in_uchar   != out_uchar)   { std::cout << "test06() - Failed uchar"   << std::endl; return false; }
-   if (in_short   != out_short)   { std::cout << "test06() - Failed short"   << std::endl; return false; }
-   if (in_ushort  != out_ushort)  { std::cout << "test06() - Failed ushort"  << std::endl; return false; }
-   if (in_int     != out_int)     { std::cout << "test06() - Failed int"     << std::endl; return false; }
-   if (in_uint    != out_uint)    { std::cout << "test06() - Failed uint"    << std::endl; return false; }
-   if (in_long    != out_long)    { std::cout << "test06() - Failed long"    << std::endl; return false; }
-   if (in_ulong   != out_ulong)   { std::cout << "test06() - Failed ulong"   << std::endl; return false; }
-   if (in_float   != out_float)   { std::cout << "test06() - Failed float"   << std::endl; return false; }
-   if (in_double  != out_double)  { std::cout << "test06() - Failed double"  << std::endl; return false; }
-   if (in_ldouble != out_ldouble) { std::cout << "test06() - Failed ldouble" << std::endl; return false; }
+   if (in_char    != out_char)    { std::cout << "example06() - Failed char"    << std::endl; return false; }
+   if (in_uchar   != out_uchar)   { std::cout << "example06() - Failed uchar"   << std::endl; return false; }
+   if (in_short   != out_short)   { std::cout << "example06() - Failed short"   << std::endl; return false; }
+   if (in_ushort  != out_ushort)  { std::cout << "example06() - Failed ushort"  << std::endl; return false; }
+   if (in_int     != out_int)     { std::cout << "example06() - Failed int"     << std::endl; return false; }
+   if (in_uint    != out_uint)    { std::cout << "example06() - Failed uint"    << std::endl; return false; }
+   if (in_long    != out_long)    { std::cout << "example06() - Failed long"    << std::endl; return false; }
+   if (in_ulong   != out_ulong)   { std::cout << "example06() - Failed ulong"   << std::endl; return false; }
+   if (in_float   != out_float)   { std::cout << "example06() - Failed float"   << std::endl; return false; }
+   if (in_double  != out_double)  { std::cout << "example06() - Failed double"  << std::endl; return false; }
+   if (in_ldouble != out_ldouble) { std::cout << "example06() - Failed ldouble" << std::endl; return false; }
 
    return true;
 }
 
-bool test08(char* buffer)
+bool example10(char* buffer)
 {
    const size_t size = 10;
    const int intlst[size] = { -1, 2, -3, 4, -5, 6, -7, 8, -9, 10 };
@@ -986,25 +1036,25 @@ bool test08(char* buffer)
 
    if (!std::equal(intlst, intlst + size, r_intlst))
    {
-      std::cout << "test07() - failed int list compare." << std::endl;
+      std::cout << "example07() - failed int list compare." << std::endl;
       return false;
    }
 
    if (!std::equal(uintlst, uintlst + size, r_uintlst))
    {
-      std::cout << "test07() - failed unsigned int list compare." << std::endl;
+      std::cout << "example07() - failed unsigned int list compare." << std::endl;
       return false;
    }
 
    if (!std::equal(fltlst, fltlst + size, r_fltlst))
    {
-      std::cout << "test07() - failed float list compare." << std::endl;
+      std::cout << "example07() - failed float list compare." << std::endl;
       return false;
    }
 
    if (!std::equal(dbllst, dbllst + size, r_dbllst))
    {
-      std::cout << "test07() - failed double list compare." << std::endl;
+      std::cout << "example07() - failed double list compare." << std::endl;
       return false;
    }
 
@@ -1015,14 +1065,16 @@ int main()
 {
    static const std::size_t max_buffer_size = 10 * strtk::one_megabyte; // 10MB
    char* buffer = new char[max_buffer_size];
-   test01(buffer,max_buffer_size);
-   test02(buffer,max_buffer_size);
-   test03(buffer,max_buffer_size);
-   test04(buffer,max_buffer_size);
-   test05(buffer,max_buffer_size);
-   test06(buffer,max_buffer_size);
-   test07(buffer);
-   test08(buffer);
+   example01(buffer,max_buffer_size);
+   example02(buffer,max_buffer_size);
+   example03(buffer,max_buffer_size);
+   example04(buffer,max_buffer_size);
+   example05(buffer,max_buffer_size);
+   example06(buffer,max_buffer_size);
+   example07(buffer,max_buffer_size);
+   example08(buffer,max_buffer_size);
+   example09(buffer);
+   example10(buffer);
    delete[] buffer;
    return 0;
 }

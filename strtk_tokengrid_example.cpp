@@ -99,7 +99,7 @@ void token_grid_test02()
 
       for (std::size_t i = 0; i < grid.row_count(); ++i)
       {
-         switch(i)
+         switch (i)
          {
             case  0 : grid.row(i).parse(lst[0]);
                       break;
@@ -131,7 +131,7 @@ void token_grid_test02()
 
       for (std::size_t i = 0; i < grid.row_count(); ++i)
       {
-         switch(i)
+         switch (i)
          {
             case  0 : grid.row(i).parse_with_index(0,lst[0]);
                       break;

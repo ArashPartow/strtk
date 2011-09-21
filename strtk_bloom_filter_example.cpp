@@ -76,7 +76,7 @@ int main()
       printf("[insert ] Element Count: %llu\tTotal Time: %5.3fsec\tRate: %10.3felem/sec\n",
              static_cast<unsigned long long>(filter.element_count()),
              timer.time(),
-             element_count/timer.time());
+             element_count / timer.time());
    }
 
    {
@@ -102,7 +102,7 @@ int main()
       printf("[contain] Element Count: %llu\tTotal Time: %5.3fsec\tRate: %10.3felem/sec\n",
              static_cast<unsigned long long>(filter.element_count()),
              timer.time(),
-             element_count/timer.time());
+             element_count / timer.time());
    }
 
    {
@@ -129,7 +129,27 @@ int main()
       printf("[FPC    ] False Positive Count: %d\tTotal Time: %5.3fsec\tRate: %10.3felem/sec\n",
              false_positive_count,
              timer.time(),
-             element_count/timer.time());
+             element_count / timer.time());
+   }
+
+   {
+      strtk::bloom::filter secondary_filter;
+
+      if (!filter.write_to_file("bloom_filter.bin"))
+      {
+         std::cout << "Error - Failed to write filter to file!" << std::endl;
+         return 1;
+      }
+      else if (!secondary_filter.read_from_file("bloom_filter.bin"))
+      {
+         std::cout << "Error - Failed to read filter from file!" << std::endl;
+         return 1;
+      }
+      else if (secondary_filter != filter)
+      {
+         std::cout << "Error - Persisted filter and original filter do not match!" << std::endl;
+         return 1;
+      }
    }
 
    return 0;

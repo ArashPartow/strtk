@@ -482,6 +482,31 @@ void strtk_lexical_cast_test_s2i()
           (s2i_rounds * strint_list_size) / t.time());
 }
 
+
+void strtkfast_lexical_cast_test_s2i()
+{
+   print_mode("[fast]");
+   int total = 0;
+   int n = 0;
+   strtk::util::timer t;
+   t.start();
+   for (std::size_t x = 0; x < s2i_rounds; ++x)
+   {
+      for (std::size_t i = 0; i < strint_list_size; ++i)
+      {
+         strtk::fast::signed_numeric_convert(strint_list[i],n);
+         total += n;
+      }
+   }
+   t.stop();
+   printf("Numbers:%10lu\tTotal:%12d\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
+          static_cast<unsigned long>(s2i_rounds * strint_list_size),
+          total,
+          t.time(),
+          (s2i_rounds * strint_list_size) / t.time());
+}
+
+
 static const std::string v[] = {
                                    "+004",                     "+005",                      "+006",               "+007",
                                    "+929",                      "766",                       "152",                "482",
@@ -806,6 +831,7 @@ int main()
    boost_lexical_cast_test_s2i();
    qi_lexical_cast_test_s2i();
    strtk_lexical_cast_test_s2i();
+   strtkfast_lexical_cast_test_s2i();
    std::cout << "String To Double Test" << std::endl;
    atof_cast_test_s2d();
    boost_cast_test_s2d();

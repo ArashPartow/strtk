@@ -215,7 +215,7 @@ namespace strtk
 
    template<typename T>
    inline bool read_line_as_value(std::istream& stream,
-                                   T& t,
+                                  T& t,
                                   const std::size_t& buffer_size = one_kilobyte)
    {
       std::string buffer;
@@ -236,8 +236,9 @@ namespace strtk
       struct hex_type_tag {};
       struct base64_type_tag {};
       struct ignore_token_type_tag {};
-      struct stdstring_type_tag{};
-      struct stdstring_range_type_tag{};
+      struct stdstring_type_tag {};
+      struct stdstring_range_type_tag {};
+      struct value_type_tag {};
       struct sink_type_tag {};
 
       template<typename T>
@@ -292,6 +293,12 @@ namespace strtk
       return string_to_type_converter_impl(itr,end,t,type);
    }
 
+   template<typename Iterator, typename T>
+   inline bool string_to_type_converter(const std::pair<Iterator,Iterator>& range, T& t)
+   {
+      return string_to_type_converter(range.first,range.second,t);
+   }
+
    template<typename T, typename Iterator>
    inline T string_to_type_converter(const Iterator begin, const Iterator end)
    {
@@ -303,6 +310,12 @@ namespace strtk
          return t;
       else
          throw;
+   }
+
+   template<typename T, typename Iterator>
+   inline T string_to_type_converter(const std::pair<Iterator,Iterator>& range)
+   {
+      return string_to_type_converter<T>(range.first.range.second);
    }
 
    template<typename T>
@@ -603,6 +616,18 @@ namespace strtk
         return write_to_text_file(stream,set,delimiter);
    }
 
+   template<typename InputIterator, typename OutputIterator>
+   inline void copy_n(InputIterator itr, std::size_t n, OutputIterator out)
+   {
+      while (n)
+      {
+         *out = *itr;
+         ++itr;
+         ++out;
+         --n;
+      }
+   }
+
    template<typename Predicate,
             typename InputIterator,
             typename OutputIterator>
@@ -888,7 +913,8 @@ namespace strtk
       Iterator itr1 = begin;
       Iterator itr2 = begin;
       std::size_t removal_count = 0;
-      while (itr1 != end)
+
+      while (end != itr1)
       {
          while ((end != itr1) && !predicate(*itr1))
          {
@@ -957,7 +983,8 @@ namespace strtk
       Iterator itr2 = begin; ++itr2;
       typename std::iterator_traits<Iterator>::value_type prev = *begin;
       std::size_t removal_count = 0;
-      while (itr1 != end)
+
+      while (end != itr1)
       {
          while ((end != itr1) && (!predicate(*itr1) || !predicate(prev)))
          {
@@ -1068,7 +1095,7 @@ namespace strtk
       typename std::iterator_traits<Iterator>::value_type prev = *begin;
       std::size_t removal_count = 0;
 
-      while (itr1 != end)
+      while (end != itr1)
       {
          while ((end != itr1) && (prev != (*itr1)))
          {
@@ -1577,23 +1604,23 @@ namespace strtk
    }
 
    template<typename Iterator>
-   inline bool imatch(const std::string& s, const Iterator begin, const Iterator end)
+   inline Iterator imatch(const std::string& s, const Iterator begin, const Iterator end)
    {
       for (const std::string* itr = begin; end != itr; ++itr)
       {
          if (imatch(s,*itr))
          {
-            return true;
+            return itr;
          }
       }
-      return false;
+      return end;
    }
 
    template<typename Allocator,
             template<typename,typename> class Sequence>
    inline bool imatch(const std::string& s, const Sequence<std::string,Allocator>& sequence)
    {
-      return imatch(s,sequence.begin(),sequence.end());
+      return (sequence.end() != imatch(s,sequence.begin(),sequence.end()));
    }
 
    template<typename Comparator, typename Allocator>
@@ -2619,10 +2646,16 @@ namespace strtk
                             OutputIterator out,
                             const split_options::type& split_option = split_options::default_mode)
    {
-      return split(multiple_char_delimiter_predicate(delimiters),
-                   str.data(),str.data() + str.size(),
-                   out,
-                   split_option);
+      if (1 == details::strnlen(delimiters,256))
+         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                      str.data(), str.data() + str.size(),
+                      out,
+                      split_option);
+      else
+         return split(multiple_char_delimiter_predicate(delimiters),
+                      str.data(), str.data() + str.size(),
+                      out,
+                      split_option);
    }
 
    template<typename OutputIterator>
@@ -3148,6 +3181,65 @@ namespace strtk
       return offset_splitter(str.data(),str.data() + str.size(),offset,out);
    }
 
+   template<typename InputIterator,
+            typename Predicate,
+            typename OutputPair>
+   inline bool split_pair(const InputIterator begin,
+                          const InputIterator end,
+                          const Predicate& delimiter,
+                          OutputPair& v1,
+                          OutputPair& v2)
+   {
+      if (0 == std::distance(begin,end)) return false;
+
+      InputIterator itr = begin;
+
+      while (end != itr)
+      {
+         if (delimiter(*itr))
+         {
+            v1 = std::make_pair(begin,itr);
+            ++itr;
+            if (0 != std::distance(itr,end))
+            {
+               v2 = std::make_pair(itr,end);
+               return true;
+            }
+            else
+               return false;
+         }
+         else
+            ++itr;
+      }
+
+      return false;
+   }
+
+   inline bool split_pair(const std::string::value_type delimiter,
+                          const std::string& str,
+                          std::pair<const char*,const char*>& v1,
+                          std::pair<const char*,const char*>& v2)
+   {
+      return split_pair(str.data(),
+                        str.data() + str.size(),
+                        single_delimiter_predicate<std::string::value_type>(delimiter),
+                        v1,
+                        v2);
+   }
+
+   template<typename DelimiterPredicate>
+   inline bool split_pair(const DelimiterPredicate& delimiter,
+                          const std::string& str,
+                          std::pair<const char*,const char*>& v1,
+                          std::pair<const char*,const char*>& v2)
+   {
+      return split_pair(str.data(),
+                        str.data() + str.size(),
+                        delimiter,
+                        v1,
+                        v2);
+   }
+
    template<typename InputIterator>
    inline std::size_t count_consecutive_duplicates(const InputIterator begin, const InputIterator end)
    {
@@ -3393,6 +3485,13 @@ namespace strtk
                          const_cast<char*>(output.data()));
    }
 
+   inline std::string convert_bin_to_hex(const std::string& binary_data)
+   {
+      std::string output;
+      convert_bin_to_hex(binary_data,output);
+      return output;
+   }
+
    inline bool convert_hex_to_bin(const unsigned char* begin, const unsigned char* end, unsigned char* out)
    {
       if (1 == (std::distance(begin,end) % 2))
@@ -3480,7 +3579,7 @@ namespace strtk
 
       if ((rounds = (length % 3)) > 0)
       {
-         switch(rounds)
+         switch (rounds)
          {
             case 1 : {
                        unsigned int block  = (unsigned char) (*itr) << 16;
@@ -3585,7 +3684,7 @@ namespace strtk
       const std::size_t remainder = (length % 4);
       if (remainder > 0)
       {
-         switch(remainder)
+         switch (remainder)
          {
             case 2 : {
                         unsigned int block  = base64_to_bin[*(itr++)] << 18;
@@ -3841,7 +3940,7 @@ namespace strtk
       const unsigned char* itr1 = begin1;
       const unsigned char* itr2 = begin2;
 
-      switch(operation)
+      switch (operation)
       {
          case bitwise_operation::eAND : while (itr1 != end1) { *(out++) = *(itr1++) & *(itr2++); } return;
          case bitwise_operation::eOR  : while (itr1 != end1) { *(out++) = *(itr1++) | *(itr2++); } return;
@@ -6912,6 +7011,164 @@ namespace strtk
       return argc;
    }
 
+   template <typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6, typename T7, typename T8,
+             typename T9>
+   inline std::size_t parse(int argc,
+                            char* argv[],
+                            T1& t1, T2& t2, T3& t3, T4& t4,
+                            T5& t5, T6& t6, T7& t7, T8& t8,
+                            T9& t9)
+
+   {
+      static const std::size_t param_count = 9;
+      if (param_count != argc) return 0;
+      std::size_t result = 0;
+      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[3]),t3)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[4]),t4)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[5]),t5)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[6]),t6)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[7]),t7)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[8]),t8)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[9]),t9)) return result; ++result;
+      return result;
+   }
+
+   template <typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6, typename T7, typename T8>
+   inline std::size_t parse(int argc,
+                            char* argv[],
+                            T1& t1, T2& t2, T3& t3, T4& t4,
+                            T5& t5, T6& t6, T7& t7, T8& t8)
+
+   {
+      static const std::size_t param_count = 8;
+      if (param_count != argc) return 0;
+      std::size_t result = 0;
+      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[3]),t3)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[4]),t4)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[5]),t5)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[6]),t6)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[7]),t7)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[8]),t8)) return result; ++result;
+      return result;
+   }
+
+   template <typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6, typename T7>
+   inline std::size_t parse(int argc,
+                            char* argv[],
+                            T1& t1, T2& t2, T3& t3, T4& t4,
+                            T5& t5, T6& t6, T7& t7)
+
+   {
+      static const std::size_t param_count = 7;
+      if (param_count != argc) return 0;
+      std::size_t result = 0;
+      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[3]),t3)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[4]),t4)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[5]),t5)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[6]),t6)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[7]),t7)) return result; ++result;
+      return result;
+   }
+
+   template <typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6>
+   inline std::size_t parse(int argc,
+                            char* argv[],
+                            T1& t1, T2& t2, T3& t3, T4& t4,
+                            T5& t5, T6& t6)
+
+   {
+      static const std::size_t param_count = 6;
+      if (param_count != argc) return 0;
+      std::size_t result = 0;
+      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[3]),t3)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[4]),t4)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[5]),t5)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[6]),t6)) return result; ++result;
+      return result;
+   }
+
+   template <typename T1, typename T2, typename T3, typename T4, typename T5>
+   inline std::size_t parse(int argc,
+                            char* argv[],
+                            T1& t1, T2& t2, T3& t3, T4& t4, T5& t5)
+   {
+      static const std::size_t param_count = 5;
+      if (param_count != argc) return 0;
+      std::size_t result = 0;
+      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[3]),t3)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[4]),t4)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[5]),t5)) return result; ++result;
+      return result;
+   }
+
+   template <typename T1, typename T2, typename T3, typename T4>
+   inline std::size_t parse(int argc,
+                            char* argv[],
+                            T1& t1, T2& t2, T3& t3, T4& t4)
+   {
+      static const std::size_t param_count = 4;
+      if (param_count != argc) return 0;
+      std::size_t result = 0;
+      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[3]),t3)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[4]),t4)) return result; ++result;
+      return result;
+   }
+
+   template <typename T1, typename T2, typename T3>
+   inline std::size_t parse(int argc,
+                            char* argv[],
+                            T1& t1, T2& t2, T3& t3)
+   {
+      static const std::size_t param_count = 3;
+      if (param_count != argc) return 0;
+      std::size_t result = 0;
+      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[3]),t3)) return result; ++result;
+      return result;
+   }
+
+   template <typename T1, typename T2, typename T3>
+   inline std::size_t parse(int argc,
+                            char* argv[],
+                            T1& t1, T2& t2)
+   {
+      static const std::size_t param_count = 2;
+      if (param_count != argc) return 0;
+      std::size_t result = 0;
+      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
+      return result;
+   }
+
+   template <typename T1, typename T2, typename T3>
+   inline std::size_t parse(int argc,
+                            char* argv[],
+                            T1& t1)
+   {
+      static const std::size_t param_count = 1;
+      if (param_count != argc) return 0;
+      std::size_t result = 0;
+      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
+      return result;
+   }
+
    #define strtk_parse_begin(Type)\
    namespace strtk {\
    bool parse(const std::string& data, const std::string& delimiters, Type& t)\
@@ -8240,7 +8497,7 @@ namespace strtk
          {
             throw;
          }
-         std::fill_n(table_,256,-1);
+         strtk::iota(table_, table_ + 256, 0);
          for (std::size_t i = 0; i < itable.size(); ++i)
          {
             table_[static_cast<unsigned int>(itable[i])] = otable[i];
@@ -8249,14 +8506,12 @@ namespace strtk
 
       inline char operator()(const char c) const
       {
-         const int& v = table_[static_cast<unsigned int>(c)];
-         return (v == -1) ? c : static_cast<char> (v);
+         return static_cast<char>(table_[static_cast<unsigned int>(c)]);
       }
 
       inline unsigned char operator()(const unsigned char c) const
       {
-         const int& v = table_[static_cast<unsigned int>(c)];
-         return (v == -1) ? c : static_cast<unsigned char> (v);
+         return static_cast<unsigned char>(table_[static_cast<unsigned int>(c)]);
       }
 
    private:
@@ -8287,8 +8542,7 @@ namespace strtk
 
       if (pre_gen_cnt > 0)
       {
-         unsigned int r = 0x00;
-         for (unsigned int i = 0; i < pre_gen_cnt; r = rnd(), ++i) ;
+         while (pre_gen_cnt--) rnd();
       }
 
       unsigned char* itr = data;
@@ -8332,6 +8586,9 @@ namespace strtk
       strtk_register_rand_real_type_tag(float)
       strtk_register_rand_real_type_tag(double)
       strtk_register_rand_real_type_tag(long double)
+
+      #undef strtk_register_rand_int_type_tag
+      #undef strtk_register_rand_real_type_tag
 
       template<typename T, typename OutputIterator, typename RandomNumberGenerator>
       inline void generate_random_values_impl(const std::size_t& count,
@@ -8878,7 +9135,6 @@ namespace strtk
          }
       }
 
-
       inline combination_iterator(iterator end)
       : begin_(end),
         end_(end),
@@ -8956,8 +9212,961 @@ namespace strtk
       range_type current_combination_;
    };
 
+   namespace fast
+   {
+      /*
+        Note: The following routines perform no sanity checks at all
+              upon the input data. Hence they should only be used with
+              data that is known to be completely 'valid'.
+      */
+      namespace details
+      {
+
+         template<typename Iterator, int N>
+         struct all_digits_check_impl
+         {
+            static inline bool process(Iterator)
+            {
+               throw "all_digits_check_impl - unsupported value for N.";
+            }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,19>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return static_cast<unsigned char>(itr[0] - '0') <= 9 &&
+                      all_digits_check_impl<Iterator,18>::process(itr + 1);
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,18>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return static_cast<unsigned char>(itr[0] - '0') <= 9 &&
+                      all_digits_check_impl<Iterator,17>::process(itr + 1);
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,17>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return static_cast<unsigned char>(itr[0] - '0') <= 9 &&
+                      all_digits_check_impl<Iterator,16>::process(itr + 1);
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,16>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 2] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 3] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 4] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 5] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 6] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 7] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 8] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 9] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[10] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[11] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[12] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[13] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[14] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[15] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,15>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 2] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 3] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 4] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 5] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 6] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 7] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 8] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 9] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[10] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[11] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[12] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[13] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[14] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,14>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 2] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 3] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 4] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 5] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 6] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 7] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 8] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 9] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[10] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[11] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[12] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[13] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,13>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 2] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 3] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 4] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 5] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 6] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 7] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 8] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 9] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[10] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[11] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[12] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,12>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 2] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 3] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 4] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 5] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 6] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 7] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 8] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 9] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[10] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[11] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,11>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 2] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 3] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 4] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 5] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 6] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 7] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 8] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 9] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[10] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,10>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 2] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 3] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 4] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 5] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 6] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 7] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 8] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 9] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,9>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 2] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 3] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 4] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 5] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 6] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 7] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 8] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,8>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 2] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 3] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 4] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 5] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 6] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 7] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,7>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 2] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 3] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 4] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 5] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 6] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,6>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 2] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 3] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 4] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 5] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,5>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 2] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 3] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 4] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,4>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 2] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 3] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,3>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 2] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,2>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9 &&
+                static_cast<unsigned char>(itr[ 1] - '0') <= 9;
+           }
+         };
+
+         template<typename Iterator>
+         struct all_digits_check_impl<Iterator,1>
+         {
+            static inline bool process(Iterator itr)
+            {
+               return
+                static_cast<unsigned char>(itr[ 0] - '0') <= 9;
+           }
+         };
+
+         template<typename T, typename Iterator, int N>
+         struct numeric_convert_impl
+         {
+            static inline void process(Iterator, T&)
+            { throw "numeric_convert_impl - unsupported value for N."; }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,19>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               strtk::fast::details::numeric_convert_impl<T,Iterator,18>::process(itr + 1,t);
+               t += static_cast<T>((itr[0] - '0') * 1000000000000000000LL);
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,18>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               strtk::fast::details::numeric_convert_impl<T,Iterator,17>::process(itr + 1,t);
+               t += static_cast<T>((itr[0] - '0') * 100000000000000000LL);
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,17>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               numeric_convert_impl<T,Iterator,16>::process(itr + 1,t);
+               t += static_cast<T>((itr[0] - '0') * 10000000000000000LL);
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,16>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[ 0] - '0') * 1000000000000000LL);
+                 x += static_cast<T>((itr[ 1] - '0') *  100000000000000LL);
+                 x += static_cast<T>((itr[ 2] - '0') *   10000000000000LL);
+                 x += static_cast<T>((itr[ 3] - '0') *    1000000000000LL);
+                 x += static_cast<T>((itr[ 4] - '0') *     100000000000LL);
+                 x += static_cast<T>((itr[ 5] - '0') *      10000000000LL);
+                 x += static_cast<T>((itr[ 6] - '0') *       1000000000LL);
+                 x += static_cast<T>((itr[ 7] - '0') *        100000000LL);
+                 x += static_cast<T>((itr[ 8] - '0') *         10000000LL);
+                 x += static_cast<T>((itr[ 9] - '0') *          1000000LL);
+                 x += static_cast<T>((itr[10] - '0') *           100000LL);
+                 x += static_cast<T>((itr[11] - '0') *            10000LL);
+                 x += static_cast<T>((itr[12] - '0') *             1000LL);
+                 x += static_cast<T>((itr[13] - '0') *              100LL);
+                 x += static_cast<T>((itr[14] - '0') *               10LL);
+                 x += static_cast<T>((itr[15] - '0') *                1LL);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,15>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[ 0] - '0') * 100000000000000LL);
+                 x += static_cast<T>((itr[ 1] - '0') *  10000000000000LL);
+                 x += static_cast<T>((itr[ 2] - '0') *   1000000000000LL);
+                 x += static_cast<T>((itr[ 3] - '0') *    100000000000LL);
+                 x += static_cast<T>((itr[ 4] - '0') *     10000000000LL);
+                 x += static_cast<T>((itr[ 5] - '0') *      1000000000LL);
+                 x += static_cast<T>((itr[ 6] - '0') *       100000000LL);
+                 x += static_cast<T>((itr[ 7] - '0') *        10000000LL);
+                 x += static_cast<T>((itr[ 8] - '0') *         1000000LL);
+                 x += static_cast<T>((itr[ 9] - '0') *          100000LL);
+                 x += static_cast<T>((itr[10] - '0') *           10000LL);
+                 x += static_cast<T>((itr[11] - '0') *            1000LL);
+                 x += static_cast<T>((itr[12] - '0') *             100LL);
+                 x += static_cast<T>((itr[13] - '0') *              10LL);
+                 x += static_cast<T>((itr[14] - '0') *               1LL);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,14>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[ 0] - '0') * 10000000000000LL);
+                 x += static_cast<T>((itr[ 1] - '0') *  1000000000000LL);
+                 x += static_cast<T>((itr[ 2] - '0') *   100000000000LL);
+                 x += static_cast<T>((itr[ 3] - '0') *    10000000000LL);
+                 x += static_cast<T>((itr[ 4] - '0') *     1000000000LL);
+                 x += static_cast<T>((itr[ 5] - '0') *      100000000LL);
+                 x += static_cast<T>((itr[ 6] - '0') *       10000000LL);
+                 x += static_cast<T>((itr[ 7] - '0') *        1000000LL);
+                 x += static_cast<T>((itr[ 8] - '0') *         100000LL);
+                 x += static_cast<T>((itr[ 9] - '0') *          10000LL);
+                 x += static_cast<T>((itr[10] - '0') *           1000LL);
+                 x += static_cast<T>((itr[11] - '0') *            100LL);
+                 x += static_cast<T>((itr[12] - '0') *             10LL);
+                 x += static_cast<T>((itr[13] - '0') *              1LL);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,13>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[ 0] - '0') * 1000000000000LL);
+                 x += static_cast<T>((itr[ 1] - '0') *  100000000000LL);
+                 x += static_cast<T>((itr[ 2] - '0') *   10000000000LL);
+                 x += static_cast<T>((itr[ 3] - '0') *    1000000000LL);
+                 x += static_cast<T>((itr[ 4] - '0') *     100000000LL);
+                 x += static_cast<T>((itr[ 5] - '0') *      10000000LL);
+                 x += static_cast<T>((itr[ 6] - '0') *       1000000LL);
+                 x += static_cast<T>((itr[ 7] - '0') *        100000LL);
+                 x += static_cast<T>((itr[ 8] - '0') *         10000LL);
+                 x += static_cast<T>((itr[ 9] - '0') *          1000LL);
+                 x += static_cast<T>((itr[10] - '0') *           100LL);
+                 x += static_cast<T>((itr[11] - '0') *            10LL);
+                 x += static_cast<T>((itr[12] - '0') *             1LL);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,12>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[ 0] - '0') * 100000000000LL);
+                 x += static_cast<T>((itr[ 1] - '0') *  10000000000LL);
+                 x += static_cast<T>((itr[ 2] - '0') *   1000000000LL);
+                 x += static_cast<T>((itr[ 3] - '0') *    100000000LL);
+                 x += static_cast<T>((itr[ 4] - '0') *     10000000LL);
+                 x += static_cast<T>((itr[ 5] - '0') *      1000000LL);
+                 x += static_cast<T>((itr[ 6] - '0') *       100000LL);
+                 x += static_cast<T>((itr[ 7] - '0') *        10000LL);
+                 x += static_cast<T>((itr[ 8] - '0') *         1000LL);
+                 x += static_cast<T>((itr[ 9] - '0') *          100LL);
+                 x += static_cast<T>((itr[10] - '0') *           10LL);
+                 x += static_cast<T>((itr[11] - '0') *            1LL);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,11>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[ 0] - '0') * 10000000000LL);
+                 x += static_cast<T>((itr[ 1] - '0') *  1000000000LL);
+                 x += static_cast<T>((itr[ 2] - '0') *   100000000LL);
+                 x += static_cast<T>((itr[ 3] - '0') *    10000000LL);
+                 x += static_cast<T>((itr[ 4] - '0') *     1000000LL);
+                 x += static_cast<T>((itr[ 5] - '0') *      100000LL);
+                 x += static_cast<T>((itr[ 6] - '0') *       10000LL);
+                 x += static_cast<T>((itr[ 7] - '0') *        1000LL);
+                 x += static_cast<T>((itr[ 8] - '0') *         100LL);
+                 x += static_cast<T>((itr[ 9] - '0') *          10LL);
+                 x += static_cast<T>((itr[10] - '0') *           1LL);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,10>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[0] - '0') * 1000000000);
+                 x += static_cast<T>((itr[1] - '0') *  100000000);
+                 x += static_cast<T>((itr[2] - '0') *   10000000);
+                 x += static_cast<T>((itr[3] - '0') *    1000000);
+                 x += static_cast<T>((itr[4] - '0') *     100000);
+                 x += static_cast<T>((itr[5] - '0') *      10000);
+                 x += static_cast<T>((itr[6] - '0') *       1000);
+                 x += static_cast<T>((itr[7] - '0') *        100);
+                 x += static_cast<T>((itr[8] - '0') *         10);
+                 x += static_cast<T>((itr[9] - '0') *          1);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,9>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[0] - '0') * 100000000);
+                 x += static_cast<T>((itr[1] - '0') *  10000000);
+                 x += static_cast<T>((itr[2] - '0') *   1000000);
+                 x += static_cast<T>((itr[3] - '0') *    100000);
+                 x += static_cast<T>((itr[4] - '0') *     10000);
+                 x += static_cast<T>((itr[5] - '0') *      1000);
+                 x += static_cast<T>((itr[6] - '0') *       100);
+                 x += static_cast<T>((itr[7] - '0') *        10);
+                 x += static_cast<T>((itr[8] - '0') *         1);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,8>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[0] - '0') * 10000000);
+                 x += static_cast<T>((itr[1] - '0') *  1000000);
+                 x += static_cast<T>((itr[2] - '0') *   100000);
+                 x += static_cast<T>((itr[3] - '0') *    10000);
+                 x += static_cast<T>((itr[4] - '0') *     1000);
+                 x += static_cast<T>((itr[5] - '0') *      100);
+                 x += static_cast<T>((itr[6] - '0') *       10);
+                 x += static_cast<T>((itr[7] - '0') *        1);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,7>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[0] - '0') * 1000000);
+                 x += static_cast<T>((itr[1] - '0') *  100000);
+                 x += static_cast<T>((itr[2] - '0') *   10000);
+                 x += static_cast<T>((itr[3] - '0') *    1000);
+                 x += static_cast<T>((itr[4] - '0') *     100);
+                 x += static_cast<T>((itr[5] - '0') *      10);
+                 x += static_cast<T>((itr[6] - '0') *       1);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,6>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[0] - '0') * 100000);
+                 x += static_cast<T>((itr[1] - '0') *  10000);
+                 x += static_cast<T>((itr[2] - '0') *   1000);
+                 x += static_cast<T>((itr[3] - '0') *    100);
+                 x += static_cast<T>((itr[4] - '0') *     10);
+                 x += static_cast<T>((itr[5] - '0') *      1);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,5>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[0] - '0') * 10000);
+                 x += static_cast<T>((itr[1] - '0') *  1000);
+                 x += static_cast<T>((itr[2] - '0') *   100);
+                 x += static_cast<T>((itr[3] - '0') *    10);
+                 x += static_cast<T>((itr[4] - '0') *     1);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,4>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[0] - '0') * 1000);
+                 x += static_cast<T>((itr[1] - '0') *  100);
+                 x += static_cast<T>((itr[2] - '0') *   10);
+                 x += static_cast<T>((itr[3] - '0') *    1);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,3>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[0] - '0') * 100);
+                 x += static_cast<T>((itr[1] - '0') *  10);
+                 x += static_cast<T>((itr[2] - '0') *   1);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,2>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               T x  = static_cast<T>((itr[0] - '0') * 10);
+                 x += static_cast<T>((itr[1] - '0') *  1);
+               t = x;
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,1>
+         {
+            static inline void process(Iterator itr, T& t)
+            {
+               t = static_cast<T>((itr[0] - '0') * 1);
+            }
+         };
+
+         template<typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,0>
+         {
+            static inline void process(Iterator, T& t)
+            {
+               t = 0;
+            }
+         };
+
+         template<typename T, typename NoneSignedTag>
+         inline bool negate(T&, NoneSignedTag)
+         {
+            return false;
+         }
+
+         template<typename T>
+         inline bool negate(T& t, strtk::details::signed_type_tag)
+         {
+            t = -t;
+            return true;
+         }
+
+      } // namespace details
+
+      template<int N, typename Iterator>
+      inline bool all_digits_check(Iterator itr)
+      {
+         typedef typename strtk::details::is_valid_iterator<Iterator>::type itr_type;
+         return details::all_digits_check_impl<Iterator,N>::process(itr);
+      }
+
+      template<int N, typename Iterator>
+      inline bool all_digits_check(const std::string& s)
+      {
+         return all_digits_check<N,const char*>(s.data());
+      }
+
+      template<typename Iterator>
+      inline bool all_digits_check(const std::size_t& n, Iterator itr)
+      {
+         switch (n)
+         {
+            case  0 : return details::all_digits_check_impl<Iterator, 0>::process(itr);
+            case  1 : return details::all_digits_check_impl<Iterator, 1>::process(itr);
+            case  2 : return details::all_digits_check_impl<Iterator, 2>::process(itr);
+            case  3 : return details::all_digits_check_impl<Iterator, 3>::process(itr);
+            case  4 : return details::all_digits_check_impl<Iterator, 4>::process(itr);
+            case  5 : return details::all_digits_check_impl<Iterator, 5>::process(itr);
+            case  6 : return details::all_digits_check_impl<Iterator, 6>::process(itr);
+            case  7 : return details::all_digits_check_impl<Iterator, 7>::process(itr);
+            case  8 : return details::all_digits_check_impl<Iterator, 8>::process(itr);
+            case  9 : return details::all_digits_check_impl<Iterator, 9>::process(itr);
+            case 10 : return details::all_digits_check_impl<Iterator,10>::process(itr);
+            case 11 : return details::all_digits_check_impl<Iterator,11>::process(itr);
+            case 12 : return details::all_digits_check_impl<Iterator,12>::process(itr);
+            case 13 : return details::all_digits_check_impl<Iterator,13>::process(itr);
+            case 14 : return details::all_digits_check_impl<Iterator,14>::process(itr);
+            case 15 : return details::all_digits_check_impl<Iterator,15>::process(itr);
+            case 16 : return details::all_digits_check_impl<Iterator,16>::process(itr);
+            case 17 : return details::all_digits_check_impl<Iterator,17>::process(itr);
+            case 18 : return details::all_digits_check_impl<Iterator,18>::process(itr);
+            case 19 : return details::all_digits_check_impl<Iterator,19>::process(itr);
+            default : return false;
+         }
+      }
+
+      template<typename Iterator>
+      inline bool all_digits_check(Iterator begin, Iterator end)
+      {
+         return all_digits_check(std::distance(begin,end),begin);
+      }
+
+      inline bool all_digits_check(const std::string& s)
+      {
+         return all_digits_check(s.size(),s.data());
+      }
+
+      template<int N, typename Iterator>
+      inline bool signed_all_digits_check(Iterator itr)
+      {
+         if (('-' == *itr) || ('+' == *itr))
+            return all_digits_check<Iterator,N - 1>((itr + 1));
+         else
+            return all_digits_check<Iterator,N>(itr);
+      }
+
+      template<typename Iterator>
+      inline bool signed_all_digits_check(const std::size_t& n, Iterator itr)
+      {
+         if (('-' == *itr) || ('+' == *itr))
+            return all_digits_check(n - 1,(itr + 1));
+         else
+            return all_digits_check(n - 1,(itr + 1));
+      }
+
+      template<int N>
+      inline bool signed_all_digits_check(const std::string& s)
+      {
+         return signed_all_digits_check<N,const char*>(s.data());
+      }
+
+      template<typename Iterator>
+      inline bool signed_all_digits_check(Iterator begin, Iterator end)
+      {
+         return signed_all_digits_check(std::distance(begin,end),begin);
+      }
+
+      inline bool signed_all_digits_check(const std::string& s)
+      {
+         return signed_all_digits_check(s.size(),s.data());
+      }
+
+      template<int N, typename T, typename Iterator>
+      inline void numeric_convert(Iterator itr, T& t,const bool digit_check = false)
+      {
+         typedef typename strtk::details::is_valid_iterator<Iterator>::type itr_type;
+         if (digit_check)
+         {
+             if (!all_digits_check<N,Iterator>(itr))
+             {
+                t = 0;
+                return;
+             }
+         }
+
+         details::numeric_convert_impl<T,Iterator,N>::process(itr,t);
+      }
+
+      template<int N, typename T>
+      inline void numeric_convert(const std::string& s, T& t,const bool digit_check = false)
+      {
+         numeric_convert<N,T,const char*>(s.data(),t,digit_check);
+      }
+
+      template<typename T, typename Iterator>
+      inline bool numeric_convert(const std::size_t& n,
+                                  Iterator itr, T& t,
+                                  const bool digit_check = false)
+      {
+         if (digit_check)
+         {
+             if (!all_digits_check(n,itr))
+             {
+                return false;
+             }
+         }
+
+         switch (n)
+         {
+            case  0 : details::numeric_convert_impl<T,Iterator, 0>::process(itr,t); return true;
+            case  1 : details::numeric_convert_impl<T,Iterator, 1>::process(itr,t); return true;
+            case  2 : details::numeric_convert_impl<T,Iterator, 2>::process(itr,t); return true;
+            case  3 : details::numeric_convert_impl<T,Iterator, 3>::process(itr,t); return true;
+            case  4 : details::numeric_convert_impl<T,Iterator, 4>::process(itr,t); return true;
+            case  5 : details::numeric_convert_impl<T,Iterator, 5>::process(itr,t); return true;
+            case  6 : details::numeric_convert_impl<T,Iterator, 6>::process(itr,t); return true;
+            case  7 : details::numeric_convert_impl<T,Iterator, 7>::process(itr,t); return true;
+            case  8 : details::numeric_convert_impl<T,Iterator, 8>::process(itr,t); return true;
+            case  9 : details::numeric_convert_impl<T,Iterator, 9>::process(itr,t); return true;
+            case 10 : details::numeric_convert_impl<T,Iterator,10>::process(itr,t); return true;
+            case 11 : details::numeric_convert_impl<T,Iterator,11>::process(itr,t); return true;
+            case 12 : details::numeric_convert_impl<T,Iterator,12>::process(itr,t); return true;
+            case 13 : details::numeric_convert_impl<T,Iterator,13>::process(itr,t); return true;
+            case 14 : details::numeric_convert_impl<T,Iterator,14>::process(itr,t); return true;
+            case 15 : details::numeric_convert_impl<T,Iterator,15>::process(itr,t); return true;
+            case 16 : details::numeric_convert_impl<T,Iterator,16>::process(itr,t); return true;
+            case 17 : details::numeric_convert_impl<T,Iterator,17>::process(itr,t); return true;
+            case 18 : details::numeric_convert_impl<T,Iterator,18>::process(itr,t); return true;
+            case 19 : details::numeric_convert_impl<T,Iterator,19>::process(itr,t); return true;
+            default : return false;
+         }
+      }
+
+      template<typename T>
+      inline void numeric_convert(const std::string& s, T& t, const bool digit_check = false)
+      {
+         numeric_convert(s.size(),s.data(),t,digit_check);
+      }
+
+      template<int N, typename T, typename Iterator>
+      inline void signed_numeric_convert(Iterator itr, T& t, const bool digit_check = false)
+      {
+         if ('-' == *itr)
+         {
+            numeric_convert<N - 1,T,Iterator>((itr + 1),t,digit_check);
+            typename strtk::details::supported_conversion_to_type<T>::type type;
+            details::negate(t,type);
+         }
+         else if ('+' == *itr)
+         {
+            numeric_convert<N - 1,T,Iterator>((itr + 1),t,digit_check);
+         }
+         else
+            numeric_convert<N,T,Iterator>(itr,t,digit_check);
+      }
+
+      template<typename T, typename Iterator>
+      inline bool signed_numeric_convert(const std::size_t& n,
+                                         Iterator itr,
+                                         T& t,
+                                         const bool digit_check = false)
+      {
+         if ('-' == *itr)
+         {
+            bool result = numeric_convert((n - 1),(itr + 1),t,digit_check);
+            typename strtk::details::supported_conversion_to_type<T>::type type;
+            return details::negate<T>(t,type) && result;
+         }
+         else if ('+' == *itr)
+         {
+            return numeric_convert((n - 1),(itr + 1),t,digit_check);
+         }
+         else
+            return numeric_convert(n,itr,t,digit_check);
+      }
+
+      template<int N, typename T>
+      inline void signed_numeric_convert(const std::string& s,
+                                         T& t,
+                                         const bool digit_check = false)
+      {
+         signed_numeric_convert<N,T,const char*>(s.data(),t,digit_check);
+      }
+
+      template<typename T>
+      inline bool signed_numeric_convert(const std::string& s,
+                                         T& t,
+                                         const bool digit_check = false)
+      {
+         return signed_numeric_convert<T,const char*>(s.size(),s.data(),t,digit_check);
+      }
+
+   } // namespace fast
+
    namespace binary
    {
+
+      namespace details
+      {
+         static inline bool is_little_endian()
+         {
+            static const unsigned int n = 1;
+            static const bool result = (static_cast<char>(1) == *(reinterpret_cast<const char*>(&n)));
+            return result;
+         }
+
+         static inline unsigned short convert(const unsigned short& v)
+         {
+            //static_assert(2 == sizeof(v),"");
+            return ((v >> 8) & 0x00FF) | ((v << 8) & 0xFFFF);
+         }
+
+         static inline unsigned int convert(const unsigned int& v)
+         {
+            //static_assert(4 == sizeof(v),"");
+            return ((v >> 24) & 0x000000FF) | ((v << 24) & 0x0000FF00) |
+                   ((v <<  8) & 0x00FF0000) | ((v >>  8) & 0xFF000000);
+         }
+
+         static inline unsigned long long convert(const unsigned long long& v)
+         {
+            //static_assert(8 == sizeof(v),"");
+            return ((v >> 56) & 0x00000000000000FFLL) | ((v << 56) & 0xFF00000000000000LL) |
+                   ((v >> 40) & 0x000000000000FF00LL) | ((v << 40) & 0x00FF000000000000LL) |
+                   ((v >> 24) & 0x0000000000FF0000LL) | ((v << 24) & 0x0000FF0000000000LL) |
+                   ((v >>  8) & 0x00000000FF000000LL) | ((v <<  8) & 0x000000FF00000000LL) ;
+         }
+
+         static inline short convert(const short& v)
+         {
+            return static_cast<short>(convert(static_cast<unsigned short>(v)));
+         }
+
+         static inline int convert(const int& v)
+         {
+            return static_cast<int>(convert(static_cast<unsigned int>(v)));
+         }
+
+         static inline unsigned long long convert(const long long& v)
+         {
+            return static_cast<long long>(convert(static_cast<unsigned long long>(v)));
+         }
+
+         class marker
+         {
+         private:
+            typedef std::pair<std::size_t,char*> mark_type;
+
+         public:
+
+            inline bool reset(std::size_t& v1, char*& v2)
+            {
+               if (stack_.empty())
+                  return false;
+               v1 = stack_.top().first;
+               v2 = stack_.top().second;
+               stack_.pop();
+               return true;
+            }
+
+            inline void mark(const std::size_t& v1,char* v2)
+            {
+               stack_.push(std::make_pair(v1,v2));
+            }
+
+         private:
+            std::stack<mark_type> stack_;
+         };
+
+      }
 
       class reader
       {
@@ -8974,7 +10183,7 @@ namespace strtk
          : original_buffer_(reinterpret_cast<char*>(buffer)),
            buffer_(reinterpret_cast<char*>(buffer)),
            buffer_length_(buffer_length * sizeof(T)),
-           read_buffer_size_(0)
+           amount_read_sofar_(0)
          {}
 
          inline bool operator!() const
@@ -8984,10 +10193,58 @@ namespace strtk
                    (0 == buffer_);
          }
 
-         inline void reset()
+         inline void reset(const bool clear_buffer = false)
          {
-            read_buffer_size_ = 0;
+            amount_read_sofar_ = 0;
             buffer_ = original_buffer_;
+            if (clear_buffer)
+               clear();
+         }
+
+         inline std::size_t position() const
+         {
+            return amount_read_sofar_;
+         }
+
+         inline const char* position_ptr() const
+         {
+            return buffer_ ;
+         }
+
+         inline std::size_t amount_read()
+         {
+            return amount_read_sofar_;
+         }
+
+         inline bool rewind(const std::size_t& n_bytes)
+         {
+            if (n_bytes <= amount_read_sofar_)
+            {
+               amount_read_sofar_ -= n_bytes;
+               buffer_ -= n_bytes;
+               return true;
+            }
+            else
+               return false;
+         }
+
+         inline bool seek(const int& n_bytes)
+         {
+            if (n_bytes < 0)
+               return rewind(-n_bytes);
+            else if (n_bytes > 0)
+            {
+               if ((amount_read_sofar_ + n_bytes) <= buffer_length_)
+               {
+                  amount_read_sofar_ += n_bytes;
+                  buffer_ += n_bytes;
+                  return true;
+               }
+               else
+                  return false;
+            }
+            else
+               return true;
          }
 
          inline void clear()
@@ -8996,25 +10253,23 @@ namespace strtk
             std::memset(buffer_,0x00,buffer_length_);
          }
 
-         inline std::size_t read_size() const
-         {
-            return read_buffer_size_;
-         }
-
          template<typename T>
-         inline bool operator()(T*& data, uint32_t& length)
+         inline bool operator()(T*& data, uint32_t& length, const bool read_length = true)
          {
-            if (!operator()(length))
+            if (read_length && !operator()(length))
                return false;
 
             const std::size_t raw_size = length * sizeof(T);
             if (!buffer_capacity_ok(raw_size))
                return false;
 
-            (*data) = new T[length];
-            std::copy(buffer_, buffer_ + raw_size, reinterpret_cast<char*>(*data));
+            if (read_length)
+            {
+               data = new T[length];
+            }
+            std::copy(buffer_, buffer_ + raw_size, reinterpret_cast<char*>(data));
             buffer_ += raw_size;
-            read_buffer_size_ += raw_size;
+            amount_read_sofar_ += raw_size;
             return true;
          }
 
@@ -9032,22 +10287,7 @@ namespace strtk
                       buffer_ + length,
                       const_cast<char*>(output.data()));
             buffer_ += length;
-            read_buffer_size_ += length;
-            return true;
-         }
-
-         template<typename T>
-         inline bool operator()(T* data, const std::size_t& length)
-         {
-            const std::size_t raw_size = length * sizeof(T);
-            if (!buffer_capacity_ok(raw_size))
-               return false;
-
-            std::copy(buffer_,
-                      buffer_ + raw_size,
-                      reinterpret_cast<char*>(data));
-            buffer_ += length;
-            read_buffer_size_ += length;
+            amount_read_sofar_ += length;
             return true;
          }
 
@@ -9078,9 +10318,10 @@ namespace strtk
 
             for (std::size_t i = 0; i < size; ++i)
             {
-               if (!operator()(t))
+               if (operator()(t))
+                  seq.push_back(t);
+               else
                   return false;
-               seq.push_back(t);
             }
             return true;
          }
@@ -9091,21 +10332,11 @@ namespace strtk
             uint32_t size = 0;
             if (!read_pod(size))
                return false;
-            vec.reserve(size);
-
             const std::size_t raw_size = size * sizeof(T);
             if (!buffer_capacity_ok(raw_size))
                return false;
-
-            T t;
-            for (std::size_t i = 0; i < size; ++i)
-            {
-               if (!operator()(t))
-                  return false;
-               vec.push_back(t);
-            }
-
-            return true;
+            vec.resize(size);
+            return selector<T>::type::batch_vector_read(*this,size,vec,false);
          }
 
          template<typename T,
@@ -9141,21 +10372,91 @@ namespace strtk
 
          inline bool operator()(std::ifstream& stream)
          {
-            if (0 == read_buffer_size_) return false;
-            stream.read(original_buffer_,static_cast<std::streamsize>(read_buffer_size_));
+            if (0 == amount_read_sofar_) return false;
+            stream.read(original_buffer_,static_cast<std::streamsize>(amount_read_sofar_));
             return true;
          }
 
          template<typename T>
          inline bool operator()(T& output)
          {
-            return selector<T,typename strtk::details::is_pod<T>::result_t>::run(*this,output);
+            return selector<T>::type::run(*this,output);
          }
 
          template<typename T>
          inline bool operator()(const T& output)
          {
-            return selector<T,typename strtk::details::is_pod<T>::result_t>::run(*this,const_cast<T&>(output));
+            return selector<T>::type::run(*this,const_cast<T&>(output));
+         }
+
+         template<typename T>
+         inline bool be_to_native(T& output)
+         {
+            //From big-endian to native
+            if (details::is_little_endian())
+            {
+               if(!operator()<T>(output)) return false;
+               output = details::convert(output);
+               return true;
+            }
+            else
+               return operator()(output);
+         }
+
+         template<typename T>
+         inline bool le_to_native(T& output)
+         {
+            //From little-endian to native
+            if (details::is_little_endian())
+               return operator()(output);
+            else
+            {
+               if(!operator()<T>(output)) return false;
+               output = details::convert(output);
+               return true;
+            }
+         }
+
+         template<typename T, std::size_t N>
+         inline bool operator()(T (&output)[N])
+         {
+            const std::size_t raw_size = N * sizeof(T);
+            if (buffer_capacity_ok(raw_size))
+            {
+               std::copy(buffer_,
+                         buffer_ + raw_size,
+                         reinterpret_cast<char*>(output));
+               buffer_ += raw_size;
+               amount_read_sofar_ += raw_size;
+               return true;
+            }
+            else
+               return false;
+         }
+
+
+         template<typename T>
+         inline bool operator()(T& output, const std::size_t& size)
+         {
+            if (buffer_capacity_ok(size))
+            {
+               bool result = strtk::string_to_type_converter<char*,T>(buffer_,buffer_ + size,output);
+               buffer_ += size;
+               amount_read_sofar_ += size;
+               return result;
+            }
+            else
+               return false;
+         }
+
+         inline void mark()
+         {
+            marker_.mark(amount_read_sofar_,buffer_);
+         }
+
+         inline bool reset_to_mark()
+         {
+            return marker_.reset(amount_read_sofar_,buffer_);
          }
 
       private:
@@ -9166,46 +10467,94 @@ namespace strtk
 
          inline bool buffer_capacity_ok(const std::size_t& required_read_qty)
          {
-            return ((required_read_qty + read_buffer_size_) < buffer_length_);
+            return ((required_read_qty + amount_read_sofar_) <= buffer_length_);
          }
 
-         template<typename T, typename IsPOD>
+         template<typename Type>
          struct selector
          {
-            template<typename Reader>
-            static inline bool run(Reader& r, T& t)
+         private:
+
+            template<typename T, typename IsPOD>
+            struct selector_impl
             {
-               return t(r);
-            }
+               template<typename Reader>
+               static inline bool run(Reader& r, T& t)
+               {
+                  return t(r);
+               }
+
+               template<typename Reader,
+                        typename Allocator>
+               static inline bool batch_vector_read(Reader& r,
+                                                    const std::size_t& size,
+                                                    std::vector<T,Allocator>& v,
+                                                    const bool)
+               {
+                  T t;
+                  for (std::size_t i = 0; i < size; ++i)
+                  {
+                     if (r.operator()(t))
+                        v[i] = t;
+                     else
+                        return false;
+                  }
+                  return true;
+               }
+            };
+
+            template<typename T>
+            struct selector_impl<T,strtk::details::yes_t>
+            {
+               template<typename Reader>
+               static inline bool run(Reader& r,
+                                      T& t,
+                                      const bool perform_buffer_capacity_check = true)
+               {
+                  return r.read_pod(t,perform_buffer_capacity_check);
+               }
+
+               template<typename Reader,
+                        typename Allocator>
+               static inline bool batch_vector_read(Reader& r,
+                                                    const std::size_t& size,
+                                                    std::vector<T,Allocator>& v,
+                                                    const bool)
+               {
+                  const std::size_t raw_size = sizeof(T) * size;
+                  char* ptr = const_cast<char*>(reinterpret_cast<const char*>(&v[0]));
+                  std::copy(r.buffer_, r.buffer_ + raw_size, ptr);
+                  r.buffer_ += raw_size;
+                  r.amount_read_sofar_ += raw_size;
+                  return true;
+               }
+            };
+
+         public:
+
+            typedef selector_impl<Type,typename strtk::details::is_pod<Type>::result_t> type;
          };
 
          template<typename T>
-         struct selector<T,details::yes_t>
-         {
-            template<typename Reader>
-            static inline bool run(Reader& r, T& t)
-            {
-               return r.read_pod(t);
-            }
-         };
-
-         template<typename T>
-         inline bool read_pod(T& data)
+         inline bool read_pod(T& data, const bool perform_buffer_capacity_check = true)
          {
             static const std::size_t data_length = sizeof(T);
-            if (!buffer_capacity_ok(data_length))
-               return false;
+            if (perform_buffer_capacity_check)
+            {
+               if (!buffer_capacity_ok(data_length))
+                  return false;
+            }
             data = (*reinterpret_cast<T*>(buffer_));
             buffer_ += data_length;
-            read_buffer_size_ += data_length;
+            amount_read_sofar_ += data_length;
             return true;
          }
 
          char* const original_buffer_;
          char* buffer_;
          std::size_t buffer_length_;
-         std::size_t read_buffer_size_;
-
+         std::size_t amount_read_sofar_;
+         details::marker marker_;
       };
 
       class writer
@@ -9222,7 +10571,7 @@ namespace strtk
          : original_buffer_(reinterpret_cast<char*>(buffer)),
            buffer_(reinterpret_cast<char*>(buffer)),
            buffer_length_(buffer_length * sizeof(T)),
-           written_buffer_size_(0)
+           amount_written_sofar_(0)
          {}
 
          inline bool operator!() const
@@ -9232,10 +10581,27 @@ namespace strtk
                    (0 == buffer_);
          }
 
-         inline void reset()
+         inline void reset(const bool clear_buffer = false)
          {
-            written_buffer_size_ = 0;
+            amount_written_sofar_ = 0;
             buffer_ = original_buffer_;
+            if (clear_buffer)
+               clear();
+         }
+
+         inline std::size_t position() const
+         {
+            return amount_written_sofar_;
+         }
+
+         inline const char* position_ptr() const
+         {
+            return buffer_ ;
+         }
+
+         inline std::size_t amount_written() const
+         {
+            return amount_written_sofar_;
          }
 
          inline void clear()
@@ -9244,9 +10610,21 @@ namespace strtk
             std::memset(buffer_,0x00,buffer_length_);
          }
 
-         inline std::size_t write_size() const
+         template<typename T, std::size_t N>
+         inline bool operator()(const T (&data)[N], const bool write_length = false)
          {
-            return written_buffer_size_;
+            if (write_length && !operator()(N))
+               return false;
+
+            const std::size_t raw_size = N * sizeof(T);
+            if (!buffer_capacity_ok(raw_size))
+               return false;
+
+            const char* ptr = reinterpret_cast<const char*>(data);
+            std::copy(ptr, ptr + raw_size, buffer_);
+            buffer_ += raw_size;
+            amount_written_sofar_ += raw_size;
+            return true;
          }
 
          template<typename T>
@@ -9262,8 +10640,7 @@ namespace strtk
             const char* ptr = reinterpret_cast<const char*>(data);
             std::copy(ptr, ptr + raw_size, buffer_);
             buffer_ += raw_size;
-            written_buffer_size_ += raw_size;
-
+            amount_written_sofar_ += raw_size;
             return true;
          }
 
@@ -9291,10 +10668,6 @@ namespace strtk
             if (!operator()(size))
                return false;
 
-            const std::size_t raw_size = size * sizeof(T);
-            if (!buffer_capacity_ok(raw_size))
-               return false;
-
             typename Sequence<T,Allocator>::const_iterator itr = seq.begin();
             typename Sequence<T,Allocator>::const_iterator end = seq.end();
             while (end != itr)
@@ -9304,6 +10677,19 @@ namespace strtk
                ++itr;
             }
             return true;
+         }
+
+         template<typename T,
+                  typename Allocator>
+         inline bool operator()(const std::vector<T,Allocator>& vec)
+         {
+            const uint32_t size = vec.size();
+            const std::size_t raw_size = (size * sizeof(T));
+            if (!buffer_capacity_ok(raw_size + sizeof(size)))
+               return false;
+            if (!operator()(size))
+               return false;
+            return selector<T>::type::batch_vector_writer(*this,raw_size,vec);
          }
 
          template<typename T,
@@ -9332,14 +10718,79 @@ namespace strtk
 
          inline std::size_t operator()(std::ofstream& stream)
          {
-            stream.write(original_buffer_,static_cast<std::streamsize>(written_buffer_size_));
-            return written_buffer_size_;
+            stream.write(original_buffer_,static_cast<std::streamsize>(amount_written_sofar_));
+            return amount_written_sofar_;
          }
 
          template<typename T>
          inline bool operator()(const T& input)
          {
-            return selector<T,typename strtk::details::is_pod<T>::result_t>::run(*this,input);
+            return selector<T>::type::run(*this,input);
+         }
+
+         template<typename T>
+         inline bool native_to_be(const T& input)
+         {
+            //From native to big-endian
+            if (details::is_little_endian())
+            {
+               return operator()<T>(details::convert(input));
+            }
+            else
+               return operator()<T>(input);
+         }
+
+         template<typename T>
+         inline bool native_to_le(T& input)
+         {
+            //From native to little-endian
+            if (details::is_little_endian())
+               return operator()<T>(input);
+            else
+               return operator()<T>(details::convert(input));
+         }
+
+         enum padding_mode
+         {
+            right_padding = 0,
+            left_padding  = 1
+         };
+
+         template<typename T>
+         inline bool operator()(const T& input,
+                                const std::size_t& size,
+                                const padding_mode pmode,
+                                const char padding = ' ')
+         {
+            if (amount_written_sofar_ + size <= buffer_length_)
+            {
+               std::string s;
+               s.reserve(size);
+               if(!strtk::type_to_string<T>(input,s))
+                  return false;
+               else if (s.size() > size)
+                  return false;
+               else if (s.size() < size)
+               {
+                  if (right_padding == pmode)
+                     s.resize(size - s.size(),padding);
+                  else
+                     s = std::string(size - s.size(),padding) + s;
+               }
+               return operator()<const char>(s.data(),size,false);
+            }
+            else
+               return false;
+         }
+
+         inline void mark()
+         {
+            marker_.mark(amount_written_sofar_,buffer_);
+         }
+
+         inline bool reset_to_mark()
+         {
+            return marker_.reset(amount_written_sofar_,buffer_);
          }
 
       private:
@@ -9348,50 +10799,91 @@ namespace strtk
          writer(const writer& s);
          writer& operator=(const writer& s);
 
-         inline bool buffer_capacity_ok(const std::size_t& required_read_qty)
+         inline bool buffer_capacity_ok(const std::size_t& required_write_qty)
          {
-            return ((required_read_qty + written_buffer_size_) < buffer_length_);
+            return ((required_write_qty + amount_written_sofar_) <= buffer_length_);
          }
 
-         template<typename T, typename IsPOD>
+         template<typename Type>
          struct selector
          {
-            template<typename Writer>
-            static inline bool run(Writer& w, const T& t)
+         private:
+
+            template<typename T, typename IsPOD>
+            struct selector_impl
             {
-               return t(w);
-            }
+               template<typename Writer>
+               static inline bool run(Writer& w, const T& t)
+               {
+                  return t(w);
+               }
+
+               template<typename Writer,
+                        typename Allocator>
+               static inline bool batch_vector_writer(Writer& w,
+                                                      const std::size_t&,
+                                                      const std::vector<T,Allocator>& v)
+               {
+                  for (std::size_t i = 0; i < v.size(); ++i)
+                  {
+                     if (w.operator()(v[i]))
+                        continue;
+                     else
+                        return false;
+                  }
+                  return true;
+               }
+            };
+
+            template<typename T>
+            struct selector_impl<T,strtk::details::yes_t>
+            {
+               template<typename Writer>
+               static inline bool run(Writer& w, const T& t)
+               {
+                  return w.write_pod(t);
+               }
+
+               template<typename Writer,
+                        typename Allocator>
+               static inline bool batch_vector_writer(Writer& w,
+                                                      const std::size_t& raw_size,
+                                                      const std::vector<T,Allocator>& v)
+               {
+                  const char* ptr = reinterpret_cast<const char*>(&v[0]);
+                  std::copy(ptr, ptr + raw_size, w.buffer_);
+                  w.buffer_ += raw_size;
+                  w.amount_written_sofar_ += raw_size;
+                  return true;
+               }
+            };
+
+         public:
+            typedef selector_impl<Type,typename strtk::details::is_pod<Type>::result_t> type;
          };
 
          template<typename T>
-         struct selector<T,details::yes_t>
-         {
-            template<typename Writer>
-            static inline bool run(Writer& w, const T& t)
-            {
-               return w.write_pod(t);
-            }
-         };
-
-         template<typename T>
-         inline bool write_pod(const T& data)
+         inline bool write_pod(const T& data, const bool perform_buffer_capacity_check = true)
          {
             static const std::size_t data_length = sizeof(T);
-            if ((data_length + written_buffer_size_) > buffer_length_)
+            if (perform_buffer_capacity_check)
             {
-               return false;
+               if ((data_length + amount_written_sofar_) > buffer_length_)
+               {
+                  return false;
+               }
             }
             *(reinterpret_cast<T*>(buffer_)) = data;
             buffer_ += data_length;
-            written_buffer_size_ += data_length;
+            amount_written_sofar_ += data_length;
             return true;
          }
 
          char* const original_buffer_;
          char* buffer_;
          std::size_t buffer_length_;
-         std::size_t written_buffer_size_;
-
+         std::size_t amount_written_sofar_;
+         details::marker marker_;
       };
 
       #define strtk_binary_reader_begin()\
@@ -9448,7 +10940,9 @@ namespace strtk
               if (!r(size))
                  return false;
                s->resize(size);
-               if(!r(const_cast<char*>(s->data()),size))
+               char* ptr = const_cast<char*>(s->data());
+               strtk::binary::reader::uint32_t length = size;
+               if (!r(ptr,length,false))
                   return false;
                return true;
             }
@@ -9462,7 +10956,7 @@ namespace strtk
                const size_type size = static_cast<size_type>(s->size());
                if (!w(size))
                   return false;
-               if(!w(s->data(),size,false))
+               if (!w(s->data(),size,false))
                   return false;
                return true;
             }
@@ -10073,11 +11567,13 @@ namespace strtk
       inline typename range_type<Iterator>::type find_exactly_n_consecutive_values(const std::size_t n,
                                                                                    Predicate p,
                                                                                    Iterator itr,
-                                                                                   const Iterator end)
+                                                                                   const Iterator end,
+                                                                                   const bool stateful_predicate = false)
       {
          if (static_cast<unsigned int>(std::distance(itr,end)) < n)
             return typename range_type<Iterator>::type(end,end);
          std::size_t count = n;
+
          while (end != itr)
          {
             if (p(*itr))
@@ -10095,9 +11591,16 @@ namespace strtk
                ++itr;
                while ((end != itr) && !p(*itr))
                   ++itr;
-               count = n;
+               if (!stateful_predicate)
+                  count = n;
+               else
+               {
+                  --count;
+                  ++itr;
+               }
             }
          }
+
          return typename range_type<Iterator>::type(end,end);
       }
 
@@ -10141,13 +11644,30 @@ namespace strtk
       }
 
       template<typename Iterator, typename Predicate>
+      inline typename range_type<Iterator>::type find_exactly_n_consecutive_values(const std::size_t n,
+                                                                                   Predicate p,
+                                                                                   typename details::range_type<Iterator>::type range,
+                                                                                   const bool stateful_predicate = false)
+      {
+         return find_exactly_n_consecutive_values(n,p,range.first,range.second,stateful_predicate);
+      }
+
+      template<typename Iterator, typename Predicate>
+      inline typename range_type<Iterator>::type find_atleast_n_consecutive_values(const std::size_t n,
+                                                                                   Predicate p,
+                                                                                   typename details::range_type<Iterator>::type range)
+      {
+         return find_atleast_n_consecutive_values(n,p,range.first,range.second);
+      }
+
+      template<typename Iterator, typename Predicate>
       inline typename range_type<Iterator>::type find_n_consecutive_values(const std::size_t n,
                                                                            find_mode::type mode,
                                                                            Predicate p,
                                                                            Iterator itr,
                                                                            const Iterator end)
       {
-         switch(mode)
+         switch (mode)
          {
             case find_mode::exactly_n : return find_exactly_n_consecutive_values(n,p,itr,end);
             case find_mode::atleast_n : return find_atleast_n_consecutive_values(n,p,itr,end);
@@ -10210,7 +11730,7 @@ namespace strtk
                                              Iterator itr,
                                              const Iterator end)
       {
-         switch(mode)
+         switch (mode)
          {
             case find_mode::exactly_n : return match_exactly_n_consecutive_values(n,p,itr,end);
             case find_mode::atleast_n : return match_atleast_n_consecutive_values(n,p,itr,end);
@@ -10226,7 +11746,7 @@ namespace strtk
                                                                           find_mode::type mode,
                                                                           typename details::range_type<Iterator>::type range)
    {
-      switch(type)
+      switch (type)
       {
          case find_type::digits  : return details::find_n_consecutive_values<Iterator>(n,
                                                                                        mode,
@@ -10263,7 +11783,7 @@ namespace strtk
                                    find_mode::type mode,
                                    typename details::range_type<Iterator>::type range)
    {
-      switch(type)
+      switch (type)
       {
          case find_type::digits  : return details::match_n_consecutive_values<Iterator>(n,
                                                                                        mode,
@@ -10293,6 +11813,75 @@ namespace strtk
          default : return false;
       }
    }
+
+   template<typename Predicate,
+            typename OutputIterator>
+   inline std::size_t split_on_consecutive(const std::size_t n,
+                                           Predicate p,
+                                           char* begin,
+                                           char* end,
+                                           OutputIterator out,
+                                           const bool stateful_predicate = false)
+   {
+      if (0 == n) return 0;
+      typedef char* iterator_type;
+      typedef details::range_type<iterator_type>::type range_type;
+      range_type itr_range(begin,end);
+      std::size_t match_count = 0;
+      while (end != itr_range.first)
+      {
+         range_type found_itr = details::find_exactly_n_consecutive_values<iterator_type,
+                                                                           Predicate>(n,
+                                                                                      p,
+                                                                                      itr_range,
+                                                                                      stateful_predicate);
+         if ((end == found_itr.first) && (found_itr.first == found_itr.second))
+         {
+            break;
+         }
+         else
+         {
+            *out = found_itr;
+            ++out;
+            ++match_count;
+            itr_range.first = found_itr.second;
+         }
+      }
+      return match_count;
+   }
+
+   template<typename Predicate,
+            typename OutputIterator>
+   inline std::size_t split_on_consecutive(const std::size_t n,
+                                           const std::size_t m,
+                                           Predicate p,
+                                           char* begin,
+                                           char* end,
+                                           OutputIterator out)
+   {
+      if (0 == n) return 0;
+      typedef char* iterator_type;
+      typedef details::range_type<iterator_type>::type range_type;
+      range_type itr_range(begin,end);
+      std::size_t match_count = 0;
+      while ((end != itr_range.first) && (match_count <= n))
+      {
+         range_type found_itr = details::find_exactly_n_consecutive_values(m,p,itr_range);
+         if ((end == found_itr.first) && (found_itr.first == found_itr.second))
+         {
+            break;
+         }
+         else
+         {
+            *out = found_itr;
+            ++out;
+            ++match_count;
+            itr_range.first = found_itr.second;
+         }
+      }
+      return match_count;
+   }
+
 
    template<typename InputIterator, typename OutputIterator>
    inline std::size_t split_on_consecutive(const std::size_t& n,
@@ -10457,6 +12046,110 @@ namespace strtk
                                                     out);
    }
 
+   template<typename Predicate, typename OutputIterator>
+   inline std::size_t split_on_consecutive(const std::size_t& n,
+                                           Predicate p,
+                                           const char* begin,
+                                           const char* end,
+                                           OutputIterator out,
+                                           const bool stateful_predicate = false)
+   {
+      return split_on_consecutive<Predicate,
+                                  OutputIterator>(n,
+                                                  p,
+                                                  const_cast<char*>(begin),
+                                                  const_cast<char*>(end),
+                                                  out,
+                                                  stateful_predicate);
+   }
+
+   template<typename Predicate, typename OutputIterator>
+   inline std::size_t split_on_consecutive(const std::size_t& n,
+                                           Predicate p,
+                                           const unsigned char* begin,
+                                           const unsigned char* end,
+                                           OutputIterator out,
+                                           const bool stateful_predicate = false)
+   {
+      return split_on_consecutive<Predicate,
+                                  OutputIterator>(n,
+                                                  p,
+                                                  reinterpret_cast<const char*>(begin),
+                                                  reinterpret_cast<const char*>(end),
+                                                  out,
+                                                  stateful_predicate);
+   }
+
+   template<typename Predicate, typename OutputIterator>
+   inline std::size_t split_on_consecutive(const std::size_t& n,
+                                           Predicate p,
+                                           const std::string& str,
+                                           OutputIterator out,
+                                           const bool stateful_predicate = false)
+   {
+      return split_on_consecutive<Predicate,
+                                  OutputIterator>(n,
+                                                  p,
+                                                  str.data(),
+                                                  str.data() + str.size(),
+                                                  out,
+                                                  stateful_predicate);
+   }
+
+   template<typename Predicate, typename OutputIterator>
+   inline std::size_t split_on_consecutive_n(const std::size_t& n,
+                                             const std::size_t& m,
+                                             Predicate p,
+                                             const char* begin,
+                                             const char* end,
+                                             OutputIterator out)
+   {
+      return split_on_consecutive_n<Predicate,
+                                    char*,
+                                    OutputIterator>(n,
+                                                    m,
+                                                    p,
+                                                    const_cast<char*>(begin),
+                                                    const_cast<char*>(end),
+                                                    out);
+   }
+
+   template<typename Predicate, typename OutputIterator>
+   inline std::size_t split_on_consecutive_n(const std::size_t& n,
+                                             const std::size_t& m,
+                                             Predicate p,
+                                             const unsigned char* begin,
+                                             const unsigned char* end,
+                                             OutputIterator out)
+   {
+      return split_on_consecutive_n<Predicate,
+                                    OutputIterator>(n,
+                                                    m,
+                                                    p,
+                                                    reinterpret_cast<const char*>(begin),
+                                                    reinterpret_cast<const char*>(end),
+                                                    out);
+   }
+
+   template<typename Predicate, typename OutputIterator>
+   inline std::size_t split_on_consecutive_n(const std::size_t& n,
+                                             const std::size_t& m,
+                                             Predicate p,
+                                             const std::string& str,
+                                             OutputIterator out)
+   {
+      return split_on_consecutive_n<Predicate,
+                                    OutputIterator>(n,
+                                                    m,
+                                                    p,
+                                                    str.data(),
+                                                    str.data() + str.size(),
+                                                    out);
+   }
+
+   // Required for broken versions of GCC pre 4.5
+   namespace util { class value; }
+
    namespace details
    {
       static const unsigned char digit_table[] =
@@ -10591,6 +12284,8 @@ namespace strtk
       strtk_register_pod_type(double)
       strtk_register_pod_type(long double)
 
+      #undef strtk_register_pod_type
+
       template<typename>
       struct numeric { enum { length = 0, size = 32, bound_length = 0, min_exp = 0, max_exp = 0 }; };
 
@@ -10639,6 +12334,9 @@ namespace strtk
 
       template<> struct supported_conversion_to_type<std::string> { typedef stdstring_type_tag type; };
       template<> struct supported_iterator_type<std::string> { enum { value = true }; };
+
+      template<> struct supported_conversion_to_type<strtk::util::value> { typedef value_type_tag type; };
+      template<> struct supported_iterator_type<strtk::util::value> { enum { value = true }; };
 
       #define strtk_register_stdstring_range_type_tag(T)\
       template<> struct supported_conversion_to_type< std::pair<T,T> >{ typedef stdstring_range_type_tag type; };
@@ -10733,6 +12431,16 @@ namespace strtk
       #define strtk_register_userdef_type_sink(T)\
       namespace strtk { namespace details { strtk_register_sink_type_tag(T) }}
 
+      #undef strtk_register_unsigned_type_tag
+      #undef strtk_register_signed_type_tag
+      #undef strtk_register_real_type_tag
+      #undef strtk_register_byte_type_tag
+      #undef strtk_register_hex_type_tag
+      #undef strtk_register_base64_type_tag
+      #undef strtk_register_supported_iterator_type
+      #undef strtk_register_stdstring_range_type_tag
+      #undef strtk_register_sequence_iterator_type
+
       template<typename T>
       struct precision
       {  static void set(std::iostream&) {}  };
@@ -10743,6 +12451,8 @@ namespace strtk
       strtk_register_iostream_precision(float)
       strtk_register_iostream_precision(double)
       strtk_register_iostream_precision(long double)
+
+      #undef strtk_register_iostream_precision
 
       template<typename Iterator, typename T, typename Tag>
       inline bool string_to_type_converter_impl(Iterator& begin, const Iterator end, T& t, not_supported_type_tag)
@@ -10771,6 +12481,12 @@ namespace strtk
             begin = end;
             return true;
          #endif
+      }
+
+      template<typename Iterator>
+      inline bool string_to_type_converter_impl(Iterator& begin, const Iterator end, strtk::util::value& v, value_type_tag)
+      {
+         return v(begin,end);
       }
 
       template<typename Iterator>
@@ -11575,6 +13291,8 @@ namespace strtk
       strtk_register_type_name(float)
       strtk_register_type_name(long double)
       strtk_register_type_name(std::string)
+
+      #undef strtk_register_type_name
 
       template <typename T>
       inline std::string type_name(const T&)
@@ -13241,7 +14959,6 @@ namespace strtk
                                                              0x80   //10000000
                                                            };
 
-
       class filter
       {
       protected:
@@ -13250,6 +14967,16 @@ namespace strtk
          typedef unsigned char cell_type;
 
       public:
+
+         filter()
+         : salt_count_(0),
+           table_size_(0),
+           raw_table_size_(0),
+           predicted_inserted_element_count_(0),
+           inserted_element_count_(0),
+           random_seed_(0),
+           desired_false_positive_probability_(0.0)
+         {}
 
          filter(const std::size_t& predicted_inserted_element_count,
                 const double& false_positive_probability,
@@ -13272,19 +14999,46 @@ namespace strtk
             this->operator=(filter);
          }
 
-         filter& operator = (const filter& f)
+         inline bool operator == (const filter& f) const
          {
-            salt_count_ = f.salt_count_;
-            table_size_ = f.table_size_;
-            raw_table_size_ = f.raw_table_size_;
-            predicted_inserted_element_count_ = f.predicted_inserted_element_count_;
-            inserted_element_count_ = f.inserted_element_count_;
-            random_seed_ = f.random_seed_;
-            desired_false_positive_probability_ = f.desired_false_positive_probability_;
-            delete[] bit_table_;
-            bit_table_ = new cell_type[raw_table_size_];
-            std::copy(f.bit_table_,f.bit_table_ + raw_table_size_,bit_table_);
-            salt_ = f.salt_;
+            if (this == &f)
+               return true;
+            else
+            {
+               return
+                  (salt_count_                         == f.salt_count_)                         &&
+                  (table_size_                         == f.table_size_)                         &&
+                  (raw_table_size_                     == f.raw_table_size_)                     &&
+                  (predicted_inserted_element_count_   == f.predicted_inserted_element_count_)   &&
+                  (inserted_element_count_             == f.inserted_element_count_)             &&
+                  (random_seed_                        == f.random_seed_)                        &&
+                  (desired_false_positive_probability_ == f.desired_false_positive_probability_) &&
+                  (salt_                               == f.salt_)                               &&
+                  std::equal(f.bit_table_,f.bit_table_ + raw_table_size_,bit_table_);
+            }
+         }
+
+         inline bool operator != (const filter& f) const
+         {
+            return !operator==(f);
+         }
+
+         inline filter& operator = (const filter& f)
+         {
+            if (this != &f)
+            {
+               salt_count_ = f.salt_count_;
+               table_size_ = f.table_size_;
+               raw_table_size_ = f.raw_table_size_;
+               predicted_inserted_element_count_ = f.predicted_inserted_element_count_;
+               inserted_element_count_ = f.inserted_element_count_;
+               random_seed_ = f.random_seed_;
+               desired_false_positive_probability_ = f.desired_false_positive_probability_;
+               delete[] bit_table_;
+               bit_table_ = new cell_type[raw_table_size_];
+               std::copy(f.bit_table_,f.bit_table_ + raw_table_size_,bit_table_);
+               salt_ = f.salt_;
+            }
             return *this;
          }
 
@@ -13482,6 +15236,80 @@ namespace strtk
             return bit_table_;
          }
 
+         inline bool write_to_file(const std::string& file_name) const
+         {
+            if (0 == table_size_)
+               return false;
+            const std::size_t buffer_size = sizeof(                        salt_count_) +
+                                            sizeof(                        table_size_) +
+                                            sizeof(                    raw_table_size_) +
+                                            sizeof(  predicted_inserted_element_count_) +
+                                            sizeof(            inserted_element_count_) +
+                                            sizeof(                       random_seed_) +
+                                            sizeof(desired_false_positive_probability_) +
+                                            salt_count_ * sizeof(           bloom_type) +
+                                            raw_table_size_ * sizeof(        cell_type) +
+                                            64; // handle array sizes etc.
+            std::ofstream ostream(file_name.c_str(),std::ios::binary);
+            if (!ostream)
+               return false;
+            unsigned char* buffer = new unsigned char[buffer_size];
+            strtk::binary::writer writer(buffer,buffer_size);
+            writer.reset(true);
+            bool result = writer(salt_count_)                         &&
+                          writer(table_size_)                         &&
+                          writer(raw_table_size_)                     &&
+                          writer(predicted_inserted_element_count_)   &&
+                          writer(inserted_element_count_)             &&
+                          writer(random_seed_)                        &&
+                          writer(desired_false_positive_probability_) &&
+                          writer(salt_)                               &&
+                          writer(bit_table_,raw_table_size_);
+            if (result)
+            {
+               writer(ostream);
+            }
+            delete[] buffer;
+            return result;
+         }
+
+         inline bool read_from_file(const std::string& file_name)
+         {
+            std::ifstream istream(file_name.c_str(),std::ios::binary);
+            if (!istream)
+               return false;
+            salt_count_                         = 0;
+            table_size_                         = 0;
+            raw_table_size_                     = 0;
+            predicted_inserted_element_count_   = 0;
+            inserted_element_count_             = 0;
+            random_seed_                        = 0;
+            bit_table_                          = 0;
+            desired_false_positive_probability_ = 0.0;
+            salt_.clear();
+            const std::size_t buffer_size = strtk::fileio::file_size(file_name);
+            unsigned char* buffer = new unsigned char[buffer_size];
+            strtk::binary::reader reader(buffer,buffer_size);
+            reader.reset(true);
+            reader(istream,buffer_size);
+            istream.close();
+            bool result = reader(salt_count_)                         &&
+                          reader(table_size_)                         &&
+                          reader(raw_table_size_)                     &&
+                          reader(predicted_inserted_element_count_)   &&
+                          reader(inserted_element_count_)             &&
+                          reader(random_seed_)                        &&
+                          reader(desired_false_positive_probability_) &&
+                          reader(salt_)                               &&
+                          reader(bit_table_,raw_table_size_);
+            if (result)
+            {
+               reader(istream);
+            }
+            delete[] buffer;
+            return result;
+         }
+
       protected:
 
          inline virtual void compute_indices(const bloom_type& hash, std::size_t& bit_index, std::size_t& bit) const
@@ -13631,12 +15459,12 @@ namespace strtk
 
          std::vector<bloom_type> salt_;
          unsigned char*          bit_table_;
-         std::size_t             salt_count_;
-         std::size_t             table_size_;
-         std::size_t             raw_table_size_;
-         std::size_t             predicted_inserted_element_count_;
-         std::size_t             inserted_element_count_;
-         std::size_t             random_seed_;
+         unsigned int            salt_count_;
+         unsigned int            table_size_;
+         unsigned int            raw_table_size_;
+         unsigned int            predicted_inserted_element_count_;
+         unsigned int            inserted_element_count_;
+         unsigned int            random_seed_;
          double                  desired_false_positive_probability_;
       };
 
@@ -13911,6 +15739,7 @@ namespace strtk
          {
             prev_t_ = t_;
             assign(t);
+            return *this;
          }
 
          inline T& operator()()
@@ -13970,6 +15799,147 @@ namespace strtk
          T prev_t_;
          bool initialised_;
 
+      };
+
+      class value
+      {
+      private:
+
+         class type_holder_base
+         {
+         public:
+
+            typedef const unsigned char* itr_type;
+
+            virtual ~type_holder_base(){}
+
+            virtual bool operator()(itr_type begin, itr_type end) const = 0;
+
+            inline bool operator()(const char* begin, const char* end) const
+            {
+               return operator()(reinterpret_cast<itr_type>(begin),
+                                 reinterpret_cast<itr_type>(end));
+            }
+
+            template<typename Iterator>
+            inline bool operator()(const std::pair<Iterator,Iterator>& p) const
+            {
+               return operator()(p.first,p.second);
+            }
+         };
+
+         template<typename T>
+         class type_holder : public type_holder_base
+         {
+         public:
+
+            typedef T* type_ptr;
+
+            explicit type_holder(T& t)
+            : value_ptr_(&t)
+            {}
+
+            inline virtual bool operator()(itr_type begin, itr_type end) const
+            {
+               return strtk::string_to_type_converter(begin,end,(*value_ptr_));
+            }
+
+         private:
+
+            type_ptr value_ptr_;
+         };
+
+      public:
+
+         value()
+         : type_holder_(0)
+         {}
+
+         template<typename T>
+         inline explicit value(T& t)
+         {
+            assign(t);
+         }
+
+         inline bool operator!() const
+         {
+            return (0 == type_holder_);
+         }
+
+         inline bool operator==(const value& v) const
+         {
+            return (0 !=   type_holder_) &&
+                   (0 != v.type_holder_) &&
+                   (type_holder_ == v.type_holder_);
+         }
+
+         inline value& operator=(const value& v)
+         {
+            if (&v != this)
+            {
+               if (0 != v.type_holder_)
+               {
+                  std::copy(v.type_holder_buffer_,
+                            v.type_holder_buffer_ + type_holder_buffer_size,
+                            type_holder_buffer_);
+                  type_holder_ = reinterpret_cast<type_holder_base*>(type_holder_buffer_);
+               }
+            }
+            return *this;
+         }
+
+         template<typename InputIterator>
+         inline bool operator()(InputIterator begin, InputIterator end) const
+         {
+            if (0 != type_holder_)
+               return (*type_holder_).operator()(begin,end);
+            else
+               return false;
+         }
+
+         template<typename InputIterator>
+         inline bool operator()(const std::pair<InputIterator,InputIterator>& r) const
+         {
+            return operator()(r.first,r.second);
+         }
+
+         inline bool operator()(const std::string& s) const
+         {
+            return operator()(s.data(),s.data() + s.size());
+         }
+
+         template<typename T>
+         inline void assign(T& t)
+         {
+            static const std::size_t type_size = sizeof(type_holder<T>(t));
+            type_holder_ = construct<T,type_size <= type_holder_buffer_size>::type(t,type_holder_buffer_);
+         }
+
+      private:
+
+         typedef type_holder_base* type_holder_ptr;
+
+         template<typename T, bool b>
+         struct construct
+         {
+            inline static type_holder_ptr type(T&, unsigned char*)
+            {
+               return reinterpret_cast<type_holder_ptr>(0);
+            }
+         };
+
+         template<typename T>
+         struct construct<T,true>
+         {
+            inline static type_holder_ptr type(T& t, unsigned char* buffer)
+            {
+               return new(buffer)type_holder<T>(t);
+            }
+         };
+
+         type_holder_ptr type_holder_;
+         enum { type_holder_buffer_size = 2 * sizeof(type_holder<unsigned long long>) };
+         unsigned char type_holder_buffer_[type_holder_buffer_size];
       };
 
       template<typename Key,
@@ -14064,7 +16034,7 @@ namespace strtk
                typename T,
                typename Comparator,
                typename Allocator>
-      inline void delete_all(const std::map<Key,T*,Comparator,Allocator>& cont)
+      inline void delete_all(std::map<Key,T*,Comparator,Allocator>& cont)
       {
          typename std::map<Key,T*,Comparator,Allocator>::iterator itr = cont.begin();
          typename std::map<Key,T*,Comparator,Allocator>::iterator end = cont.end();
@@ -14079,7 +16049,7 @@ namespace strtk
       template<typename T,
                typename Comparator,
                typename Allocator>
-      inline void delete_all(const std::set<T*,Comparator,Allocator>& cont)
+      inline void delete_all(std::set<T*,Comparator,Allocator>& cont)
       {
          typename std::set<T*,Comparator,Allocator>::iterator itr = cont.begin();
          typename std::set<T*,Comparator,Allocator>::iterator end = cont.end();
@@ -14117,7 +16087,7 @@ namespace strtk
                typename Comparator,
                typename Allocator>
       inline void delete_if(const Predicate& p,
-                            const std::map<Key,T*,Comparator,Allocator>& cont)
+                            std::map<Key,T*,Comparator,Allocator>& cont)
       {
          typename std::map<Key,T*,Comparator,Allocator>::iterator itr = cont.begin();
          while (cont.end() != itr)
@@ -14137,7 +16107,7 @@ namespace strtk
                typename Comparator,
                typename Allocator>
       inline void delete_if(const Predicate& p,
-                            const std::set<T*,Comparator,Allocator>& cont)
+                            std::set<T*,Comparator,Allocator>& cont)
       {
          typename std::set<T*,Comparator,Allocator>::iterator itr = cont.begin();
          while (cont.end() != itr)
@@ -14273,6 +16243,332 @@ namespace strtk
 
    } // namespace util
 
+   template<typename Iterator>
+   inline std::size_t distance(const std::pair<Iterator,Iterator>& p)
+   {
+      return std::distance(p.first,p.second);
+   }
+
+   template<typename Iterator1, typename Iterator2>
+   inline std::pair<Iterator1,Iterator2> make_pair(const std::string& s)
+   {
+      return std::make_pair<Iterator1,Iterator2>(
+            reinterpret_cast<Iterator1>(const_cast<char*>(s.data())),
+            reinterpret_cast<Iterator2>(const_cast<char*>(s.data() + s.size())));
+   }
+
+   template<typename Iterator1, typename Iterator2>
+   inline std::pair<Iterator1,Iterator2> make_pair(const std::pair<const char*, const char*> p)
+   {
+      return std::make_pair<Iterator1,Iterator2>(
+            reinterpret_cast<Iterator1>(const_cast<char*>(p.first)),
+            reinterpret_cast<Iterator2>(const_cast<char*>(p.second)));
+   }
+
+   template<typename Iterator>
+   inline std::pair<Iterator,Iterator> make_pair(const std::string& s)
+   {
+      return make_pair<Iterator,Iterator>(s);
+   }
+
+   template<typename Iterator>
+   inline std::pair<Iterator,Iterator> make_pair(const std::pair<const char*, const char*> p)
+   {
+      return make_pair<Iterator,Iterator>(p);
+   }
+
+   template<std::size_t N>
+   inline std::string make_string(const unsigned char (&s)[N], const std::size_t& length = N)
+   {
+      static const std::string null_string;
+      if (N < length)
+         return null_string;
+      else
+         return std::string(&s[0],&s[0] + length);
+   }
+
+   template<std::size_t N>
+   inline std::string make_string(const char (&s)[N], const std::size_t& length = N)
+   {
+      static const std::string null_string;
+      if (N < length)
+         return null_string;
+      else
+         return std::string(&s[0],&s[0] + length);
+   }
+
+   template<typename T, std::size_t N>
+   inline bool clear_array(T (&a)[N], const T& t, const std::size_t& length = N)
+   {
+      if (N < length)
+         return false;
+      else
+         std::fill_n(&a[0],length,t);
+      return true;
+   }
+
+   template<std::size_t N>
+   inline bool set_array(unsigned char (&a)[N],
+                         const std::string& s,
+                         const bool pad = false,
+                         const unsigned char padding = '0')
+   {
+      if (N < s.size())
+         return false;
+      std::copy(s.data(),s.data() + s.size(), &a[0]);
+      if ((s.size() < N) && pad)
+         std::fill_n(&a[s.size()],N - s.size(),padding);
+      return true;
+   }
+
+   template<std::size_t N, std::size_t M>
+   inline bool set_array(unsigned char (&dest)[N],
+                         unsigned char (&src)[M],
+                         const bool pad = false,
+                         const unsigned char padding = '0')
+   {
+      if (N < M)
+         return false;
+      std::copy(src,src + N, &dest[0]);
+      if ((M < N) && pad)
+         std::fill_n(&dest[M],N - M,padding);
+      return true;
+   }
+
+   namespace keyvalue
+   {
+      template<typename CharType>
+      struct options
+      {
+         typedef CharType char_type;
+
+         options()
+         : pair_block_delimiter(0),
+           pair_delimiter(0)
+         {}
+
+         char_type pair_block_delimiter;
+         char_type pair_delimiter;
+      };
+
+      template<typename KeyValueMap>
+      class parser
+      {
+      public:
+
+         typedef unsigned char char_type;
+         typedef std::pair<char_type*,char_type*> range_type;
+
+         template<typename Options>
+         parser(const Options& opts)
+         : options_(opts),
+           kv_map_(opts),
+           pair_block_sdp_(options_.pair_block_delimiter),
+           pair_delimiter_sdp_(options_.pair_delimiter)
+         {
+            pair_list_.reserve(strtk::one_kilobyte);
+         }
+
+         template<typename T>
+         inline bool register_keyvalue(const typename KeyValueMap::key_type& key, T& t)
+         {
+            return kv_map_.register_keyvalue(key,t);
+         }
+
+         inline bool operator()(const range_type& data, const bool ignore_failures = false)
+         {
+            if (!ignore_failures)
+            {
+               const std::size_t pair_count = split(pair_block_sdp_,
+                                           data.first,
+                                           data.second,
+                                           pair_list_.begin());
+               if (0 == pair_count)
+                  return false;
+
+               range_type key_range;
+               range_type value_range;
+
+               for (std::size_t i = 0; i < pair_count; ++i)
+               {
+                  const range_type& r = pair_list_[i];
+                  if (!split_pair(r.first,r.second,
+                              pair_delimiter_sdp_,
+                              key_range,value_range))
+                    return false;
+
+                  if (!kv_map_(key_range,value_range))
+                    return false;
+               }
+               return true;
+            }
+            else
+            {
+                parse_failures_ = 0;
+                pair_token_processor processor(*this);
+                split(pair_block_sdp_,
+                      data.first,
+                      data.second,
+                      strtk::functional_inserter(processor));
+                return true;
+            }
+         }
+
+         inline bool operator()(const std::string& s, const bool ignore_failures = false)
+         {
+            return operator()(strtk::make_pair<range_type::first_type>(s),ignore_failures);
+         }
+
+         inline std::size_t failure_count() const
+         {
+            return parse_failures_;
+         }
+
+      private:
+
+         class pair_token_processor
+         {
+         public:
+
+            pair_token_processor(parser<KeyValueMap>& p)
+            : parser_(p)
+            {}
+
+            inline void operator()(const range_type& r)
+            {
+               if (r.first == r.second)
+                  return;
+               if (split_pair(r.first,r.second,
+                              parser_.pair_delimiter_sdp_,
+                              key_range,
+                              value_range))
+               {
+                  if(!parser_.kv_map_(key_range,value_range))
+                     ++parser_.parse_failures_;
+               }
+               else
+                  ++parser_.parse_failures_;
+            }
+
+         private:
+            pair_token_processor operator=(const pair_token_processor&);
+
+            parser<KeyValueMap>& parser_;
+            range_type key_range;
+            range_type value_range;
+         };
+
+         options<char_type> options_;
+         std::size_t parse_failures_;
+         KeyValueMap kv_map_;
+         single_delimiter_predicate<char_type> pair_block_sdp_;
+         single_delimiter_predicate<char_type> pair_delimiter_sdp_;
+         std::vector<range_type> pair_list_;
+      };
+
+      class uintkey_map
+      {
+      private:
+         typedef unsigned char char_type;
+         typedef strtk::keyvalue::options<char_type> general_options;
+
+      public:
+         typedef unsigned int key_type;
+
+         struct options : public general_options
+         {
+            options()
+            : general_options(),
+              key_count(0)
+            {}
+
+            std::size_t key_count;
+         };
+
+         template<typename Options>
+         uintkey_map(const Options& options)
+         {
+            value_lut_.resize(options.key_count,strtk::util::value());
+         }
+
+         virtual ~uintkey_map()
+         {}
+
+         template<typename Range>
+         inline bool operator()(const Range key_range, const Range value_range)
+         {
+            std::size_t key = 0;
+            if (!fast::numeric_convert(distance(key_range),key_range.first,key,true))
+               return false;
+            if (key >= value_lut_.size())
+               return false;
+            const strtk::util::value& v = value_lut_[key];
+            if (!v)
+               return false;
+            else
+               return v(value_range);
+         }
+
+         template<typename T>
+         inline bool register_keyvalue(const key_type& key, T& t)
+         {
+            if (key < value_lut_.size())
+            {
+               value_lut_[key] = strtk::util::value(t);
+               return true;
+            }
+            else
+               return false;
+         }
+
+      private:
+
+         std::vector<strtk::util::value> value_lut_;
+      };
+
+      class stringkey_map
+      {
+      public:
+
+         typedef std::string key_type;
+
+         typedef std::map<std::string,strtk::util::value> map_type;
+
+         template<typename Options>
+         stringkey_map(const Options&)
+         {}
+
+         virtual ~stringkey_map()
+         {}
+
+         template<typename Range>
+         inline bool operator()(const Range key_range, const Range value_range)
+         {
+            std::string key(key_range.first,key_range.second);
+            map_type::iterator itr = value_map_.find(key);
+            if (value_map_.end() == itr)
+               return false;
+            const util::value& v = (*itr).second;
+            if(!v)
+               return false;
+            else
+               return v(value_range);
+         }
+
+         template<typename T>
+         inline bool register_keyvalue(const key_type& key, T& t)
+         {
+            value_map_[key] = strtk::util::value(t);
+            return true;
+         }
+
+      private:
+
+         map_type value_map_;
+      };
+
+   }
+
 } // namespace strtk
 
 namespace
@@ -14313,6 +16609,8 @@ namespace
    strtk_register_pair_to_ostream(std::string::const_iterator)
    strtk_register_pair_to_ostream(const std::string::iterator)
    strtk_register_pair_to_ostream(const std::string::const_iterator)
+
+   #undef strtk_register_pair_to_ostream
 
 } // namespace anonymous
 
@@ -14417,13 +16715,39 @@ namespace strtk
             struct timeval stop_time_;
          #endif
       };
+
+      class scoped_timer
+      {
+      public:
+
+         scoped_timer(double& time_value)
+         : time_value_(time_value)
+         {
+            t_.start();
+         }
+
+        ~scoped_timer()
+         {
+            t_.stop();
+            time_value_ = t_.time();
+         }
+
+      private:
+
+         scoped_timer(const scoped_timer&);
+         scoped_timer& operator=(const scoped_timer&);
+
+         double& time_value_;
+         timer t_;
+      };
+
    } // namespace util
 
    namespace information
    {
       static const char* library = "String Toolkit";
-      static const char* version = "2.718281828459045235360287471352";
-      static const char* date    = "20110101";
+      static const char* version = "2.7182818284590452353602874713526624977";
+      static const char* date    = "20111111";
 
       static inline std::string data()
       {
@@ -14438,3 +16762,4 @@ namespace strtk
 } // namespace strtk
 
 #endif
+
