@@ -624,7 +624,7 @@ void parse_example04()
    std::cout << "parse_example04" << std::endl;
    type t;
    std::string s = "abcdefghijklmnop|123.456|987654321|A|1";
-   if(strtk::parse(s,"|",t))
+   if (strtk::parse(s,"|",t))
    {
       std::string o;
       strtk::construct(o,"|",t.s,t.d,t.i,t.c,t.b);

@@ -613,7 +613,7 @@ bool test_fast_convert()
 {
    {
       int v = 0;
-      for(int i = -100000000; i < +100000000; ++i)
+      for (int i = -100000000; i < +100000000; ++i)
       {
          if (!strtk::fast::signed_numeric_convert(strtk::type_to_string(i),v,true))
          {
@@ -632,7 +632,7 @@ bool test_fast_convert()
 
    {
       unsigned int v = 0;
-      for(unsigned int i = 0; i < 1000000000; ++i)
+      for (unsigned int i = 0; i < 1000000000; ++i)
       {
          if (!strtk::fast::signed_numeric_convert(strtk::type_to_string(i),v,true))
          {

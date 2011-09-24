@@ -181,10 +181,11 @@ int main()
       }
       timer.stop();
 
-      printf("[uintkeymap] Total: %d Time %8.5fsec Rate: %12.3fpairs/sec\n",
+      printf("[uintkeymap] Total: %d Time %8.5fsec Rates: %12.3fpairs/sec %12.3fseq/sec\n",
              total,
              timer.time(),
-             (rounds * data_store::member_count * data_size) / timer.time ());
+             (rounds * data_store::member_count * data_size) / timer.time (),
+             (rounds * data_size) / timer.time ());
    }
 
    {
@@ -242,10 +243,11 @@ int main()
       }
       timer.stop();
 
-      printf("[strkeymap ] Total: %d Time %8.5fsec Rate: %12.3fpairs/sec\n",
+      printf("[strkeymap ] Total: %d Time %8.5fsec Rates: %12.3fpairs/sec %12.3fseq/sec\n",
              total,
              timer.time(),
-             (rounds * data_store::member_count * data_size) / timer.time ());
+             (rounds * data_store::member_count * data_size) / timer.time (),
+             (rounds * data_size) / timer.time ());
    }
 
    return 0;

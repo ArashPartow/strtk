@@ -233,7 +233,8 @@ namespace strtk
       struct real_type_tag {};
       struct byte_type_tag {};
       struct bool_type_tag {};
-      struct hex_type_tag {};
+      struct hex_number_type_tag {};
+      struct hex_string_type_tag {};
       struct base64_type_tag {};
       struct ignore_token_type_tag {};
       struct stdstring_type_tag {};
@@ -3477,6 +3478,21 @@ namespace strtk
                          reinterpret_cast<unsigned char*>(out));
    }
 
+   inline void convert_bin_to_hex(const std::pair<unsigned char*,unsigned char*>& r, unsigned char* out)
+   {
+      convert_bin_to_hex(r.first,r.second,out);
+   }
+
+   inline void convert_bin_to_hex(const std::pair<const unsigned char*,const unsigned char*>& r, unsigned char* out)
+   {
+      convert_bin_to_hex(r.first,r.second,out);
+   }
+
+   inline void convert_bin_to_hex(const std::pair<const char*,const char*>& r, char* out)
+   {
+      convert_bin_to_hex(r.first,r.second,out);
+   }
+
    inline void convert_bin_to_hex(const std::string& binary_data, std::string& output)
    {
       output.resize(binary_data.size() * 2);
@@ -3494,7 +3510,10 @@ namespace strtk
 
    inline bool convert_hex_to_bin(const unsigned char* begin, const unsigned char* end, unsigned char* out)
    {
-      if (1 == (std::distance(begin,end) % 2))
+      const std::size_t length = std::distance(begin,end);
+      if (0 == length)
+         return false;
+      else if (1 == (length % 2))
          return false;
       static const unsigned char hex_to_bin[] =
                                  {
@@ -3547,6 +3566,26 @@ namespace strtk
       return convert_hex_to_bin(reinterpret_cast<const unsigned char*>(begin),
                                 reinterpret_cast<const unsigned char*>(end),
                                 reinterpret_cast<unsigned char*>(out));
+   }
+
+   inline bool convert_hex_to_bin(const std::pair<unsigned char*,unsigned char*>& r, unsigned char* out)
+   {
+      return convert_hex_to_bin(r.first,r.second,out);
+   }
+
+   inline bool convert_hex_to_bin(const std::pair<const unsigned char*,const unsigned char*>& r, unsigned char* out)
+   {
+      return convert_hex_to_bin(r.first,r.second,out);
+   }
+
+   inline bool convert_hex_to_bin(const std::pair<char*,char*>& r, char* out)
+   {
+      return convert_hex_to_bin(r.first,r.second,out);
+   }
+
+   inline bool convert_hex_to_bin(const std::pair<const char*,const char*>& r, char* out)
+   {
+      return convert_hex_to_bin(r.first,r.second,out);
    }
 
    inline bool convert_hex_to_bin(const std::string& hex_data, std::string& output)
@@ -10395,7 +10434,7 @@ namespace strtk
             //From big-endian to native
             if (details::is_little_endian())
             {
-               if(!operator()<T>(output)) return false;
+               if (!operator()<T>(output)) return false;
                output = details::convert(output);
                return true;
             }
@@ -10411,7 +10450,7 @@ namespace strtk
                return operator()(output);
             else
             {
-               if(!operator()<T>(output)) return false;
+               if (!operator()<T>(output)) return false;
                output = details::convert(output);
                return true;
             }
@@ -10766,7 +10805,7 @@ namespace strtk
             {
                std::string s;
                s.reserve(size);
-               if(!strtk::type_to_string<T>(input,s))
+               if (!strtk::type_to_string<T>(input,s))
                   return false;
                else if (s.size() > size)
                   return false;
@@ -11034,7 +11073,7 @@ namespace strtk
       {
          std::size_t offset = 0;
          const std::size_t size = std::distance(s.first,s.second);
-         if ((size > 2) && ((*s.first) == '0') && (((*s.first + 1) == 'x') || ((*s.first + 1) == 'X')))
+         if ((size > 2) && ((*s.first) == '0') && (((*(s.first + 1)) == 'x') || ((*(s.first + 1)) == 'X')))
             offset = 2;
          if ((size - offset) > (2 * sizeof(T)))
                return (*this);
@@ -11186,6 +11225,63 @@ namespace strtk
 
       bool valid_;
       T* t_;
+   };
+
+   class hex_to_string_sink
+   {
+   public:
+
+      hex_to_string_sink(std::string& s)
+      : valid_(false),
+        s_(s)
+      {}
+
+      hex_to_string_sink(const hex_to_string_sink& hss)
+      : valid_(hss.valid_),
+        s_(hss.s_)
+      {}
+
+      inline hex_to_string_sink& operator=(const hex_to_string_sink& hss)
+      {
+         valid_ = hss.valid_;
+         s_ = hss.s_;
+         return (*this);
+      }
+
+      template<typename InputIterator>
+      inline hex_to_string_sink& operator=(const std::pair<InputIterator,InputIterator>& s)
+      {
+         const std::size_t size = std::distance(s.first,s.second);
+         std::size_t offset = 0;
+         if ((size > 2) && ((*s.first) == '0') && (((*(s.first + 1)) == 'x') || ((*(s.first + 1)) == 'X')))
+            offset = 2;
+         if ((size - offset) < 2)
+         {
+            valid_ = false;
+            return (*this);
+         }
+         s_.resize((size - offset) / 2);
+         valid_ = convert_hex_to_bin(s.first + offset,
+                                     s.second,
+                                     const_cast<char*>(s_.data()));
+         return (*this);
+      }
+
+      inline hex_to_string_sink& operator=(const std::string& s)
+      {
+         return this->operator=(std::make_pair<char*>(const_cast<char*>(s.data()),
+                                                      const_cast<char*>(s.data() + s.size())));
+      }
+
+      inline bool valid() const
+      {
+         return valid_;
+      }
+
+   private:
+
+      bool valid_;
+      std::string& s_;
    };
 
    namespace details
@@ -12320,8 +12416,10 @@ namespace strtk
       template<> struct supported_conversion_to_type<T>{ typedef byte_type_tag type; };\
       template<> struct supported_conversion_from_type<T> { typedef byte_type_tag type; };
 
-      #define strtk_register_hex_type_tag(T)\
-      template<> struct supported_conversion_to_type<T>{ typedef hex_type_tag type; };
+      #define strtk_register_hex_number_type_tag(T)\
+      template<> struct supported_conversion_to_type<T>{ typedef hex_number_type_tag type; };
+
+      template<> struct supported_conversion_to_type<hex_to_string_sink>{ typedef hex_string_type_tag type; };
 
       #define strtk_register_base64_type_tag(T)\
       template<> struct supported_conversion_to_type<T>{ typedef base64_type_tag type; };
@@ -12377,13 +12475,13 @@ namespace strtk
       strtk_register_byte_type_tag(signed char)
       strtk_register_byte_type_tag(char)
 
-      strtk_register_hex_type_tag(hex_to_number_sink<short>)
-      strtk_register_hex_type_tag(hex_to_number_sink<int>)
-      strtk_register_hex_type_tag(hex_to_number_sink<long>)
-      strtk_register_hex_type_tag(hex_to_number_sink<unsigned short>)
-      strtk_register_hex_type_tag(hex_to_number_sink<unsigned int>)
-      strtk_register_hex_type_tag(hex_to_number_sink<unsigned long>)
-      strtk_register_hex_type_tag(hex_to_number_sink<unsigned long long>)
+      strtk_register_hex_number_type_tag(hex_to_number_sink<short>)
+      strtk_register_hex_number_type_tag(hex_to_number_sink<int>)
+      strtk_register_hex_number_type_tag(hex_to_number_sink<long>)
+      strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned short>)
+      strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned int>)
+      strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned long>)
+      strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned long long>)
 
       strtk_register_base64_type_tag(base64_to_number_sink<short>)
       strtk_register_base64_type_tag(base64_to_number_sink<int>)
@@ -12435,7 +12533,7 @@ namespace strtk
       #undef strtk_register_signed_type_tag
       #undef strtk_register_real_type_tag
       #undef strtk_register_byte_type_tag
-      #undef strtk_register_hex_type_tag
+      #undef strtk_register_hex_number_type_tag
       #undef strtk_register_base64_type_tag
       #undef strtk_register_supported_iterator_type
       #undef strtk_register_stdstring_range_type_tag
@@ -13088,7 +13186,17 @@ namespace strtk
       }
 
       template<typename Iterator, typename HexSinkType>
-      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, HexSinkType& t, hex_type_tag)
+      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, HexSinkType& t, hex_number_type_tag)
+      {
+         t = std::pair<Iterator,Iterator>(itr,end);
+         if (!t.valid())
+            return false;
+         itr = end;
+         return true;
+      }
+
+      template<typename Iterator, typename HexSinkType>
+      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, HexSinkType& t, hex_string_type_tag)
       {
          t = std::pair<Iterator,Iterator>(itr,end);
          if (!t.valid())
@@ -15269,6 +15377,7 @@ namespace strtk
             {
                writer(ostream);
             }
+            ostream.close();
             delete[] buffer;
             return result;
          }
@@ -15284,9 +15393,11 @@ namespace strtk
             predicted_inserted_element_count_   = 0;
             inserted_element_count_             = 0;
             random_seed_                        = 0;
-            bit_table_                          = 0;
             desired_false_positive_probability_ = 0.0;
             salt_.clear();
+            if (0 != bit_table_)
+               delete [] bit_table_;
+            bit_table_= 0;
             const std::size_t buffer_size = strtk::fileio::file_size(file_name);
             unsigned char* buffer = new unsigned char[buffer_size];
             strtk::binary::reader reader(buffer,buffer_size);
@@ -15302,10 +15413,6 @@ namespace strtk
                           reader(desired_false_positive_probability_) &&
                           reader(salt_)                               &&
                           reader(bit_table_,raw_table_size_);
-            if (result)
-            {
-               reader(istream);
-            }
             delete[] buffer;
             return result;
          }
@@ -16392,12 +16499,13 @@ namespace strtk
                for (std::size_t i = 0; i < pair_count; ++i)
                {
                   const range_type& r = pair_list_[i];
-                  if (!split_pair(r.first,r.second,
+                  if (0 == std::distance(r.first,r.second))
+                     continue;
+                  else if (!split_pair(r.first,r.second,
                               pair_delimiter_sdp_,
                               key_range,value_range))
                     return false;
-
-                  if (!kv_map_(key_range,value_range))
+                  else if (!kv_map_(key_range,value_range))
                     return false;
                }
                return true;
@@ -16443,7 +16551,7 @@ namespace strtk
                               key_range,
                               value_range))
                {
-                  if(!parser_.kv_map_(key_range,value_range))
+                  if (!parser_.kv_map_(key_range,value_range))
                      ++parser_.parse_failures_;
                }
                else
@@ -16549,7 +16657,7 @@ namespace strtk
             if (value_map_.end() == itr)
                return false;
             const util::value& v = (*itr).second;
-            if(!v)
+            if (!v)
                return false;
             else
                return v(value_range);
@@ -16762,4 +16870,3 @@ namespace strtk
 } // namespace strtk
 
 #endif
-

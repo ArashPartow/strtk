@@ -688,7 +688,7 @@ bool example05(char* buffer, const unsigned int buffer_size)
          unsigned long long total_written = 0;
          strtk::util::timer t;
          t.start();
-         for(std::size_t r = 0; r < rounds; ++r)
+         for (std::size_t r = 0; r < rounds; ++r)
          {
             writer.reset();
             if (!writer(dbl_list))
@@ -713,7 +713,7 @@ bool example05(char* buffer, const unsigned int buffer_size)
          dbl_list.clear();
          strtk::util::timer t;
          t.start();
-         for(std::size_t r = 0; r < rounds; ++r)
+         for (std::size_t r = 0; r < rounds; ++r)
          {
             reader.reset();
             if (!reader(dbl_list))
