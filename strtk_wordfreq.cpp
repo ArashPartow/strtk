@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
 
    while (word_list.end() != itr)
    {
-      printf("%s %10ud %10.9f\n",
+      printf("%s %10d %10.9f\n",
              strtk::text::right_align(15,' ',itr->first).c_str(),
              itr->second,
              (1.0 * itr->second) / word_count);

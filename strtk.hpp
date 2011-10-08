@@ -2066,7 +2066,7 @@ namespace strtk
       }
 
       template<typename Iterator>
-      inline void operator()(const std::pair<Iterator,Iterator>& r)
+      inline void operator()(const std::pair<Iterator,Iterator>& r) const
       {
          T t;
          if (string_to_type_converter(r.first,r.second,t))
@@ -6074,7 +6074,7 @@ namespace strtk
       bool allow_through_on_match_;
       const std::string* begin_;
       const std::string* end_;
-      OutputPredicate& predicate_;
+      OutputPredicate predicate_;
    };
 
    template<typename Iterator, typename MatchPredicate>
@@ -11475,6 +11475,11 @@ namespace strtk
             return false;
       }
 
+      sink_type<Container>& reference()
+      {
+         return *this;
+      }
+
    private:
 
       std::string delimiters_;
@@ -15077,7 +15082,8 @@ namespace strtk
       public:
 
          filter()
-         : salt_count_(0),
+         : bit_table_(0),
+           salt_count_(0),
            table_size_(0),
            raw_table_size_(0),
            predicted_inserted_element_count_(0),
@@ -15417,6 +15423,11 @@ namespace strtk
             return result;
          }
 
+         inline std::size_t hash_count()
+         {
+            return salt_.size();
+         }
+
       protected:
 
          inline virtual void compute_indices(const bloom_type& hash, std::size_t& bit_index, std::size_t& bit) const
@@ -15538,30 +15549,43 @@ namespace strtk
 
          inline bloom_type hash_ap(const unsigned char* begin, std::size_t remaining_length, bloom_type hash) const
          {
-            const unsigned char* itr = begin;
-
-            while (remaining_length >= 4)
-            {
-               hash ^=    (hash <<  7) ^  (*itr++) * (hash >> 3);
-               hash ^= (~((hash << 11) + ((*itr++) ^ (hash >> 5))));
-               hash ^=    (hash <<  7) ^  (*itr++) * (hash >> 3);
-               hash ^= (~((hash << 11) + ((*itr++) ^ (hash >> 5))));
-               remaining_length -= 4;
-            }
-
-            while (remaining_length >= 2)
-            {
-               hash ^=    (hash <<  7) ^  (*itr++) * (hash >> 3);
-               hash ^= (~((hash << 11) + ((*itr++) ^ (hash >> 5))));
-               remaining_length -= 2;
-            }
-
-            if (remaining_length)
-            {
-               hash ^= (hash <<  7) ^ (*itr) * (hash >> 3);
-            }
-
-            return hash;
+              const unsigned char* itr = begin;
+              unsigned int loop = 0;
+              while (remaining_length >= 8)
+              {
+                 const unsigned int& i1 = *(reinterpret_cast<const unsigned int*>(itr)); itr += sizeof(unsigned int);
+                 const unsigned int& i2 = *(reinterpret_cast<const unsigned int*>(itr)); itr += sizeof(unsigned int);
+                 hash ^= (hash <<  7) ^  i1 * (hash >> 3) ^
+                      (~((hash << 11) + (i2 ^ (hash >> 5))));
+                 remaining_length -= 8;
+              }
+              while (remaining_length >= 4)
+              {
+                 const unsigned int& i = *(reinterpret_cast<const unsigned int*>(itr));
+                 if (loop & 0x01)
+                    hash ^=    (hash <<  7) ^  i * (hash >> 3);
+                 else
+                    hash ^= (~((hash << 11) + (i ^ (hash >> 5))));
+                 ++loop;
+                 remaining_length -= 4;
+                 itr += sizeof(unsigned int);
+              }
+              while (remaining_length >= 2)
+              {
+                 const unsigned short& i = *(reinterpret_cast<const unsigned short*>(itr));
+                 if (loop & 0x01)
+                    hash ^=    (hash <<  7) ^  i * (hash >> 3);
+                 else
+                    hash ^= (~((hash << 11) + (i ^ (hash >> 5))));
+                 ++loop;
+                 remaining_length -= 2;
+                 itr += sizeof(unsigned short);
+              }
+              if (remaining_length)
+              {
+                 hash += ((*itr) ^ (hash * 0xA5A5A5A5)) + loop;
+              }
+              return hash;
          }
 
          std::vector<bloom_type> salt_;
@@ -15595,7 +15619,6 @@ namespace strtk
          result ^= b;
          return result;
       }
-
 
       class compressible_filter : public filter
       {
@@ -15737,14 +15760,16 @@ namespace strtk
       template<std::size_t block_size>
       inline void compute_block(unsigned char* itr, std::size_t& length, unsigned int& hash)
       {
+         unsigned int local_hash = hash;
          while (length >= block_size)
          {
             for (std::size_t i = 0; i < block_size; ++i, ++itr)
             {
-               compute_pod_hash((*itr),hash);
+               compute_pod_hash((*itr),local_hash);
             }
             length -= block_size;
          }
+         hash = local_hash;
       }
 
       template<std::size_t block_size>
@@ -15865,6 +15890,11 @@ namespace strtk
          }
 
          inline bool initialised() const
+         {
+            return initialised_;
+         }
+
+         inline bool& initialised()
          {
             return initialised_;
          }
