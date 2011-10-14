@@ -536,7 +536,7 @@ namespace strtk
      {
         while (end != itr)
         {
-           stream << *itr << delimiter;
+           stream << (*itr) << delimiter;
            ++itr;
            ++count;
         }
@@ -545,7 +545,7 @@ namespace strtk
      {
         while (end != itr)
         {
-           stream << *itr;
+           stream << (*itr);
            ++itr;
            ++count;
         }
@@ -571,7 +571,7 @@ namespace strtk
      {
         while (end != itr)
         {
-           stream << *itr << delimiter;
+           stream << (*itr) << delimiter;
            ++itr;
            ++count;
         }
@@ -580,7 +580,7 @@ namespace strtk
      {
         while (end != itr)
         {
-           stream << *itr;
+           stream << (*itr);
            ++itr;
            ++count;
         }
@@ -622,7 +622,7 @@ namespace strtk
    {
       while (n)
       {
-         *out = *itr;
+         (*out) = (*itr);
          ++itr;
          ++out;
          --n;
@@ -641,7 +641,7 @@ namespace strtk
       {
          if (predicate(*itr))
          {
-            *(out++) = *itr;
+            *(out++) = (*itr);
          }
          ++itr;
       }
@@ -921,7 +921,7 @@ namespace strtk
          {
             if (itr1 != itr2)
             {
-               *itr2 = *itr1;
+               (*itr2) = (*itr1);
             }
             ++itr1;
             ++itr2;
@@ -991,10 +991,10 @@ namespace strtk
          {
             if (itr1 != itr2)
             {
-               *itr2 = *itr1;
+               (*itr2) = (*itr1);
             }
 
-            prev = *itr1;
+            prev = (*itr1);
             ++itr1;
             ++itr2;
          }
@@ -1102,9 +1102,9 @@ namespace strtk
          {
             if (itr1 != itr2)
             {
-               *itr2 = *itr1;
+               (*itr2) = (*itr1);
             }
-            prev = *itr1;
+            prev = (*itr1);
             ++itr1;
             ++itr2;
          }
@@ -1307,7 +1307,10 @@ namespace strtk
    {
       for (Iterator itr = begin; end != itr; ++itr)
       {
-         if (c1 == *itr) *itr = c2;
+         if (c1 == (*itr))
+         {
+            (*itr) = c2;
+         }
       }
    }
 
@@ -3250,7 +3253,7 @@ namespace strtk
       std::size_t count = 0;
       while (end != ++itr)
       {
-         if (*prev == *itr)
+         if ((*prev) == (*itr))
             ++count;
          else
             prev = itr;
@@ -3301,9 +3304,9 @@ namespace strtk
       while (end != ++itr)
       {
          if (*itr < min_value)
-            min_value = *itr;
+            min_value = (*itr);
          else if (*itr > max_value)
-            max_value = *itr;
+            max_value = (*itr);
       }
    }
 
@@ -3407,18 +3410,18 @@ namespace strtk
    inline const char* first_non_repeated_char(const char* begin, const char* end)
    {
       static const std::size_t lut_size = 256;
-      unsigned long long lut[lut_size];
+      unsigned long long int lut[lut_size];
 
-      std::fill_n(lut,lut_size,std::numeric_limits<unsigned long long>::max());
+      std::fill_n(lut,lut_size,std::numeric_limits<unsigned long long int>::max());
 
-      static const unsigned long long not_yet_encountered = std::numeric_limits<unsigned long long>::max();
-      static const unsigned long long repeated = not_yet_encountered - 1;
+      static const unsigned long long int not_yet_encountered = std::numeric_limits<unsigned long long int>::max();
+      static const unsigned long long int repeated = not_yet_encountered - 1;
 
       const char* itr = begin;
-      unsigned long long position = 0;
+      unsigned long long int position = 0;
       while (end != itr)
       {
-         unsigned long long& element = lut[static_cast<unsigned int>(*itr)];
+         unsigned long long int& element = lut[static_cast<unsigned int>(*itr)];
          if (not_yet_encountered == element)
          {
             element = position;
@@ -3950,9 +3953,9 @@ namespace strtk
    template<std::size_t n>
    struct interleave_ary;
 
-   template<> struct interleave_ary<sizeof(unsigned short)>     { typedef unsigned short     type; };
-   template<> struct interleave_ary<sizeof(unsigned int  )>     { typedef unsigned int       type; };
-   template<> struct interleave_ary<sizeof(unsigned long long)> { typedef unsigned long long type; };
+   template<> struct interleave_ary<sizeof(unsigned short)>         { typedef unsigned short         type; };
+   template<> struct interleave_ary<sizeof(unsigned int  )>         { typedef unsigned int           type; };
+   template<> struct interleave_ary<sizeof(unsigned long long int)> { typedef unsigned long long int type; };
 
    template<std::size_t n>
    inline void create_nway_interleave_table(typename interleave_ary<n>::type table[256])
@@ -4049,7 +4052,7 @@ namespace strtk
              high_bit_count(*(ptr + 2)) + high_bit_count(*(ptr + 3));
    }
 
-   inline std::size_t high_bit_count(const long long& ll)
+   inline std::size_t high_bit_count(const long long int& ll)
    {
       const unsigned char* ptr = reinterpret_cast<const unsigned char*>(&ll);
       return high_bit_count(*(ptr + 0)) + high_bit_count(*(ptr + 1)) +
@@ -4179,7 +4182,7 @@ namespace strtk
 
       while (end1 != itr1)
       {
-         if (*itr1 != *itr2)
+         if ((*itr1) != (*itr2))
             ++distance;
       }
 
@@ -8386,11 +8389,11 @@ namespace strtk
       InputIterator itr = begin;
       while (end != itr)
       {
-         *out = *itr;
+         (*out) = (*itr);
          ++out;
          if (ins(*itr++))
          {
-            *out = ins();
+            (*out) = ins();
             ++out;
             size += 2;
          }
@@ -8406,7 +8409,7 @@ namespace strtk
       Iterator itr = begin;
       while (end != itr)
       {
-         *itr = value++;
+         (*itr) = value++;
          ++itr;
       }
    }
@@ -8477,7 +8480,7 @@ namespace strtk
       InputIterator itr = begin;
       while (end != itr)
       {
-         const std::string& s = *itr;
+         const std::string& s = (*itr);
          ++itr;
          if (s.size() < r0)
             continue;
@@ -8614,6 +8617,9 @@ namespace strtk
 
       #define strtk_register_rand_real_type_tag(T)\
       template<> struct supported_random_type<T> { typedef rand_real_type_tag type;  enum { value = true }; };
+
+      strtk_register_rand_int_type_tag(char)
+      strtk_register_rand_int_type_tag(unsigned char)
 
       strtk_register_rand_int_type_tag(short)
       strtk_register_rand_int_type_tag(int)
@@ -8831,10 +8837,10 @@ namespace strtk
       --itr2;
       while (first != itr1)
       {
-         if (*--itr1 < *itr2)
+         if (*--itr1 < (*itr2))
          {
             Iterator j = k;
-            while (!(*itr1 < *j)) ++j;
+            while (!((*itr1) < (*j))) ++j;
             std::iter_swap(itr1,j);
             ++itr1;
             ++j;
@@ -8944,7 +8950,7 @@ namespace strtk
       return true;
    }
 
-   inline unsigned long long n_choose_k(const unsigned long long& n, const unsigned long long& k)
+   inline unsigned long long int n_choose_k(const unsigned long long int& n, const unsigned long long int& k)
    {
       if (n  < k) return 0;
       if (0 == n) return 0;
@@ -8952,7 +8958,7 @@ namespace strtk
       if (n == k) return 1;
       if (1 == k) return n;
 
-      typedef unsigned long long value_type;
+      typedef unsigned long long int value_type;
 
       class n_choose_k_impl
       {
@@ -9008,7 +9014,7 @@ namespace strtk
 
       const std::size_t table_size = static_cast<std::size_t>(n * (n / 2) + (n & 1));
 
-      unsigned long long dimension = static_table_dim;
+      unsigned long long int dimension = static_table_dim;
       value_type* table = 0;
 
       if (table_size <= static_table_size)
@@ -9017,7 +9023,7 @@ namespace strtk
       {
          dimension = n;
          table = new value_type[table_size];
-         std::fill_n(table,table_size,0LL);
+         std::fill_n(table,table_size,0ULL);
       }
 
       value_type result = n_choose_k_impl(table,dimension).compute(n,k);
@@ -9030,10 +9036,10 @@ namespace strtk
 
    inline void initialize_n_choose_k()
    {
-      const unsigned long long max_n = 100LL;
-      for (unsigned long long n = 0; n < max_n; ++n)
+      const unsigned long long int max_n = 100ULL;
+      for (unsigned long long int n = 0; n < max_n; ++n)
       {
-         for (unsigned long long k = 0; k < max_n; ++k)
+         for (unsigned long long int k = 0; k < max_n; ++k)
          {
             n_choose_k(n,k);
          }
@@ -9041,7 +9047,7 @@ namespace strtk
    }
 
    template<typename OutputIterator>
-   inline void nth_combination_sequence(unsigned long long n,
+   inline void nth_combination_sequence(unsigned long long int n,
                                         const std::size_t& r,
                                         const std::size_t& k,
                                         OutputIterator out,
@@ -9049,7 +9055,7 @@ namespace strtk
    {
       //Compute the indicies for the n'th combination of r-choose-k
       //n must be in the range [0,r-choose-k)
-      typedef unsigned long long value_type;
+      typedef unsigned long long int value_type;
 
       std::vector<std::size_t> index_list(k,0);
       value_type j = 0;
@@ -9976,7 +9982,7 @@ namespace strtk
       template<int N, typename Iterator>
       inline bool signed_all_digits_check(Iterator itr)
       {
-         if (('-' == *itr) || ('+' == *itr))
+         if (('-' == (*itr)) || ('+' == (*itr)))
             return all_digits_check<Iterator,N - 1>((itr + 1));
          else
             return all_digits_check<Iterator,N>(itr);
@@ -9985,7 +9991,7 @@ namespace strtk
       template<typename Iterator>
       inline bool signed_all_digits_check(const std::size_t& n, Iterator itr)
       {
-         if (('-' == *itr) || ('+' == *itr))
+         if (('-' == (*itr)) || ('+' == (*itr)))
             return all_digits_check(n - 1,(itr + 1));
          else
             return all_digits_check(n - 1,(itr + 1));
@@ -10078,13 +10084,13 @@ namespace strtk
       template<int N, typename T, typename Iterator>
       inline void signed_numeric_convert(Iterator itr, T& t, const bool digit_check = false)
       {
-         if ('-' == *itr)
+         if ('-' == (*itr))
          {
             numeric_convert<N - 1,T,Iterator>((itr + 1),t,digit_check);
             typename strtk::details::supported_conversion_to_type<T>::type type;
             details::negate(t,type);
          }
-         else if ('+' == *itr)
+         else if ('+' == (*itr))
          {
             numeric_convert<N - 1,T,Iterator>((itr + 1),t,digit_check);
          }
@@ -10098,13 +10104,13 @@ namespace strtk
                                          T& t,
                                          const bool digit_check = false)
       {
-         if ('-' == *itr)
+         if ('-' == (*itr))
          {
             bool result = numeric_convert((n - 1),(itr + 1),t,digit_check);
             typename strtk::details::supported_conversion_to_type<T>::type type;
             return details::negate<T>(t,type) && result;
          }
-         else if ('+' == *itr)
+         else if ('+' == (*itr))
          {
             return numeric_convert((n - 1),(itr + 1),t,digit_check);
          }
@@ -10142,6 +10148,11 @@ namespace strtk
             return result;
          }
 
+         static inline bool is_big_endian()
+         {
+            return !is_little_endian();
+         }
+
          static inline unsigned short convert(const unsigned short& v)
          {
             //static_assert(2 == sizeof(v),"");
@@ -10155,7 +10166,7 @@ namespace strtk
                    ((v <<  8) & 0x00FF0000) | ((v >>  8) & 0xFF000000);
          }
 
-         static inline unsigned long long convert(const unsigned long long& v)
+         static inline unsigned long long int convert(const unsigned long long int& v)
          {
             //static_assert(8 == sizeof(v),"");
             return ((v >> 56) & 0x00000000000000FFLL) | ((v << 56) & 0xFF00000000000000LL) |
@@ -10174,9 +10185,9 @@ namespace strtk
             return static_cast<int>(convert(static_cast<unsigned int>(v)));
          }
 
-         static inline unsigned long long convert(const long long& v)
+         static inline unsigned long long int convert(const long long int& v)
          {
-            return static_cast<long long>(convert(static_cast<unsigned long long>(v)));
+            return static_cast<long long>(convert(static_cast<unsigned long long int>(v)));
          }
 
          class marker
@@ -10215,6 +10226,7 @@ namespace strtk
          typedef unsigned int uint32_t;
          typedef unsigned short uint16_t;
          typedef unsigned char uint8_t;
+         typedef unsigned long long int uint64_t;
 
          template<typename T>
          reader(T* buffer,
@@ -10309,6 +10321,19 @@ namespace strtk
             std::copy(buffer_, buffer_ + raw_size, reinterpret_cast<char*>(data));
             buffer_ += raw_size;
             amount_read_sofar_ += raw_size;
+            return true;
+         }
+
+         template<typename T>
+         inline bool operator()(T*& data, uint64_t& length, const bool read_length = true)
+         {
+            uint32_t l = 0;
+            if (read_length)
+               l = static_cast<uint32_t>(length);
+            if (!operator()(data,l,read_length))
+               return false;
+            if (read_length)
+               length = l;
             return true;
          }
 
@@ -10601,9 +10626,11 @@ namespace strtk
       public:
 
          // should be sourced from cstdint
+         // should be sourced from cstdint
          typedef unsigned int uint32_t;
          typedef unsigned short uint16_t;
          typedef unsigned char uint8_t;
+         typedef unsigned long long int uint64_t;
 
          template<typename T>
          writer(T* buffer, const std::size_t& buffer_length)
@@ -10681,6 +10708,24 @@ namespace strtk
             buffer_ += raw_size;
             amount_written_sofar_ += raw_size;
             return true;
+         }
+
+         template<typename T>
+         inline bool operator()(const T* data, const uint64_t& length)
+         {
+            return operator()(data,static_cast<uint32_t>(length),false);
+         }
+
+         template<typename T>
+         inline bool operator()(const T* data, const uint16_t& length)
+         {
+            return operator()(data,static_cast<uint32_t>(length),false);
+         }
+
+         template<typename T>
+         inline bool operator()(const T* data, const uint8_t& length)
+         {
+            return operator()(data,static_cast<uint32_t>(length),false);
          }
 
          template<typename T1, typename T2>
@@ -10995,7 +11040,7 @@ namespace strtk
                const size_type size = static_cast<size_type>(s->size());
                if (!w(size))
                   return false;
-               if (!w(s->data(),size,false))
+               if (!w(s->data(),size))
                   return false;
                return true;
             }
@@ -12390,21 +12435,21 @@ namespace strtk
       template<typename>
       struct numeric { enum { length = 0, size = 32, bound_length = 0, min_exp = 0, max_exp = 0 }; };
 
-      template<> struct numeric<short>              { enum { length =  5, size = 16, bound_length =  4}; };
-      template<> struct numeric<unsigned short>     { enum { length =  5, size = 16, bound_length =  4}; };
+      template<> struct numeric<short>                  { enum { length =  5, size = 16, bound_length =  4}; };
+      template<> struct numeric<unsigned short>         { enum { length =  5, size = 16, bound_length =  4}; };
 
-      template<> struct numeric<int>                { enum { length = 10, size = 16, bound_length =  9}; };
-      template<> struct numeric<unsigned int>       { enum { length = 10, size = 16, bound_length =  9}; };
+      template<> struct numeric<int>                    { enum { length = 10, size = 16, bound_length =  9}; };
+      template<> struct numeric<unsigned int>           { enum { length = 10, size = 16, bound_length =  9}; };
 
-      template<> struct numeric<long>               { enum { length = 10, size = 16, bound_length =  9}; };
-      template<> struct numeric<unsigned long>      { enum { length = 10, size = 16, bound_length =  9}; };
+      template<> struct numeric<long>                   { enum { length = 10, size = 16, bound_length =  9}; };
+      template<> struct numeric<unsigned long>          { enum { length = 10, size = 16, bound_length =  9}; };
 
-      template<> struct numeric<long long>          { enum { length = 19, size = 24, bound_length = 18}; };
-      template<> struct numeric<unsigned long long> { enum { length = 20, size = 24, bound_length = 19}; };
+      template<> struct numeric<long long>              { enum { length = 19, size = 24, bound_length = 18}; };
+      template<> struct numeric<unsigned long long int> { enum { length = 20, size = 24, bound_length = 19}; };
 
-      template<> struct numeric<float>              { enum { min_exp =  -38, max_exp =  +38, precision = 10}; };
-      template<> struct numeric<double>             { enum { min_exp = -308, max_exp = +308, precision = 15}; };
-      template<> struct numeric<long double>        { enum { min_exp = -308, max_exp = +308, precision = 15}; };
+      template<> struct numeric<float>                  { enum { min_exp =  -38, max_exp =  +38, precision = 10}; };
+      template<> struct numeric<double>                 { enum { min_exp = -308, max_exp = +308, precision = 15}; };
+      template<> struct numeric<long double>            { enum { min_exp = -308, max_exp = +308, precision = 15}; };
 
       #define strtk_register_unsigned_type_tag(T)\
       template<> struct supported_conversion_to_type<T> { typedef unsigned_type_tag type; };\
@@ -12465,7 +12510,7 @@ namespace strtk
       strtk_register_unsigned_type_tag(unsigned short)
       strtk_register_unsigned_type_tag(unsigned int)
       strtk_register_unsigned_type_tag(unsigned long)
-      strtk_register_unsigned_type_tag(unsigned long long)
+      strtk_register_unsigned_type_tag(unsigned long long int)
 
       strtk_register_signed_type_tag(short)
       strtk_register_signed_type_tag(int)
@@ -12486,7 +12531,7 @@ namespace strtk
       strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned short>)
       strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned int>)
       strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned long>)
-      strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned long long>)
+      strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned long long int>)
 
       strtk_register_base64_type_tag(base64_to_number_sink<short>)
       strtk_register_base64_type_tag(base64_to_number_sink<int>)
@@ -12494,7 +12539,7 @@ namespace strtk
       strtk_register_base64_type_tag(base64_to_number_sink<unsigned short>)
       strtk_register_base64_type_tag(base64_to_number_sink<unsigned int>)
       strtk_register_base64_type_tag(base64_to_number_sink<unsigned long>)
-      strtk_register_base64_type_tag(base64_to_number_sink<unsigned long long>)
+      strtk_register_base64_type_tag(base64_to_number_sink<unsigned long long int>)
 
       strtk_register_stdstring_range_type_tag(std::string::iterator)
       strtk_register_stdstring_range_type_tag(std::string::const_iterator)
@@ -12528,7 +12573,7 @@ namespace strtk
       strtk_register_sink_type_tag(unsigned short)
       strtk_register_sink_type_tag(unsigned int)
       strtk_register_sink_type_tag(unsigned long)
-      strtk_register_sink_type_tag(unsigned long long)
+      strtk_register_sink_type_tag(unsigned long long int)
       strtk_register_sink_type_tag(std::string)
 
       #define strtk_register_userdef_type_sink(T)\
@@ -12605,13 +12650,13 @@ namespace strtk
       {
          if (end == itr) return false;
 
-         if ('+' == *itr)
+         if ('+' == (*itr))
             ++itr;
 
          if (end == itr)
             return false;
 
-         while ((end != itr) && ('0' == *itr)) ++itr;
+         while ((end != itr) && ('0' == (*itr))) ++itr;
          const std::size_t length = std::distance(itr,end);
 
          if (length > numeric<T>::length)
@@ -12687,7 +12732,7 @@ namespace strtk
             {
                if (1 == std::distance(interim_end,end))
                {
-                  typedef unsigned long long num_type;
+                  typedef unsigned long long int num_type;
                   static const num_type max               = static_cast<num_type>(std::numeric_limits<T>::max());
                   static const num_type penultimate_bound = static_cast<num_type>(max / 10);
                   static const num_type final_digit       = static_cast<num_type>(max % 10);
@@ -12721,9 +12766,9 @@ namespace strtk
 
          bool negative = false;
 
-         if ('+' == *itr)
+         if ('+' == (*itr))
             ++itr;
-         else if ('-' == *itr)
+         else if ('-' == (*itr))
          {
             ++itr;
             negative = true;
@@ -12731,7 +12776,7 @@ namespace strtk
 
          if (end == itr) return false;
 
-         while ((end != itr) && ('0' == *itr)) ++itr;
+         while ((end != itr) && ('0' == (*itr))) ++itr;
          const std::size_t length = std::distance(itr,end);
 
          if (length > numeric<T>::length)
@@ -12807,7 +12852,7 @@ namespace strtk
             {
                if (1 == std::distance(interim_end,end))
                {
-                  typedef unsigned long long num_type;
+                  typedef unsigned long long int num_type;
                   static const num_type max = static_cast<num_type>(std::numeric_limits<T>::max());
                   static const num_type min = static_cast<num_type>(static_cast<long long>(-1) * std::numeric_limits<T>::min());
                   static const num_type positive_penultimate_bound = static_cast<num_type>(max / 10);
@@ -12864,9 +12909,9 @@ namespace strtk
          T t = 0;
          bool negative = false;
 
-         if ('+' == *itr)
+         if ('+' == (*itr))
             ++itr;
-         else if ('-' == *itr)
+         else if ('-' == (*itr))
          {
             ++itr;
             negative = true;
@@ -12876,7 +12921,7 @@ namespace strtk
             return false;
 
          unsigned int digit_count = 0;
-         while ((end != itr) && ('0' == *itr)) ++itr;
+         while ((end != itr) && ('0' == (*itr))) ++itr;
 
          bool return_result = true;
          while (end != itr)
@@ -12895,7 +12940,7 @@ namespace strtk
             }
             else
             {
-               typedef unsigned long long base_type;
+               typedef unsigned long long int base_type;
                static const base_type max_limit = +std::numeric_limits<T>::max();
                static const base_type min_limit = -std::numeric_limits<T>::min();
                base_type tmp = static_cast<base_type>(t) * 10 + digit;
@@ -12915,29 +12960,22 @@ namespace strtk
       template<typename Iterator, typename T>
       inline bool parse_nan(Iterator& itr, const Iterator end, T& t)
       {
-         static const char nan_uc[] = "NAN";
-         static const char nan_lc[] = "nan";
+         typedef typename std::iterator_traits<Iterator>::value_type type;
          static const std::size_t nan_length = 3;
-
          if (std::distance(itr,end) != static_cast<int>(nan_length))
             return false;
-
-         const char* nan_itr = ('n' == *itr) ? nan_lc : nan_uc;
-
-         while (end != itr)
+         if (static_cast<type>('n') == (*itr))
          {
-            if (*nan_itr == static_cast<char>(*itr))
+            if ((static_cast<type>('a') != *(itr + 1)) || (static_cast<type>('n') != *(itr + 2)))
             {
-               ++itr;
-               ++nan_itr;
-               continue;
-            }
-            else
                return false;
+            }
          }
-
+         else if ((static_cast<type>('A') != *(itr + 1)) || (static_cast<type>('N') != *(itr + 2)))
+         {
+            return false;
+         }
          t = std::numeric_limits<T>::quiet_NaN();
-
          return true;
       }
 
@@ -12947,13 +12985,10 @@ namespace strtk
          static const char inf_uc[] = "INFINITY";
          static const char inf_lc[] = "infinity";
          static const std::size_t inf_length = 8;
-
-         if (std::distance(itr,end) > static_cast<int>(inf_length))
+         const std::size_t length = std::distance(itr,end);
+         if ((3 != length) && (inf_length != length))
             return false;
-
-         const char* inf_itr   = ('i' == *itr) ? inf_lc : inf_uc;
-         const bool lower_case = ('i' == *itr);
-
+         const char* inf_itr   = ('i' == (*itr)) ? inf_lc : inf_uc;
          while (end != itr)
          {
             if (*inf_itr == static_cast<char>(*itr))
@@ -12965,17 +13000,10 @@ namespace strtk
             else
                return false;
          }
-
-         const std::size_t length = static_cast<std::size_t>(std::distance(static_cast<const char*>(lower_case ? inf_lc : inf_uc),inf_itr));
-
-         if ((3 != length) && (inf_length != length))
-            return false;
-
          if (negative)
             t = -std::numeric_limits<T>::infinity();
          else
             t =  std::numeric_limits<T>::infinity();
-
          return true;
       }
 
@@ -12985,9 +13013,9 @@ namespace strtk
          if (end == itr) return false;
          double d = 0.0;
          bool negative = false;
-         if ('+' == *itr)
+         if ('+' == (*itr))
             ++itr;
-         else if ('-' == *itr)
+         else if ('-' == (*itr))
          {
             ++itr;
             negative = true;
@@ -12996,11 +13024,11 @@ namespace strtk
          if (end == itr)
             return false;
 
-         if (('i' == *itr) || ('I' == *itr))
+         if (('i' == (*itr)) || ('I' == (*itr)))
          {
             return parse_inf(itr,end,t,negative);
          }
-         else if (('n' == *itr) || ('N' == *itr))
+         else if (('n' == (*itr)) || ('N' == (*itr)))
          {
             return parse_nan(itr,end,t);
          }
@@ -13009,13 +13037,13 @@ namespace strtk
 
          int pre_decimal = 0;
 
-         if ('.' != *itr)
+         if ('.' != (*itr))
          {
             const Iterator curr = itr;
-            while ((end != itr) && ('0' == *itr)) ++itr;
+            while ((end != itr) && ('0' == (*itr))) ++itr;
             while (end != itr)
             {
-               const unsigned int digit = static_cast<unsigned int>(*itr - '0');
+               const unsigned int digit = static_cast<unsigned int>((*itr) - '0');
                if (digit < 10)
                   d = (d * 10.0) + digit;
                else
@@ -13030,13 +13058,13 @@ namespace strtk
 
          if (end != itr)
          {
-            if ('.' == *itr)
+            if ('.' == (*itr))
             {
                ++itr;
                const Iterator curr = itr;
                while (end != itr)
                {
-                  const unsigned int digit = static_cast<unsigned int>(*itr - '0');
+                  const unsigned int digit = static_cast<unsigned int>((*itr) - '0');
                   if (digit < 10)
                      d = (d * 10.0) + digit;
                   else
@@ -13050,7 +13078,7 @@ namespace strtk
 
             if (end != itr)
             {
-               typename std::iterator_traits<Iterator>::value_type c = *itr;
+               typename std::iterator_traits<Iterator>::value_type c = (*itr);
 
                if (('e' == c) || ('E' == c))
                {
@@ -13061,7 +13089,7 @@ namespace strtk
                      if (end == itr)
                         return false;
                      else
-                        c = *itr;
+                        c = (*itr);
                   }
 
                   if ((exp < numeric<T>::min_exp) || (numeric<T>::max_exp < exp))
@@ -13081,11 +13109,11 @@ namespace strtk
                   if ((10.0 != d) || (exponent != -1))
                      return false;
 
-                  if (('i' == *itr) || ('I' == *itr))
+                  if (('i' == (*itr)) || ('I' == (*itr)))
                   {
                      return parse_inf(itr,end,t,negative);
                   }
-                  else if (('n' == *itr) || ('N' == *itr))
+                  else if (('n' == (*itr)) || ('N' == (*itr)))
                   {
                      return parse_nan(itr,end,t);
                   }
@@ -13178,7 +13206,7 @@ namespace strtk
       {
          if (1 != std::distance(itr,end))
             return false;
-         t = (('0' == *itr) ? false : true);
+         t = (('0' == (*itr)) ? false : true);
          itr = end;
          return true;
       }
@@ -13399,7 +13427,7 @@ namespace strtk
       strtk_register_type_name(unsigned short)
       strtk_register_type_name(unsigned int)
       strtk_register_type_name(unsigned long)
-      strtk_register_type_name(unsigned long long)
+      strtk_register_type_name(unsigned long long int)
       strtk_register_type_name(double)
       strtk_register_type_name(float)
       strtk_register_type_name(long double)
@@ -14842,7 +14870,7 @@ namespace strtk
                   node_list_iterator end = node_list_.end();
                   while (end != itr)
                   {
-                     delete *itr;
+                     delete (*itr);
                      ++itr;
                   }
                }
@@ -14857,7 +14885,7 @@ namespace strtk
                while (end != itr)
                {
                   if (key_value == (*itr)->key_value_)
-                     return *itr;
+                     return (*itr);
                   else
                      ++itr;
                }
@@ -14923,7 +14951,7 @@ namespace strtk
                return;
 
             key_iterator_t itr = begin;
-            key_value_t key = *itr;
+            key_value_t key = (*itr);
             node_ptr parent = 0;
             node_ptr n = head_;
             node_ptr next_node = 0;
@@ -14931,7 +14959,7 @@ namespace strtk
 
             while (end != itr)
             {
-               key = *itr;
+               key = (*itr);
                if (0 == (next_node = n->get_node(key)))
                {
                   n->add_node(next_node = new node_t(key));
@@ -15072,6 +15100,143 @@ namespace strtk
                                                              0x80   //10000000
                                                            };
 
+      class parameters
+      {
+      public:
+
+         parameters()
+         : minimum_size(1),
+           maximum_size(std::numeric_limits<unsigned long long int>::max()),
+           minimum_number_of_hashes(1),
+           maximum_number_of_hashes(std::numeric_limits<unsigned int>::max()),
+           projected_element_count(10000),
+           false_positive_probability(1.0 / projected_element_count),
+           random_seed(0xA5A5A5A55A5A5A5AULL)
+         {}
+
+         virtual ~parameters()
+         {}
+
+         inline bool operator!()
+         {
+            return (minimum_size > maximum_size)      ||
+                   (minimum_number_of_hashes > maximum_number_of_hashes) ||
+                   (minimum_number_of_hashes < 1)     ||
+                   (0 == maximum_number_of_hashes)    ||
+                   (0 == projected_element_count)     ||
+                   (false_positive_probability < 0.0) ||
+                   (std::numeric_limits<double>::infinity() == std::abs(false_positive_probability)) ||
+                   (0 == random_seed)                 ||
+                   (0xFFFFFFFFFFFFFFFFULL == random_seed);
+         }
+
+         //Allowed min/max size of the bloom filter in bits
+         unsigned long long int minimum_size;
+         unsigned long long int maximum_size;
+
+         //Allowed min/max number of hash functions
+         unsigned int minimum_number_of_hashes;
+         unsigned int maximum_number_of_hashes;
+
+         //The approximate number of elements to be inserted
+         //into the bloom filter, should be within one order
+         //of magnitude. The default is 10000.
+         unsigned long long int projected_element_count;
+
+         //The approximate false positive probability expected
+         //from the bloom filter. The default is the reciprocal
+         //of the projected_element_count.
+         double false_positive_probability;
+
+         unsigned long long int random_seed;
+
+         inline bool operator()(strtk::binary::reader& reader)
+         {
+            return reader(minimum_size) &&
+                   reader(maximum_size) &&
+                   reader(minimum_number_of_hashes) &&
+                   reader(maximum_number_of_hashes) &&
+                   reader(projected_element_count) &&
+                   reader(false_positive_probability) &&
+                   reader(random_seed);
+         }
+
+         inline bool operator()(strtk::binary::writer& writer)
+         {
+            return writer(minimum_size) &&
+                   writer(maximum_size) &&
+                   writer(minimum_number_of_hashes) &&
+                   writer(maximum_number_of_hashes) &&
+                   writer(projected_element_count) &&
+                   writer(false_positive_probability) &&
+                   writer(random_seed);
+         }
+
+         struct optimal_parameters_t
+         {
+            optimal_parameters_t()
+            : number_of_hashes(0),
+              table_size(0)
+            {}
+
+            unsigned int number_of_hashes;
+            unsigned long long int table_size;
+         };
+
+         optimal_parameters_t optimal_parameters;
+
+         virtual bool compute_optimal_parameters()
+         {
+            /*
+              Note:
+              The following will attempt to find the number of hash functions
+              and minimum amount of storage bits required to construct a bloom
+              filter consistent with the user defined false positive probability
+              and estimated element insertion count.
+            */
+
+            if (!(*this))
+               return false;
+
+            double min_m = std::numeric_limits<double>::infinity();
+            double min_k = 0.0;
+            double curr_m = 0.0;
+            double k = 1.0;
+
+            while (k < 1000.0)
+            {
+               double numerator   = (- k * projected_element_count);
+               double denominator = std::log(1.0 - std::pow(false_positive_probability, 1.0 / k));
+               curr_m = numerator / denominator;
+               if (curr_m < min_m)
+               {
+                  min_m = curr_m;
+                  min_k = k;
+               }
+               k += 1.0;
+            }
+
+            optimal_parameters_t& optp = optimal_parameters;
+
+            optp.number_of_hashes = static_cast<std::size_t>(min_k);
+            optp.table_size = static_cast<unsigned long long int>(min_m);
+            optp.table_size += (((optp.table_size % bits_per_char) != 0) ? (bits_per_char - (optp.table_size % bits_per_char)) : 0);
+
+            if (optp.number_of_hashes < minimum_number_of_hashes)
+               optp.number_of_hashes = minimum_number_of_hashes;
+            else if (optp.number_of_hashes > maximum_number_of_hashes)
+               optp.number_of_hashes = maximum_number_of_hashes;
+
+            if (optp.table_size < minimum_size)
+               optp.table_size = minimum_size;
+            else if (optp.table_size > maximum_size)
+               optp.table_size = maximum_size;
+
+            return true;
+         }
+
+      };
+
       class filter
       {
       protected:
@@ -15086,25 +15251,24 @@ namespace strtk
            salt_count_(0),
            table_size_(0),
            raw_table_size_(0),
-           predicted_inserted_element_count_(0),
+           projected_element_count_(0),
            inserted_element_count_(0),
            random_seed_(0),
            desired_false_positive_probability_(0.0)
          {}
 
-         filter(const std::size_t& predicted_inserted_element_count,
-                const double& false_positive_probability,
-                const std::size_t& random_seed)
+         filter(const parameters& p)
          : bit_table_(0),
-           predicted_inserted_element_count_(predicted_inserted_element_count),
+           projected_element_count_(p.projected_element_count),
            inserted_element_count_(0),
-           random_seed_((random_seed) ? random_seed : 0xA5A5A5A5),
-           desired_false_positive_probability_(false_positive_probability)
+           random_seed_((p.random_seed) ? p.random_seed : 0xA5A5A5A5),
+           desired_false_positive_probability_(p.false_positive_probability)
          {
-            find_optimal_parameters();
+            salt_count_ = p.optimal_parameters.number_of_hashes;
+            table_size_ = p.optimal_parameters.table_size;
             generate_unique_salt();
             raw_table_size_ = table_size_ / bits_per_char;
-            bit_table_ = new cell_type[raw_table_size_];
+            bit_table_ = new cell_type[static_cast<std::size_t>(raw_table_size_)];
             std::fill_n(bit_table_,raw_table_size_,0x00);
          }
 
@@ -15115,21 +15279,21 @@ namespace strtk
 
          inline bool operator == (const filter& f) const
          {
-            if (this == &f)
-               return true;
-            else
+            if (this != &f)
             {
                return
                   (salt_count_                         == f.salt_count_)                         &&
                   (table_size_                         == f.table_size_)                         &&
                   (raw_table_size_                     == f.raw_table_size_)                     &&
-                  (predicted_inserted_element_count_   == f.predicted_inserted_element_count_)   &&
+                  (projected_element_count_   == f.projected_element_count_)   &&
                   (inserted_element_count_             == f.inserted_element_count_)             &&
                   (random_seed_                        == f.random_seed_)                        &&
                   (desired_false_positive_probability_ == f.desired_false_positive_probability_) &&
                   (salt_                               == f.salt_)                               &&
                   std::equal(f.bit_table_,f.bit_table_ + raw_table_size_,bit_table_);
             }
+            else
+               return true;
          }
 
          inline bool operator != (const filter& f) const
@@ -15144,12 +15308,12 @@ namespace strtk
                salt_count_ = f.salt_count_;
                table_size_ = f.table_size_;
                raw_table_size_ = f.raw_table_size_;
-               predicted_inserted_element_count_ = f.predicted_inserted_element_count_;
+               projected_element_count_ = f.projected_element_count_;
                inserted_element_count_ = f.inserted_element_count_;
                random_seed_ = f.random_seed_;
                desired_false_positive_probability_ = f.desired_false_positive_probability_;
                delete[] bit_table_;
-               bit_table_ = new cell_type[raw_table_size_];
+               bit_table_ = new cell_type[static_cast<std::size_t>(raw_table_size_)];
                std::copy(f.bit_table_,f.bit_table_ + raw_table_size_,bit_table_);
                salt_ = f.salt_;
             }
@@ -15272,7 +15436,7 @@ namespace strtk
             return end;
          }
 
-         inline virtual std::size_t size() const
+         inline virtual unsigned long long int size() const
          {
             return table_size_;
          }
@@ -15357,12 +15521,13 @@ namespace strtk
             const std::size_t buffer_size = sizeof(                        salt_count_) +
                                             sizeof(                        table_size_) +
                                             sizeof(                    raw_table_size_) +
-                                            sizeof(  predicted_inserted_element_count_) +
+                                            sizeof(  projected_element_count_) +
                                             sizeof(            inserted_element_count_) +
                                             sizeof(                       random_seed_) +
                                             sizeof(desired_false_positive_probability_) +
                                             salt_count_ * sizeof(           bloom_type) +
-                                            raw_table_size_ * sizeof(        cell_type) +
+                                              static_cast<std::size_t>(raw_table_size_) *
+                                                                      sizeof(cell_type) +
                                             64; // handle array sizes etc.
             std::ofstream ostream(file_name.c_str(),std::ios::binary);
             if (!ostream)
@@ -15373,7 +15538,7 @@ namespace strtk
             bool result = writer(salt_count_)                         &&
                           writer(table_size_)                         &&
                           writer(raw_table_size_)                     &&
-                          writer(predicted_inserted_element_count_)   &&
+                          writer(projected_element_count_)   &&
                           writer(inserted_element_count_)             &&
                           writer(random_seed_)                        &&
                           writer(desired_false_positive_probability_) &&
@@ -15396,7 +15561,7 @@ namespace strtk
             salt_count_                         = 0;
             table_size_                         = 0;
             raw_table_size_                     = 0;
-            predicted_inserted_element_count_   = 0;
+            projected_element_count_   = 0;
             inserted_element_count_             = 0;
             random_seed_                        = 0;
             desired_false_positive_probability_ = 0.0;
@@ -15413,7 +15578,7 @@ namespace strtk
             bool result = reader(salt_count_)                         &&
                           reader(table_size_)                         &&
                           reader(raw_table_size_)                     &&
-                          reader(predicted_inserted_element_count_)   &&
+                          reader(projected_element_count_)   &&
                           reader(inserted_element_count_)             &&
                           reader(random_seed_)                        &&
                           reader(desired_false_positive_probability_) &&
@@ -15494,7 +15659,7 @@ namespace strtk
                     so as to allow for the generation of unique bloom filter
                     instances.
                   */
-                  salt_[i] = salt_[i] * salt_[(i + 3) % salt_.size()] + random_seed_;
+                  salt_[i] = salt_[i] * salt_[(i + 3) % salt_.size()] + static_cast<bloom_type>(random_seed_);
                 }
             }
             else
@@ -15513,89 +15678,55 @@ namespace strtk
             }
          }
 
-         void find_optimal_parameters()
-         {
-            /*
-              Note:
-              The following will attempt to find the number of hash functions
-              and minimum amount of storage bits required to construct a bloom
-              filter consistent with the user defined false positive probability
-              and estimated element insertion count.
-            */
-
-            double min_m = std::numeric_limits<double>::infinity();
-            double min_k = 0.0;
-            double curr_m = 0.0;
-            double k = 1.0;
-
-            while (k < 1000.0)
-            {
-               double numerator   = (- k * predicted_inserted_element_count_);
-               double denominator = std::log(1.0 - std::pow(desired_false_positive_probability_, 1.0 / k));
-               curr_m = numerator / denominator;
-
-               if (curr_m < min_m)
-               {
-                  min_m = curr_m;
-                  min_k = k;
-               }
-               k += 1.0;
-            }
-
-            salt_count_ = static_cast<std::size_t>(min_k);
-            table_size_ = static_cast<std::size_t>(min_m);
-            table_size_ += (((table_size_ % bits_per_char) != 0) ? (bits_per_char - (table_size_ % bits_per_char)) : 0);
-         }
-
          inline bloom_type hash_ap(const unsigned char* begin, std::size_t remaining_length, bloom_type hash) const
          {
-              const unsigned char* itr = begin;
-              unsigned int loop = 0;
-              while (remaining_length >= 8)
-              {
-                 const unsigned int& i1 = *(reinterpret_cast<const unsigned int*>(itr)); itr += sizeof(unsigned int);
-                 const unsigned int& i2 = *(reinterpret_cast<const unsigned int*>(itr)); itr += sizeof(unsigned int);
-                 hash ^= (hash <<  7) ^  i1 * (hash >> 3) ^
-                      (~((hash << 11) + (i2 ^ (hash >> 5))));
-                 remaining_length -= 8;
-              }
-              while (remaining_length >= 4)
-              {
-                 const unsigned int& i = *(reinterpret_cast<const unsigned int*>(itr));
-                 if (loop & 0x01)
-                    hash ^=    (hash <<  7) ^  i * (hash >> 3);
-                 else
-                    hash ^= (~((hash << 11) + (i ^ (hash >> 5))));
-                 ++loop;
-                 remaining_length -= 4;
-                 itr += sizeof(unsigned int);
-              }
-              while (remaining_length >= 2)
-              {
-                 const unsigned short& i = *(reinterpret_cast<const unsigned short*>(itr));
-                 if (loop & 0x01)
-                    hash ^=    (hash <<  7) ^  i * (hash >> 3);
-                 else
-                    hash ^= (~((hash << 11) + (i ^ (hash >> 5))));
-                 ++loop;
-                 remaining_length -= 2;
-                 itr += sizeof(unsigned short);
-              }
-              if (remaining_length)
-              {
-                 hash += ((*itr) ^ (hash * 0xA5A5A5A5)) + loop;
-              }
-              return hash;
+            const unsigned char* itr = begin;
+            unsigned int loop = 0;
+            while (remaining_length >= 8)
+            {
+               const unsigned int& i1 = *(reinterpret_cast<const unsigned int*>(itr)); itr += sizeof(unsigned int);
+               const unsigned int& i2 = *(reinterpret_cast<const unsigned int*>(itr)); itr += sizeof(unsigned int);
+               hash ^= (hash <<  7) ^  i1 * (hash >> 3) ^
+                    (~((hash << 11) + (i2 ^ (hash >> 5))));
+               remaining_length -= 8;
+            }
+            while (remaining_length >= 4)
+            {
+               const unsigned int& i = *(reinterpret_cast<const unsigned int*>(itr));
+               if (loop & 0x01)
+                  hash ^=    (hash <<  7) ^  i * (hash >> 3);
+               else
+                  hash ^= (~((hash << 11) + (i ^ (hash >> 5))));
+               ++loop;
+               remaining_length -= 4;
+               itr += sizeof(unsigned int);
+            }
+            while (remaining_length >= 2)
+            {
+               const unsigned short& i = *(reinterpret_cast<const unsigned short*>(itr));
+               if (loop & 0x01)
+                  hash ^=    (hash <<  7) ^  i * (hash >> 3);
+               else
+                  hash ^= (~((hash << 11) + (i ^ (hash >> 5))));
+               ++loop;
+               remaining_length -= 2;
+               itr += sizeof(unsigned short);
+            }
+            if (remaining_length)
+            {
+               hash += ((*itr) ^ (hash * 0xA5A5A5A5)) + loop;
+            }
+            return hash;
          }
 
          std::vector<bloom_type> salt_;
          unsigned char*          bit_table_;
          unsigned int            salt_count_;
-         unsigned int            table_size_;
-         unsigned int            raw_table_size_;
-         unsigned int            predicted_inserted_element_count_;
+         unsigned long long int  table_size_;
+         unsigned long long int  raw_table_size_;
+         unsigned long long int  projected_element_count_;
          unsigned int            inserted_element_count_;
-         unsigned int            random_seed_;
+         unsigned long long int  random_seed_;
          double                  desired_false_positive_probability_;
       };
 
@@ -15624,15 +15755,13 @@ namespace strtk
       {
       public:
 
-         compressible_filter(const std::size_t& predicted_element_count,
-                             const double& false_positive_probability,
-                             const std::size_t& random_seed)
-         : filter(predicted_element_count,false_positive_probability,random_seed)
+         compressible_filter(const parameters& p)
+         : filter(p)
          {
             size_list.push_back(table_size_);
          }
 
-         inline virtual std::size_t size() const
+         inline virtual unsigned long long int size() const
          {
             return size_list.back();
          }
@@ -15644,8 +15773,8 @@ namespace strtk
                return false;
             }
 
-            std::size_t original_table_size = size_list.back();
-            std::size_t new_table_size = static_cast<std::size_t>((size_list.back() * (1.0 - (percentage / 100.0))));
+            unsigned long long int original_table_size = size_list.back();
+            unsigned long long int new_table_size = static_cast<unsigned long long int>((size_list.back() * (1.0 - (percentage / 100.0))));
             new_table_size -= (((new_table_size % bits_per_char) != 0) ? (new_table_size % bits_per_char) : 0);
 
             if ((bits_per_char > new_table_size) || (new_table_size >= original_table_size))
@@ -15654,7 +15783,7 @@ namespace strtk
             }
 
             desired_false_positive_probability_ = effective_fpp();
-            cell_type* tmp = new cell_type[new_table_size / bits_per_char];
+            cell_type* tmp = new cell_type[static_cast<std::size_t>(new_table_size / bits_per_char)];
             std::copy(bit_table_, bit_table_ + (new_table_size / bits_per_char), tmp);
             cell_type* itr = bit_table_ + (new_table_size / bits_per_char);
             cell_type* end = bit_table_ + (original_table_size / bits_per_char);
@@ -15684,7 +15813,7 @@ namespace strtk
             bit = bit_index % bits_per_char;
          }
 
-         std::vector<std::size_t> size_list;
+         std::vector<unsigned long long int> size_list;
       };
 
    }
@@ -15718,7 +15847,7 @@ namespace strtk
          compute_pod_hash(static_cast<int>(data),hash);
       }
 
-      inline void compute_pod_hash(const unsigned long long& data, unsigned int& hash)
+      inline void compute_pod_hash(const unsigned long long int& data, unsigned int& hash)
       {
          const unsigned char* itr = reinterpret_cast<const unsigned char*>(&data);
          hash ^=  ((hash <<  7) ^  itr[0] * (hash >> 3));
@@ -16075,7 +16204,7 @@ namespace strtk
          };
 
          type_holder_ptr type_holder_;
-         enum { type_holder_buffer_size = 2 * sizeof(type_holder<unsigned long long>) };
+         enum { type_holder_buffer_size = 2 * sizeof(type_holder<unsigned long long int>) };
          unsigned char type_holder_buffer_[type_holder_buffer_size];
       };
 
@@ -16517,9 +16646,9 @@ namespace strtk
             if (!ignore_failures)
             {
                const std::size_t pair_count = split(pair_block_sdp_,
-                                           data.first,
-                                           data.second,
-                                           pair_list_.begin());
+                                                    data.first,
+                                                    data.second,
+                                                    pair_list_.begin());
                if (0 == pair_count)
                   return false;
 
@@ -16532,11 +16661,11 @@ namespace strtk
                   if (0 == std::distance(r.first,r.second))
                      continue;
                   else if (!split_pair(r.first,r.second,
-                              pair_delimiter_sdp_,
-                              key_range,value_range))
-                    return false;
+                                       pair_delimiter_sdp_,
+                                       key_range,value_range))
+                     return false;
                   else if (!kv_map_(key_range,value_range))
-                    return false;
+                     return false;
                }
                return true;
             }
@@ -16664,26 +16793,57 @@ namespace strtk
          std::vector<strtk::util::value> value_lut_;
       };
 
-      class stringkey_map
+      namespace details
+      {
+         template<typename Range,typename KType>
+         struct keygen
+         {
+            static inline KType transform(const Range&)
+            {
+               return KType();
+            }
+         };
+
+         template<typename Range>
+         struct keygen<Range,std::string>
+         {
+            static inline std::string transform(const Range& key_range)
+            {
+               return std::string(key_range.first,key_range.second);
+            }
+         };
+
+         template<typename Range>
+         struct keygen<Range,unsigned int>
+         {
+            static inline unsigned int transform(const Range& key_range)
+            {
+               unsigned int result = 0;
+               strtk::fast::numeric_convert(std::distance(key_range.first,key_range.second),key_range.first,result,true);
+               return result;
+            }
+         };
+      }
+
+      template<typename KeyType, typename MapType = std::map<KeyType,strtk::util::value> >
+      class key_map
       {
       public:
 
-         typedef std::string key_type;
-
-         typedef std::map<std::string,strtk::util::value> map_type;
+         typedef KeyType key_type;
+         typedef MapType map_type;
 
          template<typename Options>
-         stringkey_map(const Options&)
+         key_map(const Options&)
          {}
 
-         virtual ~stringkey_map()
+         virtual ~key_map()
          {}
 
          template<typename Range>
          inline bool operator()(const Range key_range, const Range value_range)
          {
-            std::string key(key_range.first,key_range.second);
-            map_type::iterator itr = value_map_.find(key);
+            typename map_type::iterator itr = value_map_.find(details::keygen<Range,key_type>::transform(key_range));
             if (value_map_.end() == itr)
                return false;
             const util::value& v = (*itr).second;
@@ -16705,8 +16865,9 @@ namespace strtk
          map_type value_map_;
       };
 
-   }
+      typedef key_map<std::string> stringkey_map;
 
+   }
 } // namespace strtk
 
 namespace
@@ -16800,7 +16961,12 @@ namespace strtk
 
             timer()
             : in_use_(false)
-            {}
+            {
+               start_time_.tv_sec  = 0;
+               start_time_.tv_usec = 0;
+               stop_time_.tv_sec   = 0;
+               stop_time_.tv_usec  = 0;
+            }
 
             inline void start()
             {
@@ -16814,7 +16980,7 @@ namespace strtk
                in_use_ = false;
             }
 
-            inline unsigned long long usec_time() const
+            inline unsigned long long int usec_time() const
             {
                if (!in_use_)
                {
@@ -16822,10 +16988,10 @@ namespace strtk
                      return 1000000 * (stop_time_.tv_sec  - start_time_.tv_sec ) +
                                       (stop_time_.tv_usec - start_time_.tv_usec);
                   else
-                     return std::numeric_limits<unsigned long long>::max();
+                     return std::numeric_limits<unsigned long long int>::max();
                }
                else
-                  return std::numeric_limits<unsigned long long>::max();
+                  return std::numeric_limits<unsigned long long int>::max();
             }
 
             inline double time() const

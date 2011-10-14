@@ -52,13 +52,26 @@ int main()
    static const std::size_t n = letters.size();
    static const std::size_t k = 14;
    static const std::size_t element_count = 2 * static_cast<std::size_t>(strtk::n_choose_k(n,k));
-   static const double false_positive_probability = 0.001;
+   static const double false_positive_probability = 0.0001;
 
    typedef strtk::combination_iterator<char*> iterator_type;
 
-   strtk::bloom::filter filter(element_count,
-                               false_positive_probability,
-                               strtk::magic_seed);
+   strtk::bloom::parameters parameters;
+
+   parameters.projected_element_count    = element_count;
+   parameters.false_positive_probability = false_positive_probability;
+   parameters.random_seed                = strtk::magic_seed;
+   parameters.maximum_number_of_hashes   = 7;
+
+   if (!parameters)
+   {
+      std::cout << "Error - Invalid set of bloom filter parameters!" << std::endl;
+      return 1;
+   }
+
+   parameters.compute_optimal_parameters();
+
+   strtk::bloom::filter filter(parameters);
 
    printf("Filter Size: %7.3fKB "
           "Data Size: %8.3fKB "
@@ -159,7 +172,7 @@ int main()
       }
       timer.stop();
 
-      printf("[FPC    ] Element Count: %llu\tFalse Positive Count: %d\tFalse Positive Rate: %9.8f\tTotal Time: %5.3fsec\tRate: %10.3felem/sec\n",
+      printf("[FPC    ] Element Count: %llu\tFalse Positive Count: %d\tFalse Positive Probability: %9.8f\tTotal Time: %5.3fsec\tRate: %10.3felem/sec\n",
              static_cast<unsigned long long>(small_element_count),
              false_positive_count,
              (1.0 * false_positive_count)/small_element_count,

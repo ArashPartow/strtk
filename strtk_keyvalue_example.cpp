@@ -18,20 +18,30 @@
 
 /*
    Description: This example demonstrates parsing of a sequence of key-value
-                pairs. An example data object named "data_store" is used which
-                contains 22 various types of members that need populating. Each
-                member is mapped via a key to value which is registered with the
-                parser. The examples below demonstrate parsing of keys as
-                unsigned int and of std::string types.
+                pairs.
 
-                An array of 5 sequences of key-value pairs, in various orderings,
+                In the first example a data object named "data_store" which is
+                comprised of 22 members of various types that need populating.
+                Each member is mapped via a key to a value which is registered
+                with the parser. The examples below demonstrate parsing of keys
+                as unsigned int and of std::string types.
+
+                An array of five sequences of key-value pairs, in various orderings,
                 are passed to the key-value parser. The parser processes each
-                sequence, splitting them up into pairs and subsequently
-                processing each pair, mapping parsed values to the appropriate
-                registered value. The whole process is timed, and details such as
-                total time and rate of pairs parsed per second is displayed. Note
-                a running total is maintained so as to overcome the effects of
-                overzealous optimizers.
+                sequence, splitting them up into pairs and subsequently processing
+                each pair, mapping parsed values to the appropriate registered value.
+                The whole process is timed, and details such as total time and rate
+                of key-value pairs and sequences parsed per second are displayed.
+                Note a running total is maintained so as to overcome the effects
+                of overzealous optimizers.
+
+                In the second example a data object named complex_data is used which
+                contains six members of various types, three of which are STL sequences.
+                Twelve sequences of key-value pairs representing POD data and sequences
+                of values. Parsing of the sequences are carried out, upon a successful
+                parse operation the members of the complex_data instance is printed to
+                stdout.
+
 */
 
 
@@ -101,7 +111,7 @@ struct data_store
 
 };
 
-int main()
+void example01()
 {
    static const std::size_t rounds = 1000000;
 
@@ -176,7 +186,10 @@ int main()
             if (kvp(data[j]))
                total += ds.ui1;
             else
-               return 1;
+            {
+               std::cout << "Failed to parse data: " << data[j] << std::endl;
+               return;
+            }
          }
       }
       timer.stop();
@@ -238,7 +251,10 @@ int main()
             if (kvp(data[j]))
                total += ds.ui1;
             else
-               return 1;
+            {
+               std::cout << "Failed to parse data: " << data[j] << std::endl;
+               return;
+            }
          }
       }
       timer.stop();
@@ -249,7 +265,89 @@ int main()
              (rounds * data_store::member_count * data_size) / timer.time (),
              (rounds * data_size) / timer.time ());
    }
-
-   return 0;
 }
 
+struct complex_data
+{
+   int                    v0; // key = 00
+   double                 v1; // key = 01
+   std::string            v2; // key = 02
+   std::vector<int>       v3; // key = 03
+   std::deque<double>     v4; // key = 04
+   std::list<std::string> v5; // key = 05
+
+   void reset()
+   {
+      v3.clear();
+      v4.clear();
+      v5.clear();
+   }
+};
+
+void example02()
+{
+   static const std::string data[] =
+                     {
+                        "00=123456|01=1234567.1234567|02=Simple text|03=-3,-2,-1,0,+1,2,+3|04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4",
+                        "01=1234567.1234567|02=Simple text|03=-3,-2,-1,0,+1,2,+3|04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4|00=123456",
+                        "02=Simple text|03=-3,-2,-1,0,+1,2,+3|04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4|00=123456|01=1234567.1234567",
+                        "03=-3,-2,-1,0,+1,2,+3|04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4|00=123456|01=1234567.1234567|02=Simple text",
+                        "04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4|00=123456|01=1234567.1234567|02=Simple text|03=-3,-2,-1,0,+1,2,+3",
+                        "05=Text1,Text2,Text3,Text4|00=123456|01=1234567.1234567|02=Simple text|03=-3,-2,-1,0,+1,2,+3|04=1.1,2.2,3.3,4.4,5.5,6.6",
+                        "00=123456|03=-3,-2,-1,0,+1,2,+3|02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567|05=Text1,Text2,Text3,Text4",
+                        "03=-3,-2,-1,0,+1,2,+3|02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567|05=Text1,Text2,Text3,Text4|00=123456",
+                        "02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567|05=Text1,Text2,Text3,Text4|00=123456|03=-3,-2,-1,0,+1,2,+3",
+                        "04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567|05=Text1,Text2,Text3,Text4|00=123456|03=-3,-2,-1,0,+1,2,+3|02=Simple text",
+                        "01=1234567.1234567|05=Text1,Text2,Text3,Text4|00=123456|03=-3,-2,-1,0,+1,2,+3|02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6",
+                        "05=Text1,Text2,Text3,Text4|00=123456|03=-3,-2,-1,0,+1,2,+3|02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567",
+                     };
+
+   static const std::size_t data_size = sizeof(data) / sizeof(std::string);
+
+   typedef strtk::keyvalue::parser<strtk::keyvalue::uintkey_map> kvp_type;
+
+   strtk::keyvalue::uintkey_map::options options;
+
+   options.key_count            =   6; //[0,5]
+   options.pair_block_delimiter = '|';
+   options.pair_delimiter       = '=';
+
+   kvp_type kvp(options);
+
+   complex_data cd;
+
+   strtk::vector_sink<int>::type vec_sink(",");
+   strtk::deque_sink<double>::type deq_sink(",");
+   strtk::list_sink<std::string>::type lst_sink(",");
+
+   kvp.register_keyvalue(0,cd.v0);
+   kvp.register_keyvalue(1,cd.v1);
+   kvp.register_keyvalue(2,cd.v2);
+   kvp.register_keyvalue(3,vec_sink(cd.v3));
+   kvp.register_keyvalue(4,deq_sink(cd.v4));
+   kvp.register_keyvalue(5,lst_sink(cd.v5));
+
+   for (std::size_t i = 0; i < data_size; ++i)
+   {
+      if (kvp(data[i]))
+      {
+         std::cout << "Seq[" << strtk::text::right_align(2,'0',i) << "] "
+                   << "Key0: " << cd.v0 << " "
+                   << "Key1: " << cd.v1 << " "
+                   << "Key2: " << cd.v2 << " "
+                   << "Key3: " << strtk::join(" ",cd.v3) << " "
+                   << "Key4: " << strtk::join(" ",cd.v4) << " "
+                   << "Key5: " << strtk::join(" ",cd.v5) << "\n";
+         cd.reset();
+      }
+      else
+         std::cout << "Failed to parse data: " << data[i] << std::endl;
+   }
+}
+
+int main()
+{
+   example01();
+   example02();
+   return 0;
+}

@@ -55,7 +55,7 @@ public:
      map_(map),
      p_(p)
    {
-      str_.reserve(strtk::one_kilobyte);
+      str_.reserve(32);
    }
 
    inline void operator() (const std::string& s)
@@ -120,6 +120,7 @@ int main(int argc, char* argv[])
    }
 
    std::cout << "Word count: " << word_count << std::endl;
+   std::cout << "Unique word count: " << word_list.size() << std::endl;
 
    map_t::iterator itr = word_list.begin();
 

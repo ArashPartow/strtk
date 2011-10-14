@@ -78,7 +78,8 @@ int main(int argc, char* argv[])
    std::string file_name = argv[1];
    std::string line;
 
-   strtk::for_each_line(file_name,random_line_selector(line,static_cast<std::size_t>(::time(0))));
+   strtk::for_each_line(file_name,
+                        random_line_selector(line,static_cast<std::size_t>(::time(0))));
 
    std::cout << line << std::endl;
 

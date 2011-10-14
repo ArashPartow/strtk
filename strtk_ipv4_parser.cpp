@@ -38,32 +38,21 @@ class ipv4_parser
 public:
 
    ipv4_parser()
-   : predicate_('.'),
-     tokenizer_(static_cast<char*>(0),static_cast<char*>(0),predicate_)
+   : predicate_('.')
    {}
 
    inline bool operator()(const std::string& data, unsigned char octet[4])
    {
-      tokenizer_.assign(data.data(),data.data() + data.size());
-      tokenizer_type::iterator itr = tokenizer_.begin();
-      tokenizer_type::const_iterator end = tokenizer_.end();
-      std::size_t octet_count = 0;
-      unsigned short tmp = 0;
-      while ((octet_count < 4) && (end != itr))
-      {
-         tokenizer_type::iterator::value_type range = *itr;
-         std::size_t token_length = std::distance(range.first,range.second);
-         if (0 == token_length)
-            return false;
-         else if (!strtk::string_to_type_converter(range.first,range.second,tmp))
-            return false;
-         else if (tmp > 255)
-            return false;
-         octet[octet_count] = static_cast<unsigned char>(tmp);
-         ++itr;
-         ++octet_count;
-      }
-      return (4 == octet_count);
+      typedef std::pair<const char*,const char*> iterator_type;
+      typedef iterator_type* iterator_type_ptr;
+      iterator_type token[4];
+      if (4 != strtk::split_n(predicate_,data,4,token))
+         return false;
+      if (!process_token(token[0],octet[0])) return false;
+      if (!process_token(token[1],octet[1])) return false;
+      if (!process_token(token[2],octet[2])) return false;
+      if (!process_token(token[3],octet[3])) return false;
+      return true;
    }
 
    inline bool operator()(const std::string& data, unsigned int& ip)
@@ -74,8 +63,18 @@ public:
 
 private:
 
+   inline bool process_token(const std::pair<const char*,const char*>& token, unsigned char& octet)
+   {
+      unsigned int v = 0;
+      if (!strtk::fast::numeric_convert(strtk::distance(token),token.first,v,true))
+         return false;
+      if (v > 255)
+         return false;
+      octet = static_cast<unsigned char>(v);
+      return true;
+   }
+
    strtk::single_delimiter_predicate<char> predicate_;
-   tokenizer_type tokenizer_;
 };
 
 void print_octet(const unsigned char octet[4])
