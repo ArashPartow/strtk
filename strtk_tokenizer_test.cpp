@@ -2129,6 +2129,291 @@ bool test_n_choose_k()
    return true;
 }
 
+bool test_keyvalue_parser()
+{
+   {
+      std::string data = "INT=-1234|UINT=+5678|DOUBLE=1234.5678|FLOAT=90123.4567f|STRING=Some simple text";
+      int d1;
+      unsigned int d2;
+      double d3;
+      float d4;
+      std::string d5;
+
+      typedef unsigned char char_type;
+      typedef strtk::keyvalue::parser<strtk::keyvalue::stringkey_map> kvp_type;
+      typedef strtk::keyvalue::options<char_type> opts_type;
+
+      opts_type options;
+
+      options.pair_block_delimiter = '|';
+      options.pair_delimiter       = '=';
+
+      kvp_type kvp(options);
+
+      kvp.register_keyvalue("INT",   d1);
+      kvp.register_keyvalue("UINT",  d2);
+      kvp.register_keyvalue("DOUBLE",d3);
+      kvp.register_keyvalue("FLOAT", d4);
+      kvp.register_keyvalue("STRING",d5);
+
+      if (!kvp(data))
+      {
+         std::cout << "test_keyvalue_parser() - Failed to parse key-value data: " << data << std::endl;
+         return false;
+      }
+
+      if (d1 != -1234)
+      {
+         std::cout << "test_keyvalue_parser() - Error d1 parse failure. d1: " << d1 << std::endl;
+         return false;
+      }
+
+      if (d2 != 5678)
+      {
+         std::cout << "test_keyvalue_parser() - Error d2 parse failure. d2: " << d2 << std::endl;
+         return false;
+      }
+
+      if (std::abs(d3 - 1234.5678) > 0.0000001)
+      {
+         std::cout << "test_keyvalue_parser() - Error d3 parse failure. d3: " << d3 << std::endl;
+         return false;
+      }
+
+      if (std::abs(d4 - 90123.4567f) > 0.0000001f)
+      {
+         std::cout << "test_keyvalue_parser() - Error d3 parse failure. d4: " << d4 << std::endl;
+         return false;
+      }
+
+      if (d5 != "Some simple text")
+      {
+         std::cout << "test_keyvalue_parser() - Error d5 parse failure. d5: " << d5 << std::endl;
+         return false;
+      }
+
+   }
+
+   {
+      std::string data = "001=-1234|002=+5678|003=1234.5678|004=90123.4567f|005=Some simple text";
+      int d1;
+      unsigned int d2;
+      double d3;
+      float d4;
+      std::string d5;
+
+      typedef unsigned char char_type;
+      typedef strtk::keyvalue::parser<strtk::keyvalue::uintkey_map> kvp_type;
+
+      strtk::keyvalue::uintkey_map::options options;
+
+      options.key_count            =   7;
+      options.pair_block_delimiter = '|';
+      options.pair_delimiter       = '=';
+
+      kvp_type kvp(options);
+
+      kvp.register_keyvalue(1,d1);
+      kvp.register_keyvalue(2,d2);
+      kvp.register_keyvalue(3,d3);
+      kvp.register_keyvalue(4,d4);
+      kvp.register_keyvalue(5,d5);
+
+      if (!kvp(data))
+      {
+         std::cout << "test_keyvalue_parser() - Failed to parse key-value data: " << data << std::endl;
+         return false;
+      }
+
+      if (d1 != -1234)
+      {
+         std::cout << "test_keyvalue_parser() - Error d1 parse failure. d1: " << d1 << std::endl;
+         return false;
+      }
+
+      if (d2 != 5678)
+      {
+         std::cout << "test_keyvalue_parser() - Error d2 parse failure. d2: " << d2 << std::endl;
+         return false;
+      }
+
+      if (std::abs(d3 - 1234.5678) > 0.0000001)
+      {
+         std::cout << "test_keyvalue_parser() - Error d3 parse failure. d3: " << d3 << std::endl;
+         return false;
+      }
+
+      if (std::abs(d4 - 90123.4567f) > 0.0000001f)
+      {
+         std::cout << "test_keyvalue_parser() - Error d3 parse failure. d4: " << d4 << std::endl;
+         return false;
+      }
+
+      if (d5 != "Some simple text")
+      {
+         std::cout << "test_keyvalue_parser() - Error d5 parse failure. d5: " << d5 << std::endl;
+         return false;
+      }
+   }
+
+
+   {
+      std::string data = "int_list=-3,-2,-1,0,+1,+2,+3|"
+                         "uint_list=0,1,2,3,4,5,6,7,8,9|"
+                         "dbl_list=-1.1,+2.2,3.3,-4.4,+5.5,-6.6,7.7|"
+                         "flt_list=-1.1f,+2.2f,3.3f,-4.4f,+5.5f,-6.6f,7.7f|"
+                         "string_list=Text 1,Text 2,Text 3,Text 4,Text 5";
+
+      std::vector<int> int_list;
+      std::deque<unsigned int> uint_list;
+      std::list<double> dbl_list;
+      std::set<float> flt_list;
+      std::queue<std::string> string_list;
+
+
+      typedef unsigned char char_type;
+      typedef strtk::keyvalue::parser<strtk::keyvalue::stringkey_map> kvp_type;
+      typedef strtk::keyvalue::options<char_type> opts_type;
+
+      opts_type options;
+
+      options.pair_block_delimiter = '|';
+      options.pair_delimiter       = '=';
+
+      kvp_type kvp(options);
+
+      //define sinks
+      strtk::vector_sink<int>::type          vec_sink(",");
+      strtk::deque_sink<unsigned int>::type  deq_sink(",");
+      strtk::list_sink<double>::type         lst_sink(",");
+      strtk::set_sink<float>::type           set_sink(",");
+      strtk::queue_sink<std::string>::type   que_sink(",");
+
+      kvp.register_keyvalue("int_list",   vec_sink(   int_list));
+      kvp.register_keyvalue("uint_list",  deq_sink(  uint_list));
+      kvp.register_keyvalue("dbl_list",   lst_sink(   dbl_list));
+      kvp.register_keyvalue("flt_list",   set_sink(   flt_list));
+      kvp.register_keyvalue("string_list",que_sink(string_list));
+
+      if (!kvp(data))
+      {
+         std::cout << "test_keyvalue_parser() - Failed to parse key-value data: " << data << std::endl;
+         return false;
+      }
+
+      if (7 != int_list.size())
+      {
+         std::cout << "test_keyvalue_parser() - Error int_list parse failure." << std::endl;
+         return false;
+      }
+
+      if (10 != uint_list.size())
+      {
+         std::cout << "test_keyvalue_parser() - Error uint_list parse failure" << std::endl;
+         return false;
+      }
+
+      if (7 != dbl_list.size())
+      {
+         std::cout << "test_keyvalue_parser() - Error dbl_list parse failure" << std::endl;
+         return false;
+      }
+
+      if (7 != flt_list.size())
+      {
+         std::cout << "test_keyvalue_parser() - Error flt_list parse failure" << std::endl;
+         return false;
+      }
+
+      if (5 != string_list.size())
+      {
+         std::cout << "test_keyvalue_parser() - Error string_list parse failure" << std::endl;
+         return false;
+      }
+   }
+
+   {
+      std::string data = "INT=-1234|UINT=+5678|DOUBLE=1234.5678|FLOAT=90123.4567f|STRING=Some simple text";
+
+      strtk::util::attribute<int> d1;
+      strtk::util::attribute<unsigned int> d2;
+      strtk::util::attribute<double> d3;
+      strtk::util::attribute<float> d4;
+      strtk::util::attribute<std::string> d5;
+
+      typedef unsigned char char_type;
+      typedef strtk::keyvalue::parser<strtk::keyvalue::stringkey_map> kvp_type;
+      typedef strtk::keyvalue::options<char_type> opts_type;
+
+      opts_type options;
+
+      options.pair_block_delimiter = '|';
+      options.pair_delimiter       = '=';
+
+      kvp_type kvp(options);
+
+      d1.initialised() = false;
+      d2.initialised() = false;
+      d3.initialised() = false;
+      d4.initialised() = false;
+      d5.initialised() = false;
+
+      kvp.register_keyvalue("INT",   d1);
+      kvp.register_keyvalue("UINT",  d2);
+      kvp.register_keyvalue("DOUBLE",d3);
+      kvp.register_keyvalue("FLOAT", d4);
+      kvp.register_keyvalue("STRING",d5);
+
+      if (!kvp(data))
+      {
+         std::cout << "test_keyvalue_parser() - Failed to parse key-value data: " << data << std::endl;
+         return false;
+      }
+
+      if (!d1.initialised()) { std::cout << "test_keyvalue_parser() - Error d1 not initialised!" << std::endl; return false; }
+      if (!d2.initialised()) { std::cout << "test_keyvalue_parser() - Error d2 not initialised!" << std::endl; return false; }
+      if (!d3.initialised()) { std::cout << "test_keyvalue_parser() - Error d3 not initialised!" << std::endl; return false; }
+      if (!d4.initialised()) { std::cout << "test_keyvalue_parser() - Error d4 not initialised!" << std::endl; return false; }
+      if (!d5.initialised()) { std::cout << "test_keyvalue_parser() - Error d5 not initialised!" << std::endl; return false; }
+
+      if ((d1 != -1234) && (-1234 != d1))
+      {
+         std::cout << "test_keyvalue_parser() - Error d1 parse failure. d1: " << d1 << std::endl;
+         return false;
+      }
+
+      if ((d2 != 5678) && (5678 != d2))
+      {
+         std::cout << "test_keyvalue_parser() - Error d2 parse failure. d2: " << d2 << std::endl;
+         return false;
+      }
+
+      if ((std::abs(d3 - 1234.5678) > 0.0000001) &&
+          (std::abs(1234.5678 - d3) > 0.0000001))
+
+      {
+         std::cout << "test_keyvalue_parser() - Error d3 parse failure. d3: " << d3 << std::endl;
+         return false;
+      }
+
+      if ((std::abs(d4 - 90123.4567f) > 0.0000001f) &&
+          (std::abs(90123.4567f - d4) > 0.0000001f))
+      {
+         std::cout << "test_keyvalue_parser() - Error d3 parse failure. d4: " << d4 << std::endl;
+         return false;
+      }
+
+      if ((d5 != "Some simple text") && ("Some simple text" != d5))
+      {
+         std::cout << "test_keyvalue_parser() - Error d5 parse failure. d5: " << d5 << std::endl;
+         return false;
+      }
+
+   }
+
+   return true;
+}
+
 int main()
 {
    bool result = true;
@@ -2148,5 +2433,6 @@ int main()
    result &= test_kv_parse();
    result &= test_replace_pattern();
    result &= test_n_choose_k();
+   result &= test_keyvalue_parser();
    return (false == result ? 1 : 0);
 }

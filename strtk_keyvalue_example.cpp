@@ -20,24 +20,24 @@
    Description: This example demonstrates parsing of a sequence of key-value
                 pairs.
 
-                In the first example a data object named "data_store" which is
-                comprised of 22 members of various types that need populating.
-                Each member is mapped via a key to a value which is registered
-                with the parser. The examples below demonstrate parsing of keys
-                as unsigned int and of std::string types.
+                In the first example data object named "data_store" is used which
+                contains 22 various types of members that need populating. Each
+                member is mapped via a key to value which is registered with the
+                parser. The examples below demonstrate parsing of keys as
+                unsigned int and of std::string types.
 
-                An array of five sequences of key-value pairs, in various orderings,
+                An array of 5 sequences of key-value pairs, in various orderings,
                 are passed to the key-value parser. The parser processes each
-                sequence, splitting them up into pairs and subsequently processing
-                each pair, mapping parsed values to the appropriate registered value.
-                The whole process is timed, and details such as total time and rate
-                of key-value pairs and sequences parsed per second are displayed.
-                Note a running total is maintained so as to overcome the effects
-                of overzealous optimizers.
+                sequence, splitting them up into pairs and subsequently
+                processing each pair, mapping parsed values to the appropriate
+                registered value. The whole process is timed, and details such as
+                total time and rate of pairs parsed per second is displayed. Note
+                a running total is maintained so as to overcome the effects of
+                overzealous optimizers.
 
                 In the second example a data object named complex_data is used which
-                contains six members of various types, three of which are STL sequences.
-                Twelve sequences of key-value pairs representing POD data and sequences
+                contains 6 different types of members, 3 of which are STL sequences.
+                12 sequences of key-value pairs representing POD data and sequences
                 of values. Parsing of the sequences are carried out, upon a successful
                 parse operation the members of the complex_data instance is printed to
                 stdout.
@@ -288,18 +288,18 @@ void example02()
 {
    static const std::string data[] =
                      {
-                        "00=123456|01=1234567.1234567|02=Simple text|03=-3,-2,-1,0,+1,2,+3|04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4",
-                        "01=1234567.1234567|02=Simple text|03=-3,-2,-1,0,+1,2,+3|04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4|00=123456",
-                        "02=Simple text|03=-3,-2,-1,0,+1,2,+3|04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4|00=123456|01=1234567.1234567",
-                        "03=-3,-2,-1,0,+1,2,+3|04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4|00=123456|01=1234567.1234567|02=Simple text",
-                        "04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4|00=123456|01=1234567.1234567|02=Simple text|03=-3,-2,-1,0,+1,2,+3",
-                        "05=Text1,Text2,Text3,Text4|00=123456|01=1234567.1234567|02=Simple text|03=-3,-2,-1,0,+1,2,+3|04=1.1,2.2,3.3,4.4,5.5,6.6",
-                        "00=123456|03=-3,-2,-1,0,+1,2,+3|02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567|05=Text1,Text2,Text3,Text4",
-                        "03=-3,-2,-1,0,+1,2,+3|02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567|05=Text1,Text2,Text3,Text4|00=123456",
-                        "02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567|05=Text1,Text2,Text3,Text4|00=123456|03=-3,-2,-1,0,+1,2,+3",
-                        "04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567|05=Text1,Text2,Text3,Text4|00=123456|03=-3,-2,-1,0,+1,2,+3|02=Simple text",
-                        "01=1234567.1234567|05=Text1,Text2,Text3,Text4|00=123456|03=-3,-2,-1,0,+1,2,+3|02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6",
-                        "05=Text1,Text2,Text3,Text4|00=123456|03=-3,-2,-1,0,+1,2,+3|02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567",
+                        "00=123456|01=1234567.1234567|02=Simple text|03=-3,-2,-1,0,1,2,3|04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4",
+                        "01=1234567.1234567|02=Simple text|03=-3,-2,-1,0,1,2,3|04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4|00=123456",
+                        "02=Simple text|03=-3,-2,-1,0,1,2,3|04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4|00=123456|01=1234567.1234567",
+                        "03=-3,-2,-1,0,1,2,3|04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4|00=123456|01=1234567.1234567|02=Simple text",
+                        "04=1.1,2.2,3.3,4.4,5.5,6.6|05=Text1,Text2,Text3,Text4|00=123456|01=1234567.1234567|02=Simple text|03=-3,-2,-1,0,1,2,3",
+                        "05=Text1,Text2,Text3,Text4|00=123456|01=1234567.1234567|02=Simple text|03=-3,-2,-1,0,1,2,3|04=1.1,2.2,3.3,4.4,5.5,6.6",
+                        "00=123456|03=-3,-2,-1,0,1,2,3|02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567|05=Text1,Text2,Text3,Text4",
+                        "03=-3,-2,-1,0,1,2,3|02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567|05=Text1,Text2,Text3,Text4|00=123456",
+                        "02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567|05=Text1,Text2,Text3,Text4|00=123456|03=-3,-2,-1,0,1,2,3",
+                        "04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567|05=Text1,Text2,Text3,Text4|00=123456|03=-3,-2,-1,0,1,2,3|02=Simple text",
+                        "01=1234567.1234567|05=Text1,Text2,Text3,Text4|00=123456|03=-3,-2,-1,0,1,2,3|02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6",
+                        "05=Text1,Text2,Text3,Text4|00=123456|03=-3,-2,-1,0,1,2,3|02=Simple text|04=1.1,2.2,3.3,4.4,5.5,6.6|01=1234567.1234567",
                      };
 
    static const std::size_t data_size = sizeof(data) / sizeof(std::string);
