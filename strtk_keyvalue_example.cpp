@@ -332,12 +332,12 @@ void example02()
       if (kvp(data[i]))
       {
          std::cout << "Seq[" << strtk::text::right_align(2,'0',i) << "] "
-                   << "Key0: " << cd.v0 << " "
-                   << "Key1: " << cd.v1 << " "
-                   << "Key2: " << cd.v2 << " "
-                   << "Key3: " << strtk::join(" ",cd.v3) << " "
-                   << "Key4: " << strtk::join(" ",cd.v4) << " "
-                   << "Key5: " << strtk::join(" ",cd.v5) << "\n";
+                   << "(Key0: " << cd.v0 << ") "
+                   << "(Key1: " << cd.v1 << ") "
+                   << "(Key2: " << cd.v2 << ") "
+                   << "(Key3: " << strtk::join(" ",cd.v3) << ") "
+                   << "(Key4: " << strtk::join(" ",cd.v4) << ") "
+                   << "(Key5: " << strtk::join(" ",cd.v5) << ")\n";
          cd.reset();
       }
       else

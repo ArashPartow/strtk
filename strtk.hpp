@@ -791,13 +791,12 @@ namespace strtk
 
       inline bool operator()(const T& d) const
       {
-         return d == delimiter_;
+         return delimiter_ == d;
       }
 
    private:
 
       single_delimiter_predicate<T>& operator=(const single_delimiter_predicate<T>&);
-
       const T delimiter_;
    };
 
@@ -8966,7 +8965,7 @@ namespace strtk
 
          n_choose_k_impl(value_type* table,const value_type& dimension)
          : table_(table),
-         dimension_(dimension / 2)
+           dimension_(dimension / 2)
          {}
 
          inline value_type& lookup(const value_type& n, const value_type& k)
@@ -9239,8 +9238,8 @@ namespace strtk
 
       inline bool operator==(const combination_iterator& itr) const
       {
-         return (begin_  == itr.begin_) &&
-                (end_    == itr.end_) &&
+         return (begin_  == itr.begin_ ) &&
+                (end_    == itr.end_   ) &&
                 (middle_ == itr.middle_);
       }
 
@@ -13036,6 +13035,7 @@ namespace strtk
          {
             const Iterator curr = itr;
             while ((end != itr) && ('0' == (*itr))) ++itr;
+            const Iterator post_zero_cull_itr = itr;
             while (end != itr)
             {
                const unsigned int digit = static_cast<unsigned int>((*itr) - '0');
@@ -13044,9 +13044,9 @@ namespace strtk
                else
                   break;
                ++itr;
-               ++pre_decimal;
             }
             if (curr != itr) instate = true;
+            pre_decimal = std::distance(post_zero_cull_itr,itr);
          }
 
          int exponent = 0;
@@ -13926,8 +13926,8 @@ namespace strtk
 
          while (round < 2)
          {
-            std::ifstream& input_stream = ((round == 0) ? file1 : file2);
-            remaining_bytes = ((round == 0) ? file_size(file_name1) : file_size(file_name2));
+            std::ifstream& input_stream = ((0 == round) ? file1 : file2);
+            remaining_bytes = ((0 == round) ? file_size(file_name1) : file_size(file_name2));
 
             while (remaining_bytes >= block_size)
             {
@@ -16911,15 +16911,29 @@ namespace strtk
                   return std::numeric_limits<unsigned int>::max();
             }
          };
+
+         struct no_op_validator
+         {
+            template<typename Range>
+            inline bool operator()(const Range&)
+            {
+               return true;
+            }
+         };
       }
 
-      template<typename KeyType, typename MapType = std::map<KeyType,strtk::util::value> >
+      template<typename KeyType,
+               typename MapType = std::map<KeyType,strtk::util::value>,
+               typename KeyValidator = details::no_op_validator,
+               typename ValueValidator = details::no_op_validator>
       class key_map
       {
       public:
 
          typedef KeyType key_type;
          typedef MapType map_type;
+         typedef KeyValidator key_validator_type;
+         typedef ValueValidator value_validator_type;
 
          template<typename Options>
          key_map(const Options&)
@@ -16929,8 +16943,12 @@ namespace strtk
          {}
 
          template<typename Range>
-         inline bool operator()(const Range key_range, const Range value_range)
+         inline bool operator()(const Range& key_range, const Range& value_range)
          {
+            if (!key_validator_(key_range))
+               return false;
+            if (!val_validator_(value_range))
+               return false;
             typename map_type::iterator itr = value_map_.find(details::keygen<Range,key_type>::transform(key_range));
             if (value_map_.end() == itr)
                return false;
@@ -16955,6 +16973,8 @@ namespace strtk
       private:
 
          map_type value_map_;
+         key_validator_type key_validator_;
+         value_validator_type val_validator_;
       };
 
       typedef key_map<std::string> stringkey_map;
