@@ -14,7 +14,6 @@
  *****************************************************************
 */
 
-
 #ifndef INCLUDE_STRTK_HPP
 #define INCLUDE_STRTK_HPP
 
@@ -241,6 +240,7 @@ namespace strtk
       struct stdstring_range_type_tag {};
       struct value_type_tag {};
       struct sink_type_tag {};
+      struct stl_seq_type_tag {};
       struct attribute_type_tag {};
 
       template<typename T>
@@ -2016,6 +2016,8 @@ namespace strtk
       };
 
       typedef tokenizer<>::iterator_type iterator_type;
+      typedef tokenizer<>::iterator_type range_t;
+
       typedef std::vector<iterator_type> token_vector_type;
       typedef std::deque<iterator_type> token_deque_type;
       typedef std::list<iterator_type> token_list_type;
@@ -2691,6 +2693,44 @@ namespace strtk
                    split_option);
    }
 
+   template<typename Allocator,
+            template<typename,typename> class Sequence>
+   inline std::size_t split(const char* delimiters,
+                            const std::string& str,
+                            Sequence<std::pair<const char*, const char*>,Allocator>& sequence,
+                            const split_options::type& split_option = split_options::default_mode)
+   {
+      if (1 == details::strnlen(delimiters,256))
+         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                      str.data(), str.data() + str.size(),
+                      std::back_inserter(sequence),
+                      split_option);
+      else
+         return split(multiple_char_delimiter_predicate(delimiters),
+                      str.data(), str.data() + str.size(),
+                      std::back_inserter(sequence),
+                      split_option);
+   }
+
+   template<typename Allocator,
+            template<typename,typename> class Sequence>
+   inline std::size_t split(const std::string& delimiters,
+                            const std::string& str,
+                            Sequence<std::pair<const char*, const char*>,Allocator>& sequence,
+                            const split_options::type& split_option = split_options::default_mode)
+   {
+      if (1 == delimiters.size())
+         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                      str.data(), str.data() + str.size(),
+                      std::back_inserter(sequence),
+                      split_option);
+      else
+         return split(multiple_char_delimiter_predicate(delimiters),
+                      str.data(), str.data() + str.size(),
+                      std::back_inserter(sequence),
+                      split_option);
+   }
+
    template<typename DelimiterPredicate,
             typename OutputIterator>
    inline std::size_t split(const DelimiterPredicate& delimiter,
@@ -3241,6 +3281,26 @@ namespace strtk
                         delimiter,
                         v1,
                         v2);
+   }
+
+   template<typename Function>
+   inline std::size_t for_each_token(const std::string& buffer,
+                                     const std::string& delimiters,
+                                     Function function)
+   {
+      return split(delimiters,
+                   buffer,
+                   strtk::functional_inserter<Function>(function));
+   }
+
+   template<typename Function>
+   inline std::size_t for_each_token(const std::string& buffer,
+                                     const char* delimiters,
+                                     Function function)
+   {
+      return split(delimiters,
+                   buffer,
+                   strtk::functional_inserter<Function>(function));
    }
 
    template<typename InputIterator>
@@ -6670,6 +6730,114 @@ namespace strtk
       else
          return split(multiple_char_delimiter_predicate(delimiters),
                       begin,end,
+                      range_to_type_push_inserter(priority_queue),
+                      split_option);
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline std::size_t parse(const std::pair<InputIterator,InputIterator>& range,
+                            const std::string& delimiters,
+                            Sequence<T,Allocator>& sequence,
+                            const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (1 == delimiters.size())
+         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                      range.first,range.second,
+                      range_to_type_back_inserter(sequence),
+                      split_option);
+      else
+         return split(multiple_char_delimiter_predicate(delimiters),
+                      range.first,range.second,
+                      range_to_type_back_inserter(sequence),
+                      split_option);
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t parse(const std::pair<InputIterator,InputIterator>& range,
+                            const std::string& delimiters,
+                            std::set<T,Comparator,Allocator>& set,
+                            const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (1 == delimiters.size())
+         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                      range.first,range.second,
+                      range_to_type_inserter(set),
+                      split_option);
+      else
+         return split(multiple_char_delimiter_predicate(delimiters),
+                      range.first,range.second,
+                      range_to_type_inserter(set),
+                      split_option);
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Container>
+   inline std::size_t parse(const std::pair<InputIterator,InputIterator>& range,
+                            const std::string& delimiters,
+                            std::queue<T,Container>& queue,
+                            const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (1 == delimiters.size())
+         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                      range.first,range.second,
+                      range_to_type_push_inserter(queue),
+                      split_option);
+      else
+         return split(multiple_char_delimiter_predicate(delimiters),
+                      range.first,range.second,
+                      range_to_type_push_inserter(queue),
+                      split_option);
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Container>
+   inline std::size_t parse(const std::pair<InputIterator,InputIterator>& range,
+                            const std::string& delimiters,
+                            std::stack<T,Container>& stack,
+                            const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (1 == delimiters.size())
+         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                      range.first,range.second,
+                      range_to_type_push_inserter(stack),
+                      split_option);
+      else
+         return split(multiple_char_delimiter_predicate(delimiters),
+                      range.first,range.second,
+                      range_to_type_push_inserter(stack),
+                      split_option);
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Container,
+             typename Comparator>
+   inline std::size_t parse(const std::pair<InputIterator,InputIterator>& range,
+                            const std::string& delimiters,
+                            std::priority_queue<T,Container,Comparator>& priority_queue,
+                            const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (1 == delimiters.size())
+         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                      range.first,range.second,
+                      range_to_type_push_inserter(priority_queue),
+                      split_option);
+      else
+         return split(multiple_char_delimiter_predicate(delimiters),
+               range.first,range.second,
                       range_to_type_push_inserter(priority_queue),
                       split_option);
    }
@@ -12479,6 +12647,7 @@ namespace strtk
       template<> struct supported_iterator_type<std::string> { enum { value = true }; };
 
       template<> struct supported_conversion_to_type<strtk::util::value> { typedef value_type_tag type; };
+      template<> struct supported_conversion_from_type<strtk::util::value> { typedef value_type_tag type; };
       template<> struct supported_iterator_type<strtk::util::value> { enum { value = true }; };
 
       #define strtk_register_stdstring_range_type_tag(T)\
@@ -12492,6 +12661,22 @@ namespace strtk
       template<> struct supported_conversion_to_type<sink_type<std::queue<T> > > { typedef sink_type_tag type; };\
       template<> struct supported_conversion_to_type<sink_type<std::stack<T> > > { typedef sink_type_tag type; };\
       template<> struct supported_conversion_to_type<sink_type<std::priority_queue<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_from_type<sink_type<std::vector<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_from_type<sink_type<std::deque<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_from_type<sink_type<std::list<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_from_type<sink_type<std::set<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_from_type<sink_type<std::queue<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_from_type<sink_type<std::stack<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_from_type<sink_type<std::priority_queue<T> > > { typedef sink_type_tag type; };\
+
+      #define strtk_register_stl_container_to_string_conv_type_tag(T)\
+      template<> struct supported_conversion_from_type<std::vector<T> > { typedef stl_seq_type_tag type; };\
+      template<> struct supported_conversion_from_type<std::deque<T> > { typedef stl_seq_type_tag type; };\
+      template<> struct supported_conversion_from_type<std::list<T> > { typedef stl_seq_type_tag type; };\
+      template<> struct supported_conversion_from_type<std::set<T> > { typedef stl_seq_type_tag type; };\
+      template<> struct supported_conversion_from_type<std::queue<T> > { typedef stl_seq_type_tag type; };\
+      template<> struct supported_conversion_from_type<std::stack<T> > { typedef stl_seq_type_tag type; };\
+      template<> struct supported_conversion_from_type<std::priority_queue<T> > { typedef stl_seq_type_tag type; };\
 
       template<> struct supported_conversion_to_type<ignore_token>{ typedef ignore_token_type_tag type; };
 
@@ -12570,6 +12755,21 @@ namespace strtk
       strtk_register_sink_type_tag(unsigned long long int)
       strtk_register_sink_type_tag(std::string)
 
+      strtk_register_stl_container_to_string_conv_type_tag(float)
+      strtk_register_stl_container_to_string_conv_type_tag(double)
+      strtk_register_stl_container_to_string_conv_type_tag(long double)
+      strtk_register_stl_container_to_string_conv_type_tag(signed char)
+      strtk_register_stl_container_to_string_conv_type_tag(char)
+      strtk_register_stl_container_to_string_conv_type_tag(short)
+      strtk_register_stl_container_to_string_conv_type_tag(int)
+      strtk_register_stl_container_to_string_conv_type_tag(long)
+      strtk_register_stl_container_to_string_conv_type_tag(unsigned char)
+      strtk_register_stl_container_to_string_conv_type_tag(unsigned short)
+      strtk_register_stl_container_to_string_conv_type_tag(unsigned int)
+      strtk_register_stl_container_to_string_conv_type_tag(unsigned long)
+      strtk_register_stl_container_to_string_conv_type_tag(unsigned long long int)
+      strtk_register_stl_container_to_string_conv_type_tag(std::string)
+
       #define strtk_register_userdef_type_sink(T)\
       namespace strtk { namespace details { strtk_register_sink_type_tag(T) }}
 
@@ -12582,6 +12782,7 @@ namespace strtk
       #undef strtk_register_supported_iterator_type
       #undef strtk_register_stdstring_range_type_tag
       #undef strtk_register_sequence_iterator_type
+      #undef strtk_register_stl_container_to_string_conv_type_tag
 
       template<typename T>
       struct precision
@@ -13297,7 +13498,7 @@ namespace strtk
             {
                remainder  = value % radix_cube;
                value     /= radix_cube;
-               index = remainder * 3;
+               index = static_cast<std::size_t>(remainder * 3);
                *(itr--) = details::rev_3digit_lut[index + 0];
                *(itr--) = details::rev_3digit_lut[index + 1];
                *(itr--) = details::rev_3digit_lut[index + 2];
@@ -13307,7 +13508,7 @@ namespace strtk
             {
                remainder  = value % radix_sqr;
                value     /= radix_sqr;
-               index = remainder << 1;
+               index = static_cast<std::size_t>(remainder << 1);
                *(itr--) = details::rev_2digit_lut[index + 0];
                *(itr--) = details::rev_2digit_lut[index + 1];
             }
@@ -13407,8 +13608,26 @@ namespace strtk
          return true;
       }
 
+      template<typename SinkType>
+      inline bool type_to_string_converter_impl(const SinkType&, std::string&, sink_type_tag)
+      {
+         //Generic conversion not supported for sinks. Use joins or custom converters.
+         return false;
+      }
+
+      template<typename STLContainerType>
+      inline bool type_to_string_converter_impl(const STLContainerType&, std::string&, stl_seq_type_tag)
+      {
+         //Generic conversion not supported for stl containers. Use joins or custom converters.
+         return false;
+      }
+
       template <typename T>
-      inline std::string type_name() { static const std::string s("Unknown"); return s; }
+      inline std::string type_name()
+      {
+         static const std::string s("Unknown");
+         return s;
+      }
 
       #define strtk_register_type_name(Type)\
       template <> inline std::string type_name<Type>() { static const std::string s(#Type); return s; }
@@ -16158,6 +16377,8 @@ namespace strtk
 
             virtual bool operator()(itr_type begin, itr_type end) const = 0;
 
+            virtual bool to_string(std::string& s) const = 0;
+
             inline bool operator()(const char* begin, const char* end) const
             {
                return operator()(reinterpret_cast<itr_type>(begin),
@@ -16185,6 +16406,11 @@ namespace strtk
             inline virtual bool operator()(itr_type begin, itr_type end) const
             {
                return strtk::string_to_type_converter(begin,end,(*value_ptr_));
+            }
+
+            inline virtual bool to_string(std::string& s) const
+            {
+               return strtk::type_to_string((*value_ptr_),s);
             }
 
             inline operator T() const
@@ -16261,6 +16487,23 @@ namespace strtk
          {
             static const std::size_t type_size = sizeof(type_holder<T>(t));
             type_holder_ = construct<T,type_size <= type_holder_buffer_size>::type(t,type_holder_buffer_);
+         }
+
+         inline bool to_string(std::string& s) const
+         {
+            if (0 != type_holder_)
+               return (*type_holder_).to_string(s);
+            else
+               return false;
+         }
+
+         template<typename T>
+         inline operator T() const
+         {
+            if (0 != type_holder_)
+               return (*type_holder_);
+            else
+               return T();
          }
 
       private:
@@ -16591,6 +16834,14 @@ namespace strtk
 
    } // namespace util
 
+   namespace details
+   {
+      inline bool type_to_string_converter_impl(const strtk::util::value& v, std::string& result, value_type_tag)
+      {
+         return v.to_string(result);
+      }
+   }
+
    template<typename Iterator>
    inline std::size_t distance(const std::pair<Iterator,Iterator>& p)
    {
@@ -16643,6 +16894,11 @@ namespace strtk
          return null_string;
       else
          return std::string(&s[0],&s[0] + length);
+   }
+
+   inline std::string make_string(const std::pair<const char*,const char*>& range)
+   {
+      return std::string(range.first,range.second);
    }
 
    template<typename T, std::size_t N>
