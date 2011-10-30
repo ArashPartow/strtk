@@ -809,7 +809,7 @@ namespace strtk
 
       multiple_delimiter_predicate(const T* d_begin, const T* d_end)
       : length_(std::distance(d_begin,d_end)),
-        delimiter_(new T[length_]),
+        delimiter_((length_ <= sbo_buffer_size) ? sbo_buffer : new T[length_]),
         delimiter_end_(delimiter_ + length_)
       {
          std::copy(d_begin,d_end, delimiter_);
@@ -826,7 +826,7 @@ namespace strtk
       template<typename Iterator>
       multiple_delimiter_predicate(const Iterator begin, const Iterator end)
       : length_(std::distance(begin,end)),
-        delimiter_(new T[length_]),
+        delimiter_((length_ <= sbo_buffer_size) ? sbo_buffer : new T[length_]),
         delimiter_end_(delimiter_ + length_)
       {
          //static_assert(T == std::iterator_traits<Iterator>::value_type);
@@ -836,7 +836,7 @@ namespace strtk
       template<typename Type>
       multiple_delimiter_predicate(const range::adapter<Type>& r)
       : length_(std::distance(r.begin(),r.end())),
-        delimiter_(new T[length_]),
+        delimiter_((length_ <= sbo_buffer_size) ? sbo_buffer : new T[length_]),
         delimiter_end_(delimiter_ + length_)
       {
          //static_assert(T == std::iterator_traits<Iterator>::value_type);
@@ -845,7 +845,10 @@ namespace strtk
 
      ~multiple_delimiter_predicate()
       {
-        delete[] delimiter_;
+         if (length_ > sbo_buffer_size)
+         {
+            delete[] delimiter_;
+         }
       }
 
       inline bool operator()(const T& d) const
@@ -861,6 +864,8 @@ namespace strtk
       std::size_t length_;
       T* delimiter_;
       T* delimiter_end_;
+      enum { sbo_buffer_size = 32 };
+      T sbo_buffer[sbo_buffer_size];
    };
 
    struct multiple_char_delimiter_predicate
@@ -1725,6 +1730,64 @@ namespace strtk
                                 Sequence<Range,Allocator>& seq)
    {
       return ifind_all(pattern,data,std::back_inserter(seq));
+   }
+
+   template<typename InputIterator>
+   inline bool begins_with(const InputIterator pattern_begin,
+                           const InputIterator pattern_end,
+                           const InputIterator begin,
+                           const InputIterator end)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (std::distance(pattern_begin,pattern_end) <= std::distance(begin,end))
+      {
+         return std::equal(pattern_begin,pattern_end,begin);
+      }
+      else
+         return false;
+   }
+
+   inline bool begins_with(const std::string& pattern, const std::string& data)
+   {
+      if (pattern.size() <= data.size())
+      {
+         return begins_with(pattern.data(),
+                            pattern.data() + pattern.size(),
+                            data.data(),
+                            data.data() + data.size());
+      }
+      else
+         return false;
+   }
+
+   template<typename InputIterator>
+   inline bool ends_with(const InputIterator pattern_begin,
+                         const InputIterator pattern_end,
+                         const InputIterator begin,
+                         const InputIterator end)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      const std::size_t pattern_length = std::distance(pattern_begin,pattern_end);
+      const std::size_t data_length = std::distance(begin,end);
+      if (pattern_length <= data_length)
+      {
+         return std::equal(pattern_begin,pattern_end, begin + (data_length - pattern_length));
+      }
+      else
+         return false;
+   }
+
+   inline bool ends_with(const std::string& pattern, const std::string& data)
+   {
+      if (pattern.size() <= data.size())
+      {
+         return ends_with(pattern.data(),
+                          pattern.data() + pattern.size(),
+                          data.data(),
+                          data.data() + data.size());
+      }
+      else
+         return false;
    }
 
    namespace tokenize_options
@@ -2643,6 +2706,60 @@ namespace strtk
       }
 
       return token_count;
+   }
+
+   template<typename DelimiterPredicate,
+            typename Iterator,
+            typename OutputIterator>
+   inline std::size_t split(const DelimiterPredicate& delimiter,
+                            const std::pair<Iterator,Iterator>& range,
+                            OutputIterator out,
+                            const split_options::type split_option = split_options::default_mode)
+   {
+      return split(delimiter,
+                   range.first,range.second,
+                   out,
+                   split_option);
+   }
+
+   template<typename DelimiterPredicate,
+            typename Iterator,
+            typename OutputIterator>
+   inline std::size_t split(const char* delimiters,
+                            const std::pair<Iterator,Iterator>& range,
+                            OutputIterator out,
+                            const split_options::type split_option = split_options::default_mode)
+   {
+      if (1 == details::strnlen(delimiters,256))
+         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                      range.first,range.second,
+                      out,
+                      split_option);
+      else
+         return split(multiple_char_delimiter_predicate(delimiters),
+                      range.first,range.second,
+                      out,
+                      split_option);
+   }
+
+   template<typename DelimiterPredicate,
+            typename Iterator,
+            typename OutputIterator>
+   inline std::size_t split(const std::string& delimiters,
+                            const std::pair<Iterator,Iterator>& range,
+                            OutputIterator out,
+                            const split_options::type split_option = split_options::default_mode)
+   {
+      if (1 == delimiters.size())
+         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                      range.first,range.second,
+                      out,
+                      split_option);
+      else
+         return split(multiple_char_delimiter_predicate(delimiters),
+                      range.first,range.second,
+                      out,
+                      split_option);
    }
 
    template<typename OutputIterator>
@@ -6968,6 +7085,129 @@ namespace strtk
                         split_option);
    }
 
+   template <typename InputIterator,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline std::size_t parse_n(const std::pair<InputIterator,InputIterator>& range,
+                              const std::string& delimiters,
+                              const std::size_t& n,
+                              Sequence<T,Allocator>& sequence,
+                              const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (1 == delimiters.size())
+         return split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                        range.first,range.second,
+                        n,
+                        range_to_type_back_inserter(sequence),
+                        split_option);
+      else
+         return split_n(multiple_char_delimiter_predicate(delimiters),
+                        range.first,range.second,
+                        n,
+                        range_to_type_back_inserter(sequence),
+                        split_option);
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t parse_n(const std::pair<InputIterator,InputIterator>& range,
+                              const std::string& delimiters,
+                              const std::size_t& n,
+                              std::set<T,Comparator,Allocator>& set,
+                              const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (1 == delimiters.size())
+         return split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                        range.first,range.second,
+                        n,
+                        range_to_type_inserter(set),
+                        split_option);
+      else
+         return split_n(multiple_char_delimiter_predicate(delimiters),
+                        range.first,range.second,
+                        n,
+                        range_to_type_inserter(set),
+                        split_option);
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Container>
+   inline std::size_t parse_n(const std::pair<InputIterator,InputIterator>& range,
+                              const std::string& delimiters,
+                              const std::size_t& n,
+                              std::queue<T,Container>& queue,
+                              const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (1 == delimiters.size())
+         return split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                        range.first,range.second,
+                        n,
+                        range_to_type_push_inserter(queue),
+                        split_option);
+      else
+         return split_n(multiple_char_delimiter_predicate(delimiters),
+                        range.first,range.second,
+                        n,
+                        range_to_type_push_inserter(queue),
+                        split_option);
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Container>
+   inline std::size_t parse_n(const std::pair<InputIterator,InputIterator>& range,
+                              const std::string& delimiters,
+                              const std::size_t& n,
+                              std::stack<T,Container>& stack,
+                              const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (1 == delimiters.size())
+         return split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                        range.first,range.second,
+                        n,
+                        range_to_type_push_inserter(stack),
+                        split_option);
+      else
+         return split_n(multiple_char_delimiter_predicate(delimiters),
+                        range.first,range.second,
+                        n,
+                        range_to_type_push_inserter(stack),
+                        split_option);
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Container,
+             typename Comparator>
+   inline std::size_t parse_n(const std::pair<InputIterator,InputIterator>& range,
+                              const std::string& delimiters,
+                              const std::size_t& n,
+                              std::priority_queue<T,Container,Comparator>& priority_queue,
+                              const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (1 == delimiters.size())
+         return split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                        range.first,range.second,
+                        n,
+                        range_to_type_push_inserter(priority_queue),
+                        split_option);
+      else
+         return split_n(multiple_char_delimiter_predicate(delimiters),
+                        range.first,range.second,
+                        n,
+                        range_to_type_push_inserter(priority_queue),
+                        split_option);
+   }
+
    template<typename T1, typename T2, typename T3, typename  T4,
             typename T5, typename T6, typename T7, typename  T8,
             typename T9, typename T10, typename T11, typename T12>
@@ -8706,10 +8946,10 @@ namespace strtk
          {
             throw;
          }
-         strtk::iota(table_, table_ + 256, 0);
+         strtk::iota(table_, table_ + 256, static_cast<unsigned char>(0));
          for (std::size_t i = 0; i < itable.size(); ++i)
          {
-            table_[static_cast<unsigned int>(itable[i])] = otable[i];
+            table_[static_cast<unsigned int>(itable[i])] = static_cast<unsigned char>(otable[i]);
          }
       }
 
@@ -8724,7 +8964,7 @@ namespace strtk
       }
 
    private:
-      int table_[256];
+      unsigned char table_[256];
    };
 
    inline std::string translate(const translation_table& trans_table, const std::string& s)
@@ -13034,7 +13274,7 @@ namespace strtk
                interim_length -= 2;
             }
 
-            while (interim_end != itr)
+            if (interim_end != itr)
             {
                digit[0] = static_cast<unsigned int>(*itr - '0');
                if (digit[0] >= 10) return false;
@@ -15041,6 +15281,139 @@ namespace strtk
       return data + (set.size() * sizeof(T));
    }
 
+   class string_condition
+   {
+   private:
+
+      typedef const unsigned char* itr_type;
+
+      inline bool condition_equal(const itr_type begin, const itr_type end) const
+      {
+         if (s.size() == static_cast<std::size_t>(std::distance(begin,end)))
+         {
+            return std::equal(s_begin,s_end,begin);
+         }
+         else
+            return false;
+      }
+
+      inline bool condition_notequal(const itr_type begin,const itr_type end) const
+      {
+         if (s.size() == static_cast<std::size_t>(std::distance(begin,end)))
+         {
+            return !std::equal(s_begin,s_end,begin);
+         }
+         else
+            return true;
+      }
+
+      inline bool condition_like(const itr_type begin, const itr_type end) const
+      {
+         return match(s_begin,s_end,begin,end,(unsigned char)'*',(unsigned char)'?');
+      }
+
+      inline bool condition_begins_with(const itr_type begin, const itr_type end) const
+      {
+         if (s.size() == static_cast<std::size_t>(std::distance(begin,end)))
+         {
+            return strtk::begins_with(s_begin,s_end,begin,end);
+         }
+         else
+            return false;
+      }
+
+      inline bool condition_ends_with(const itr_type begin, const itr_type end) const
+      {
+         if (s.size() == static_cast<std::size_t>(std::distance(begin,end)))
+         {
+            return strtk::ends_with(s_begin,s_end,begin,end);
+         }
+         else
+            return false;
+      }
+
+      inline bool condition_within(const itr_type begin, const itr_type end) const
+      {
+         if (s.size() <= static_cast<std::size_t>(std::distance(begin,end)))
+         {
+            return (end != std::search(begin,end,s_begin,s_end));
+         }
+         else
+            return false;
+      }
+
+      inline bool condition_notwithin(const itr_type begin, const itr_type end) const
+      {
+         if (s.size() <= static_cast<std::size_t>(std::distance(begin,end)))
+         {
+            return (end == std::search(begin,end,s_begin,s_end));
+         }
+         else
+            return true;
+      }
+
+      typedef bool (string_condition::*condition_method)(const itr_type begin, const itr_type end) const;
+
+   public:
+
+      enum condition_type
+      {
+         equal       =  0,
+         notequal    =  1,
+         like        =  2,
+         begins_with =  4,
+         ends_with   =  8,
+         within      = 16,
+         notwithin   = 32
+      };
+
+      inline explicit string_condition(condition_type cond_type, const std::string& str)
+      : cond_type_(cond_type),
+        s(str),
+        s_begin(reinterpret_cast<const unsigned char*>(s.data())),
+        s_end(reinterpret_cast<const unsigned char*>(s.data() + str.size())),
+        condition_method_(0)
+      {
+         switch(cond_type)
+         {
+            case equal       : condition_method_ = &string_condition::condition_equal;
+                                                   break;
+            case notequal    : condition_method_ = &string_condition::condition_notequal;
+                                                   break;
+            case like        : condition_method_ = &string_condition::condition_like;
+                                                   break;
+            case begins_with : condition_method_ = &string_condition::condition_begins_with;
+                                                   break;
+            case ends_with   : condition_method_ = &string_condition::condition_ends_with;
+                                                   break;
+            case within      : condition_method_ = &string_condition::condition_within;
+                                                   break;
+            case notwithin   : condition_method_ = &string_condition::condition_notwithin;
+                                                   break;
+         }
+      }
+
+      template<typename Iterator>
+      bool operator()(const Iterator begin, const Iterator end)
+      {
+         return ((*this).*condition_method_)(begin,end);
+      }
+
+      bool operator()(const std::string& str)
+      {
+         return operator()(reinterpret_cast<const unsigned char*>(str.data()),
+                           reinterpret_cast<const unsigned char*>(str.data() + str.size()));
+      }
+
+   private:
+
+      condition_type cond_type_;
+      std::string s;
+      const unsigned char* s_begin;
+      const unsigned char* s_end;
+      condition_method condition_method_;
+   };
+
    namespace trie
    {
       template<typename KeyIterator, typename ValueType>
@@ -15499,7 +15872,7 @@ namespace strtk
                   (salt_count_                         == f.salt_count_)                         &&
                   (table_size_                         == f.table_size_)                         &&
                   (raw_table_size_                     == f.raw_table_size_)                     &&
-                  (projected_element_count_   == f.projected_element_count_)   &&
+                  (projected_element_count_            == f.projected_element_count_)            &&
                   (inserted_element_count_             == f.inserted_element_count_)             &&
                   (random_seed_                        == f.random_seed_)                        &&
                   (desired_false_positive_probability_ == f.desired_false_positive_probability_) &&
