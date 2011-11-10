@@ -727,6 +727,11 @@ namespace strtk
            end_(end)
          {}
 
+         adapter(const std::pair<T*,T*>& r)
+         : begin_(r.first),
+           end_(r.second)
+         {}
+
          adapter(T* const begin, const std::size_t length)
          : begin_(begin),
            end_(begin_ + length)
@@ -747,11 +752,31 @@ namespace strtk
             return std::distance(begin_,end_);
          }
 
+         inline operator std::string() const
+         {
+            return stringify(begin_,end_);
+         }
+
       private:
+
+         template<typename Type>
+         static inline std::string stringify(Type*,Type*)
+         {
+            static std::string result = "";
+            return result;
+         }
+
+         static inline std::string stringify(const char* begin, const char* end)
+         {
+            return std::string(begin,end);
+         }
 
          iterator begin_;
          iterator end_;
       };
+
+      typedef adapter<const char> string;
+      typedef adapter<const unsigned char> ustring;
 
       template <typename T>
       inline adapter<T> type(const T* begin, const T* end)
@@ -777,6 +802,17 @@ namespace strtk
       {
          return adapter<typename Sequence<T,Allocator>::iterator>(seq.begin(),seq.end());
       }
+
+      inline std::string as_string(const adapter<const char>& a)
+      {
+         return std::string(a.begin(),a.end());
+      }
+
+      inline std::string as_string(const adapter<const unsigned char>& a)
+      {
+         return std::string(a.begin(),a.end());
+      }
+
 
    } // namespace range
 
@@ -2509,15 +2545,15 @@ namespace strtk
       : counter_(counter)
       {}
 
-      counting_back_inserter_iterator(const counting_back_inserter_iterator& it)
-      : counter_(it.counter_)
+      counting_back_inserter_iterator(const counting_back_inserter_iterator& itr)
+      : counter_(itr.counter_)
       {}
 
-      inline counting_back_inserter_iterator& operator=(const counting_back_inserter_iterator& it)
+      inline counting_back_inserter_iterator& operator=(const counting_back_inserter_iterator& itr)
       {
-         if (this != &it)
+         if (this != &itr)
          {
-            this->counter_ = it.counter_;
+            this->counter_ = itr.counter_;
          }
          return (*this);
       }
@@ -4534,7 +4570,7 @@ namespace strtk
                    typename T3, typename T4,
                    typename T5, typename T6,
                    typename T7, typename T8,
-                   typename T9, typename T10 >
+                   typename T9, typename T10>
          inline bool parse_with_index(const std::size_t& col1, const std::size_t& col2,
                                       const std::size_t& col3, const std::size_t& col4,
                                       const std::size_t& col5, const std::size_t& col6,
@@ -4560,7 +4596,7 @@ namespace strtk
                    typename T3, typename T4,
                    typename T5, typename T6,
                    typename T7, typename T8,
-                   typename T9 >
+                   typename T9>
          inline bool parse_with_index(const std::size_t& col1, const std::size_t& col2,
                                       const std::size_t& col3, const std::size_t& col4,
                                       const std::size_t& col5, const std::size_t& col6,
@@ -10550,6 +10586,7 @@ namespace strtk
       {
          static inline bool is_little_endian()
          {
+            //Is the current architecture/platform little-endian?
             static const unsigned int n = 1;
             static const bool result = (static_cast<char>(1) == *(reinterpret_cast<const char*>(&n)));
             return result;
@@ -17310,6 +17347,61 @@ namespace strtk
       if ((M < N) && pad)
          std::fill_n(&dest[M],N - M,padding);
       return true;
+   }
+
+   inline void reverse(const std_string::iterator_type& range)
+   {
+      char* begin = const_cast<char*>(range.first);
+      char* end = const_cast<char*>(range.second);
+      std::reverse(begin,end);
+   }
+
+   template<typename T>
+   inline void reverse(const range::adapter<T>& r)
+   {
+      T* begin = const_cast<T*>(r.begin());
+      T* end = const_cast<T*>(r.end());
+      std::reverse(begin,end);
+   }
+
+   template<typename T>
+   inline void reverse(const range::adapter<const T>& r)
+   {
+      T* begin = const_cast<T*>(r.begin());
+      T* end = const_cast<T*>(r.end());
+      std::reverse(begin,end);
+   }
+
+   inline void reverse(std::string& s)
+   {
+      std::reverse(s.begin(),s.end());
+   }
+
+   inline void fill(std::string& s, const std::string::value_type v)
+   {
+      std::fill(const_cast<char*>(s.data()),const_cast<char*>(s.data() + s.size()), v);
+   }
+
+   inline void fill(const std::pair<const char*,const char*>& range, char v)
+   {
+      char* begin = const_cast<char*>(range.first);
+      char* end = const_cast<char*>(range.second);
+      std::fill(begin,end,v);
+   }
+
+   template<typename T>
+   inline void fill(const range::adapter<const T>& r, const typename range::adapter<const T>::value_type& v)
+   {
+      char* begin = const_cast<char*>(r.begin());
+      char* end = const_cast<char*>(r.end());
+      std::fill(begin,end,v);
+   }
+
+   inline void fill(const std_string::iterator_type& range, const std::string::value_type& v)
+   {
+      char* begin = const_cast<char*>(range.first);
+      char* end = const_cast<char*>(range.second);
+      std::fill(begin,end,v);
    }
 
    namespace keyvalue
