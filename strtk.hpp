@@ -6160,6 +6160,7 @@ namespace strtk
    struct filter_non_empty_range
    {
    public:
+
       filter_non_empty_range(OutputIterator out)
       : out_(out)
       {}
@@ -7478,8 +7479,7 @@ namespace strtk
    template <typename T,
              typename Allocator,
              template <typename,typename> class Sequence>
-   inline std::size_t parse(int argc,
-                            char* argv[],
+   inline std::size_t parse(const int& argc, char* argv[],
                             Sequence<T,Allocator>& sequence,
                             const bool break_on_fail = true)
    {
@@ -7501,158 +7501,140 @@ namespace strtk
    template <typename T1, typename T2, typename T3, typename T4,
              typename T5, typename T6, typename T7, typename T8,
              typename T9>
-   inline std::size_t parse(int argc,
-                            char* argv[],
+   inline std::size_t parse(const int& argc, char* argv[],
                             T1& t1, T2& t2, T3& t3, T4& t4,
                             T5& t5, T6& t6, T7& t7, T8& t8,
                             T9& t9)
 
    {
-      static const std::size_t param_count = 9;
-      if (param_count != argc) return 0;
+      if (9 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[3]),t3)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[4]),t4)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[5]),t5)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[6]),t6)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[7]),t7)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[8]),t8)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[9]),t9)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t3)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[3]),t4)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[4]),t5)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[5]),t6)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[6]),t7)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[7]),t8)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[8]),t9)) return result; ++result;
       return result;
    }
 
    template <typename T1, typename T2, typename T3, typename T4,
              typename T5, typename T6, typename T7, typename T8>
-   inline std::size_t parse(int argc,
-                            char* argv[],
+   inline std::size_t parse(const int& argc, char* argv[],
                             T1& t1, T2& t2, T3& t3, T4& t4,
                             T5& t5, T6& t6, T7& t7, T8& t8)
 
    {
-      static const std::size_t param_count = 8;
-      if (param_count != argc) return 0;
+      if (8 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[3]),t3)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[4]),t4)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[5]),t5)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[6]),t6)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[7]),t7)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[8]),t8)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t3)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[3]),t4)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[4]),t5)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[5]),t6)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[6]),t7)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[7]),t8)) return result; ++result;
       return result;
    }
 
    template <typename T1, typename T2, typename T3, typename T4,
              typename T5, typename T6, typename T7>
-   inline std::size_t parse(int argc,
-                            char* argv[],
+   inline std::size_t parse(const int& argc, char* argv[],
                             T1& t1, T2& t2, T3& t3, T4& t4,
                             T5& t5, T6& t6, T7& t7)
 
    {
-      static const std::size_t param_count = 7;
-      if (param_count != argc) return 0;
+      if (7 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[3]),t3)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[4]),t4)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[5]),t5)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[6]),t6)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[7]),t7)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t3)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[3]),t4)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[4]),t5)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[5]),t6)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[6]),t7)) return result; ++result;
       return result;
    }
 
    template <typename T1, typename T2, typename T3, typename T4,
              typename T5, typename T6>
-   inline std::size_t parse(int argc,
-                            char* argv[],
+   inline std::size_t parse(const int& argc, char* argv[],
                             T1& t1, T2& t2, T3& t3, T4& t4,
                             T5& t5, T6& t6)
 
    {
-      static const std::size_t param_count = 6;
-      if (param_count != argc) return 0;
+      if (6 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[3]),t3)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[4]),t4)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[5]),t5)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[6]),t6)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t3)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[3]),t4)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[4]),t5)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[5]),t6)) return result; ++result;
       return result;
    }
 
    template <typename T1, typename T2, typename T3, typename T4, typename T5>
-   inline std::size_t parse(int argc,
-                            char* argv[],
+   inline std::size_t parse(const int& argc, char* argv[],
                             T1& t1, T2& t2, T3& t3, T4& t4, T5& t5)
    {
-      static const std::size_t param_count = 5;
-      if (param_count != argc) return 0;
+      if (5 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[3]),t3)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[4]),t4)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[5]),t5)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t3)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[3]),t4)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[4]),t5)) return result; ++result;
       return result;
    }
 
    template <typename T1, typename T2, typename T3, typename T4>
-   inline std::size_t parse(int argc,
-                            char* argv[],
+   inline std::size_t parse(const int& argc, char* argv[],
                             T1& t1, T2& t2, T3& t3, T4& t4)
    {
-      static const std::size_t param_count = 4;
-      if (param_count != argc) return 0;
+      if (4 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[3]),t3)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[4]),t4)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t3)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[3]),t4)) return result; ++result;
       return result;
    }
 
    template <typename T1, typename T2, typename T3>
-   inline std::size_t parse(int argc,
-                            char* argv[],
+   inline std::size_t parse(const int& argc, char* argv[],
                             T1& t1, T2& t2, T3& t3)
    {
-      static const std::size_t param_count = 3;
-      if (param_count != argc) return 0;
+      if (3 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[3]),t3)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[2]),t3)) return result; ++result;
       return result;
    }
 
-   template <typename T1, typename T2, typename T3>
-   inline std::size_t parse(int argc,
-                            char* argv[],
+   template <typename T1, typename T2>
+   inline std::size_t parse(const int& argc, char* argv[],
                             T1& t1, T2& t2)
    {
-      static const std::size_t param_count = 2;
-      if (param_count != argc) return 0;
+      if (2 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t2)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
       return result;
    }
 
-   template <typename T1, typename T2, typename T3>
-   inline std::size_t parse(int argc,
-                            char* argv[],
+   template <typename T1>
+   inline std::size_t parse(const int& argc, char* argv[],
                             T1& t1)
    {
-      static const std::size_t param_count = 1;
-      if (param_count != argc) return 0;
+      if (1 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[1]),t1)) return result; ++result;
+      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
       return result;
    }
 
@@ -8977,6 +8959,7 @@ namespace strtk
    class translation_table
    {
    public:
+
       translation_table(const std::string& itable, const std::string& otable)
       {
          if (itable.size() != otable.size())
@@ -9332,65 +9315,200 @@ namespace strtk
       return true;
    }
 
-   template <typename Iterator, typename Function>
+   namespace details
+   {
+      /*
+         Credits:
+         (C) Copyright Howard Hinnant 2005-2011.
+         Use, modification and distribution are subject to the Boost Software License,
+         Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
+         http://www.boost.org/LICENSE_1_0.txt).
+      */
+      template<typename Iterator>
+      static inline void rotate_discontinuous(Iterator first1, Iterator last1,
+                                              typename std::iterator_traits<Iterator>::difference_type d1,
+                                              Iterator first2, Iterator last2,
+                                              typename std::iterator_traits<Iterator>::difference_type d2)
+      {
+         using std::swap;
+         if (d1 <= d2)
+            std::rotate(first2, std::swap_ranges(first1, last1, first2), last2);
+         else
+         {
+            Iterator i1 = last1;
+            while (first2 != last2)
+            {
+               swap(*--i1,*--last2);
+            }
+            std::rotate(first1, i1, last1);
+         }
+      }
+
+      template<typename Iterator, class Function>
+      inline void combine_discontinuous(Iterator first1, Iterator last1, typename std::iterator_traits<Iterator>::difference_type d1,
+                                        Iterator first2, Iterator last2, typename std::iterator_traits<Iterator>::difference_type d2,
+                                        Function& f,
+                                        typename std::iterator_traits<Iterator>::difference_type d = 0)
+      {
+         typedef typename std::iterator_traits<Iterator>::difference_type D;
+         using std::swap;
+         if ((0 == d1) || (0 == d2))
+            return f();
+         if (1 == d1)
+         {
+            Iterator i2 = first2;
+            while (i2 != last2)
+            {
+               f();
+               swap(*first1, *i2);
+               ++i2;
+            }
+         }
+         else
+         {
+            Iterator f1p = first1;
+            std::advance(f1p,1);
+            Iterator i2 = first2;
+            D d22 = d2;
+            while (i2 != last2)
+            {
+               combine_discontinuous(f1p, last1, d1 - 1, i2, last2, d22, f, d + 1);
+               swap(*first1, *i2);
+               ++i2;
+               --d22;
+            }
+         }
+         f();
+         if (0 != d)
+         {
+            Iterator f2p = first2;
+            std::advance(f2p,1);
+            rotate_discontinuous(first1, last1, d1, f2p, last2, d2 - 1);
+         }
+         else
+            rotate_discontinuous(first1, last1, d1, first2, last2, d2);
+      }
+
+      template<typename Iterator, class Function>
+      inline bool combine_discontinuous_conditional(Iterator first1, Iterator last1, typename std::iterator_traits<Iterator>::difference_type d1,
+                                                    Iterator first2, Iterator last2, typename std::iterator_traits<Iterator>::difference_type d2,
+                                                    Function& f,
+                                                    typename std::iterator_traits<Iterator>::difference_type d = 0)
+      {
+         typedef typename std::iterator_traits<Iterator>::difference_type D;
+         using std::swap;
+         if (d1 == 0 || d2 == 0)
+            return f();
+         if (d1 == 1)
+         {
+            for (Iterator i2 = first2; i2 != last2; ++i2)
+            {
+               if (!f())
+                  return false;
+               swap(*first1, *i2);
+            }
+         }
+         else
+         {
+            Iterator f1p = first1;
+            std::advance(f1p,1);
+            Iterator i2 = first2;
+            for (D d22 = d2; i2 != last2; ++i2, --d22)
+            {
+               if (!combine_discontinuous_conditional(f1p, last1, d1-1, i2, last2, d22, f, d+1))
+                  return false;
+               swap(*first1, *i2);
+            }
+         }
+         if (!f())
+            return false;
+         if (d != 0)
+         {
+            Iterator f2p = first2;
+            std::advance(f2p,1);
+            rotate_discontinuous(first1, last1, d1, f2p, last2, d2-1);
+         }
+         else
+            rotate_discontinuous(first1, last1, d1, first2, last2, d2);
+         return true;
+      }
+
+      template<class Function, typename Iterator>
+      class bound_range
+      {
+      public:
+
+         bound_range(Function f, Iterator first, Iterator last)
+         : f_(f),
+           first_(first),
+           last_(last)
+         {}
+
+         inline void operator()()
+         {
+            f_(first_,last_);
+         }
+
+      private:
+         inline bound_range& operator=(const bound_range&);
+
+         Function f_;
+         Iterator first_;
+         Iterator last_;
+      };
+
+      template<class Function, typename Iterator>
+      class bound_range_conditional
+      {
+      public:
+
+         bound_range_conditional(Function f, Iterator first, Iterator last)
+         : f_(f),
+           first_(first),
+           last_(last)
+         {}
+
+         inline bool operator()()
+         {
+            return f_(first_,last_);
+         }
+
+      private:
+         inline bound_range_conditional& operator=(const bound_range_conditional&);
+
+         Function f_;
+         Iterator first_;
+         Iterator last_;
+      };
+
+   }
+
+   template<typename Iterator, typename Function>
    inline void for_each_combination(Iterator begin, Iterator end, const std::size_t& size, Function function)
    {
       if (static_cast<typename std::iterator_traits<Iterator>::difference_type>(size) > std::distance(begin,end))
          return;
-      do
-      {
-         function(begin,begin + size);
-      }
-      while (next_combination(begin,begin + size,end));
+      Iterator mid = begin + size;
+      details::bound_range<Function&, Iterator> func(function,begin,mid);
+      details::combine_discontinuous(begin, mid,
+                                     std::distance(begin,mid),
+                                     mid, end,
+                                     std::distance(mid,end),
+                                     func);
    }
 
-   template <typename Iterator, typename Function>
-   inline bool for_each_combination_conditional(Iterator begin, Iterator end, const std::size_t& size, Function function)
-   {
-      if (static_cast<typename std::iterator_traits<Iterator>::difference_type>(size) > std::distance(begin,end))
-         return false;
-      do
-      {
-         if (!function(begin,begin + size))
-            return false;
-      }
-      while (next_combination(begin,begin + size,end));
-      return true;
-   }
-
-   template <typename Iterator, typename Function>
-   inline void for_each_combutation(Iterator begin, Iterator end, const std::size_t& size, Function function)
+   template<typename Iterator, typename Function>
+   inline void for_each_combination_conditional(Iterator begin, Iterator end, const std::size_t& size, Function function)
    {
       if (static_cast<typename std::iterator_traits<Iterator>::difference_type>(size) > std::distance(begin,end))
          return;
-      // for each permutation of each combination
-      do
-      {
-         do
-         {
-            function(begin,begin + size);
-         }
-         while (std::next_permutation(begin,begin + size));
-      }
-      while (next_combination(begin,begin + size,end));
-   }
-
-   template <typename Iterator, typename Function>
-   inline bool for_each_combutation_conditional(Iterator begin, Iterator end, const std::size_t& size, Function function)
-   {
-      if (static_cast<typename std::iterator_traits<Iterator>::difference_type>(size) > std::distance(begin,end))
-         return false;
-      do
-      {
-         do
-         {
-            if (!function(begin,begin + size))
-               return false;
-         }
-         while (std::next_permutation(begin,begin + size));
-      }
-      while (next_combination(begin,begin + size,end));
-      return true;
+      Iterator mid = begin + size;
+      details::bound_range_conditional<Function&, Iterator> func(function,begin,mid);
+      details::combine_discontinuous_conditional(begin, mid,
+                                                 std::distance(begin,mid),
+                                                 mid, end,
+                                                 std::distance(mid,end),
+                                                 func);
    }
 
    inline unsigned long long int n_choose_k(const unsigned long long int& n, const unsigned long long int& k)
@@ -11913,6 +12031,7 @@ namespace strtk
    class sink_type
    {
    public:
+
       typedef typename Container::value_type value_type;
 
       inline sink_type(const std::string& delimiters,
@@ -13460,7 +13579,7 @@ namespace strtk
          const std::size_t length = std::distance(itr,end);
          if ((3 != length) && (inf_length != length))
             return false;
-         const char* inf_itr   = ('i' == (*itr)) ? inf_lc : inf_uc;
+         const char* inf_itr = ('i' == (*itr)) ? inf_lc : inf_uc;
          while (end != itr)
          {
             if (*inf_itr == static_cast<char>(*itr))
@@ -15829,7 +15948,7 @@ namespace strtk
 
             while (k < 1000.0)
             {
-               double numerator   = (- k * projected_element_count);
+               double numerator   = -k * projected_element_count;
                double denominator = std::log(1.0 - std::pow(false_positive_probability, 1.0 / k));
                curr_m = numerator / denominator;
                if (curr_m < min_m)
@@ -17246,6 +17365,73 @@ namespace strtk
 
    namespace details
    {
+      typedef const unsigned char* ptr;
+
+      template<typename T>
+      bool cmpimpl(ptr c1, ptr c2) { return (*reinterpret_cast<T>(c1)) == (*reinterpret_cast<T>(c2)); }
+
+      template<std::size_t K>
+      struct size_impl { static inline bool cmp(ptr,ptr) { return true; } };
+
+      template<>
+      struct size_impl<8> { static inline bool cmp(ptr c1, ptr c2) { return cmpimpl<const unsigned long long*>(c1,c2); } };
+
+      template<>
+      struct size_impl<4> { static inline bool cmp(ptr c1, ptr c2) { return cmpimpl<const unsigned int*>(c1,c2); } };
+
+      template<>
+      struct size_impl<2> { static inline bool cmp(ptr c1, ptr c2) { return cmpimpl<const unsigned short*>(c1,c2); } };
+
+      template<>
+      struct size_impl<1> { static inline bool cmp(ptr c1, ptr c2) { return cmpimpl<const unsigned char*>(c1,c2); } };
+
+      template<std::size_t X>
+      struct next_size { enum { size = (X >= 8) ? 8 : ((X >= 4) ? 4 : ((X >= 2) ? 2 : 1)) }; };
+
+      template<std::size_t N>
+      struct memcmp_n_impl
+      {
+         static inline bool process(details::ptr c1, details::ptr c2)
+         {
+            static const std::size_t size = details::next_size<N>::size;
+            return  details::size_impl<size>::cmp(c1,c2) && memcmp_n_impl<N - size>::process(c1 + size, c2 + size);
+         }
+
+         static inline bool process(const char* c1, const char* c2)
+         {
+            return memcmp_n_impl<N>::process(reinterpret_cast<details::ptr>(c1),reinterpret_cast<details::ptr>(c2));
+         }
+
+         template<std::size_t K1, std::size_t K2>
+         static inline bool process(const unsigned char (&c1)[K1], const unsigned char (&c2)[K2])
+         {
+            return memcmp_n_impl<N>::process(static_cast<ptr>(c1),static_cast<ptr>(c2));
+         }
+      };
+
+      template<> struct memcmp_n_impl<0> { static inline bool process(ptr,ptr) { return true; } };
+   }
+
+   template<std::size_t N>
+   inline bool memcmp_n(details::ptr c1, details::ptr c2)
+   {
+      return details::memcmp_n_impl<N>::process(c1,c2);
+   }
+
+   template<std::size_t N>
+   inline bool memcmp_n(const char* c1, const char* c2)
+   {
+      return details::memcmp_n_impl<N>::process(c1,c2);
+   }
+
+   template<std::size_t N,std::size_t K1, std::size_t K2>
+   inline bool memcmp_n(const unsigned char (&c1)[K1], const unsigned char (&c2)[K2])
+   {
+      return details::memcmp_n_impl<N>::process(c1,c2);
+   }
+
+   namespace details
+   {
       inline bool type_to_string_converter_impl(const strtk::util::value& v, std::string& result, value_type_tag)
       {
          return v.to_string(result);
@@ -17543,6 +17729,7 @@ namespace strtk
          typedef strtk::keyvalue::options<char_type> general_options;
 
       public:
+
          typedef unsigned int key_type;
 
          struct options : public general_options
@@ -17818,8 +18005,10 @@ namespace strtk
                if (!in_use_)
                {
                   if (stop_time_.tv_sec >= start_time_.tv_sec)
+                  {
                      return 1000000 * (stop_time_.tv_sec  - start_time_.tv_sec ) +
                                       (stop_time_.tv_usec - start_time_.tv_usec);
+                  }
                   else
                      return std::numeric_limits<unsigned long long int>::max();
                }
