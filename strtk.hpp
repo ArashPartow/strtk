@@ -3804,9 +3804,9 @@ namespace strtk
       const unsigned char* itr = begin;
       while (end != itr)
       {
-         (*out)  = static_cast<unsigned char>(hex_to_bin[*(itr++)] << 4);
-         (*out) |= static_cast<unsigned char>(hex_to_bin[*(itr++)]     );
+         *reinterpret_cast<unsigned char*>(out) = static_cast<unsigned char>(hex_to_bin[itr[0]] << 4 | hex_to_bin[itr[1]]);
          ++out;
+         itr += 2;
       }
       return true;
    }
