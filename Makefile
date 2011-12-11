@@ -121,12 +121,12 @@ strtk_wordfreq: strtk_wordfreq.cpp strtk.hpp
 	$(COMPILER) $(OPTIONS) strtk_wordfreq strtk_wordfreq.cpp $(LINKER_OPT)
 
 pgo: strtk_parse_test.cpp strtk_tokenizer_cmp.cpp strtk.hpp
-	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -pg -fprofile-generate -DUSE_SPIRIT -o strtk_tokenizer_cmp strtk_tokenizer_cmp.cpp $(LINKER_OPT)
-	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -pg -fprofile-generate -o strtk_parse_test strtk_parse_test.cpp $(LINKER_OPT)
-	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -pg -fprofile-generate -o strtk_serializer_example strtk_serializer_example.cpp $(LINKER_OPT)
-	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -pg -fprofile-generate -o strtk_search_trie_example strtk_search_trie_example.cpp $(LINKER_OPT)
-	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -pg -fprofile-generate -o strtk_converters_example strtk_converters_example.cpp $(LINKER_OPT)
-	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -pg -fprofile-generate -o strtk_bloom_filter_example strtk_bloom_filter_example.cpp $(LINKER_OPT)
+	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -fprofile-generate -DUSE_SPIRIT -o strtk_tokenizer_cmp strtk_tokenizer_cmp.cpp $(LINKER_OPT)
+	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -fprofile-generate -o strtk_parse_test strtk_parse_test.cpp $(LINKER_OPT)
+	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -fprofile-generate -o strtk_serializer_example strtk_serializer_example.cpp $(LINKER_OPT)
+	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -fprofile-generate -o strtk_search_trie_example strtk_search_trie_example.cpp $(LINKER_OPT)
+	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -fprofile-generate -o strtk_converters_example strtk_converters_example.cpp $(LINKER_OPT)
+	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -fprofile-generate -o strtk_bloom_filter_example strtk_bloom_filter_example.cpp $(LINKER_OPT)
 	./strtk_tokenizer_cmp
 	./strtk_parse_test
 	./strtk_serializer_example
