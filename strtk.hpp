@@ -813,7 +813,6 @@ namespace strtk
          return std::string(a.begin(),a.end());
       }
 
-
    } // namespace range
 
    template <typename T>
@@ -5998,6 +5997,38 @@ namespace strtk
          return token_grid::options();
       }
 
+      template<typename Function>
+      inline std::size_t for_each_row(const row_range_type& row_range, Function f) const
+      {
+         if ((row_range.first > token_list_.size()) || (row_range.second > token_list_.size()))
+            return false;
+
+         if (row_range.first > row_range.second)
+            return false;
+
+         std::size_t row_count = 0;
+
+         itr_list_list_type::const_iterator itr = token_list_.begin() + row_range.first;
+         itr_list_list_type::const_iterator end = token_list_.begin() + row_range.second;
+
+         while (end != itr)
+         {
+            if (!(*itr).empty())
+            {
+               f(row_type(*itr));
+            }
+            ++itr;
+            ++row_count;
+         }
+         return row_count;
+      }
+
+      template<typename Function>
+      inline std::size_t for_each_row(Function f) const
+      {
+         return for_each_row(all_rows(),f);
+      }
+
    private:
 
       token_grid(const token_grid& tg);
@@ -11080,7 +11111,6 @@ namespace strtk
                return false;
          }
 
-
          template <typename T>
          inline bool operator()(T& output, const std::size_t& size)
          {
@@ -12168,7 +12198,6 @@ namespace strtk
          return right_align(width,pad,type_to_string(t));
       }
 
-
       template <typename T>
       inline std::string left_align(const std::size_t& width,
                                     const std::string::value_type& pad,
@@ -12606,7 +12635,6 @@ namespace strtk
       }
       return match_count;
    }
-
 
    template <typename InputIterator, typename OutputIterator>
    inline std::size_t split_on_consecutive(const std::size_t& n,
@@ -17482,7 +17510,6 @@ namespace strtk
       {
          sequence.push_back(v1);
       }
-
 
    } // namespace util
 
