@@ -242,6 +242,7 @@ namespace strtk
       struct sink_type_tag            {};
       struct stl_seq_type_tag         {};
       struct attribute_type_tag       {};
+      struct semantic_action_type_tag {};
 
       template <typename T>
       struct supported_conversion_to_type
@@ -4452,6 +4453,24 @@ namespace strtk
       typedef std::pair<std::size_t,std::size_t> row_range_type;
       typedef std::pair<std::size_t,std::size_t> col_range_type;
 
+      inline row_range_type range(std::size_t lower_bound,
+                                  std::size_t upper_bound = std::numeric_limits<std::size_t>::max()) const
+      {
+         if (upper_bound == std::numeric_limits<std::size_t>::max())
+         {
+            upper_bound = token_list_.size();
+         }
+         else if (upper_bound > token_list_.size())
+         {
+            return row_range_type(std::numeric_limits<std::size_t>::max(),std::numeric_limits<std::size_t>::max());
+         }
+         else if (lower_bound > upper_bound)
+         {
+            return row_range_type(std::numeric_limits<std::size_t>::max(),std::numeric_limits<std::size_t>::max());
+         }
+         return row_range_type(lower_bound,upper_bound);
+      }
+
       struct options
       {
          options()
@@ -4513,6 +4532,8 @@ namespace strtk
 
       public:
 
+         typedef itr_list_type::value_type range_type;
+
          row_type(const itr_list_type& token_list)
          : index_(std::numeric_limits<std::size_t>::max()),
            row_list_(0),
@@ -4561,6 +4582,11 @@ namespace strtk
          inline T get(const std::size_t& index) const
          {
             return row_type::operator[]<T>(index);
+         }
+
+         inline col_range_type all_columns() const
+         {
+            return col_range_type(0,(*token_list_).size());
          }
 
          inline range_type token(const std::size_t& index) const
@@ -5165,6 +5191,32 @@ namespace strtk
          inline void parse_checked(std::priority_queue<T,Container,Comparator>& priority_queue) const
          {
             parse_checked<T>(push_inserter(priority_queue));
+         }
+
+         template<typename Function>
+         inline std::size_t for_each_column(const col_range_type& range, Function f) const
+         {
+            if (!validate_column_range(range))
+               return false;
+
+            itr_list_type::const_iterator itr = token_list_->begin() + range.first;
+            itr_list_type::const_iterator end = token_list_->begin() + range.second;
+            std::size_t col_count = 0;
+
+            while (end != itr)
+            {
+               const itr_list_type::value_type& range = (*itr);
+               f(range);
+               ++itr;
+               ++col_count;
+            }
+            return col_count;
+         }
+
+         template<typename Function>
+         inline std::size_t for_each_column(Function f) const
+         {
+            return for_each_column(all_columns(),f);
          }
 
       private:
@@ -16993,6 +17045,161 @@ namespace strtk
          return (os << attrib.value());
       }
 
+      namespace details
+      {
+
+         class semantic_action_impl
+         {
+         private:
+
+            class function_holder_base
+            {
+            public:
+
+               typedef const unsigned char* itr_type;
+
+               virtual ~function_holder_base(){}
+
+               virtual bool operator()(itr_type begin, itr_type end) const = 0;
+
+               inline bool operator()(const char* begin, const char* end) const
+               {
+                  return operator()(reinterpret_cast<itr_type>(begin),
+                                    reinterpret_cast<itr_type>(end));
+               }
+
+               template <typename Iterator>
+               inline bool operator()(const std::pair<Iterator,Iterator>& p) const
+               {
+                  return operator()(p.first,p.second);
+               }
+            };
+
+            template <typename Function>
+            class function_holder : public function_holder_base
+            {
+            public:
+
+               explicit function_holder(Function& f)
+               : function_(&f)
+               {}
+
+               inline virtual bool operator()(itr_type begin, itr_type end) const
+               {
+                  return (*function_)(begin,end);
+               }
+
+            private:
+
+               Function* function_;
+            };
+
+         public:
+
+            semantic_action_impl()
+            : function_holder_(0)
+            {}
+
+            template <typename Function>
+            inline explicit semantic_action_impl(Function& f)
+            {
+               assign(f);
+            }
+
+            inline bool operator!() const
+            {
+               return (0 == function_holder_);
+            }
+
+            inline bool operator==(const semantic_action_impl& sa) const
+            {
+               return (0 !=    function_holder_) &&
+                      (0 != sa.function_holder_) &&
+                      (function_holder_ == sa.function_holder_);
+            }
+
+            inline semantic_action_impl& operator=(const semantic_action_impl& sa)
+            {
+               if (&sa != this)
+               {
+                  if (0 != sa.function_holder_)
+                  {
+                     std::copy(sa.function_holder_buffer_,
+                               sa.function_holder_buffer_ + function_holder_buffer_size,
+                               function_holder_buffer_);
+                     function_holder_ = reinterpret_cast<function_holder_base*>(function_holder_buffer_);
+                  }
+               }
+               return *this;
+            }
+
+            template <typename InputIterator>
+            inline bool operator()(InputIterator begin, InputIterator end) const
+            {
+               if (0 != function_holder_)
+                  return (*function_holder_).operator()(begin,end);
+               else
+                  return false;
+            }
+
+            template <typename InputIterator>
+            inline bool operator()(const std::pair<InputIterator,InputIterator>& r) const
+            {
+               return operator()(r.first,r.second);
+            }
+
+            inline bool operator()(const std::string& s) const
+            {
+               return operator()(s.data(),s.data() + s.size());
+            }
+
+            template <typename Function>
+            inline void assign(Function& f)
+            {
+               static const std::size_t type_size = sizeof(function_holder<Function>(f));
+               function_holder_ = construct<Function,type_size <= function_holder_buffer_size>::type(f,function_holder_buffer_);
+            }
+
+            inline semantic_action_impl& ref()
+            {
+               return *this;
+            }
+
+         private:
+
+            typedef function_holder_base* function_holder_ptr;
+
+            template <typename Function, bool b>
+            struct construct
+            {
+               inline static function_holder_ptr type(Function&, unsigned char*)
+               {
+                  return reinterpret_cast<function_holder_ptr>(0);
+               }
+            };
+
+            template <typename Function>
+            struct construct<Function,true>
+            {
+               inline static function_holder_ptr type(Function& f, unsigned char* buffer)
+               {
+                  return new(buffer)function_holder<Function>(f);
+               }
+            };
+
+            function_holder_ptr function_holder_;
+            enum { function_holder_buffer_size = 64 };
+            unsigned char function_holder_buffer_[function_holder_buffer_size];
+         };
+
+      } // namespace details
+
+      template <typename Function>
+      inline details::semantic_action_impl semantic_action(Function f)
+      {
+         return details::semantic_action_impl(f);
+      }
+
    } // namespace utils
 
    namespace details
@@ -17038,6 +17245,14 @@ namespace strtk
       }
 
       #undef strtk_register_attribute_type_tag
+
+      template<> struct supported_conversion_to_type<strtk::util::details::semantic_action_impl>{ typedef semantic_action_type_tag type; };
+
+      template <typename Iterator>
+      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, strtk::util::details::semantic_action_impl& result, semantic_action_type_tag)
+      {
+         return result(itr,end);
+      }
 
    } // namespace details
 
