@@ -2,7 +2,7 @@
  *****************************************************************
  *                     String Toolkit Library                    *
  *                                                               *
- * Author: Arash Partow (2002-2011)                              *
+ * Author: Arash Partow (2002-2012)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -760,7 +760,7 @@ namespace strtk
 
       private:
 
-         template<typename Type>
+         template <typename Type>
          static inline std::string stringify(Type*,Type*)
          {
             static std::string result = "";
@@ -3202,7 +3202,7 @@ namespace strtk
 
    #endif // strtk_enable_regex
 
-   template<const std::size_t offset_list_size>
+   template <const std::size_t offset_list_size>
    class offset_predicate
    {
    public:
@@ -4198,14 +4198,14 @@ namespace strtk
                                        const_cast<char*>(out.data()));
    }
 
-   template<std::size_t n>
+   template <std::size_t n>
    struct interleave_ary;
 
    template<> struct interleave_ary<sizeof(unsigned short)>         { typedef unsigned short         type; };
    template<> struct interleave_ary<sizeof(unsigned int  )>         { typedef unsigned int           type; };
    template<> struct interleave_ary<sizeof(unsigned long long int)> { typedef unsigned long long int type; };
 
-   template<std::size_t n>
+   template <std::size_t n>
    inline void create_nway_interleave_table(typename interleave_ary<n>::type table[256])
    {
       typedef typename interleave_ary<n>::type type;
@@ -5193,7 +5193,7 @@ namespace strtk
             parse_checked<T>(push_inserter(priority_queue));
          }
 
-         template<typename Function>
+         template <typename Function>
          inline std::size_t for_each_column(const col_range_type& range, Function f) const
          {
             if (!validate_column_range(range))
@@ -5213,7 +5213,7 @@ namespace strtk
             return col_count;
          }
 
-         template<typename Function>
+         template <typename Function>
          inline std::size_t for_each_column(Function f) const
          {
             return for_each_column(all_columns(),f);
@@ -6049,7 +6049,7 @@ namespace strtk
          return token_grid::options();
       }
 
-      template<typename Function>
+      template <typename Function>
       inline std::size_t for_each_row(const row_range_type& row_range, Function f) const
       {
          if ((row_range.first > token_list_.size()) || (row_range.second > token_list_.size()))
@@ -6075,7 +6075,7 @@ namespace strtk
          return row_count;
       }
 
-      template<typename Function>
+      template <typename Function>
       inline std::size_t for_each_row(Function f) const
       {
          return for_each_row(all_rows(),f);
@@ -6426,7 +6426,7 @@ namespace strtk
       }
    }
 
-   template<std::size_t length>
+   template <std::size_t length>
    struct size_equal_to
    {
       template <typename Iterator>
@@ -6457,7 +6457,7 @@ namespace strtk
       }
    };
 
-   template<std::size_t length>
+   template <std::size_t length>
    struct size_less_than
    {
       template <typename Iterator>
@@ -6488,7 +6488,7 @@ namespace strtk
       }
    };
 
-   template<std::size_t length>
+   template <std::size_t length>
    struct size_greater_than
    {
       template <typename Iterator>
@@ -9441,7 +9441,7 @@ namespace strtk
          Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
          http://www.boost.org/LICENSE_1_0.txt).
       */
-      template<typename Iterator>
+      template <typename Iterator>
       static inline void rotate_discontinuous(Iterator first1, Iterator last1,
                                               typename std::iterator_traits<Iterator>::difference_type d1,
                                               Iterator first2, Iterator last2,
@@ -9461,7 +9461,7 @@ namespace strtk
          }
       }
 
-      template<typename Iterator, class Function>
+      template <typename Iterator, class Function>
       inline void combine_discontinuous(Iterator first1, Iterator last1, typename std::iterator_traits<Iterator>::difference_type d1,
                                         Iterator first2, Iterator last2, typename std::iterator_traits<Iterator>::difference_type d2,
                                         Function& f,
@@ -9506,7 +9506,7 @@ namespace strtk
             rotate_discontinuous(first1, last1, d1, first2, last2, d2);
       }
 
-      template<typename Iterator, class Function>
+      template <typename Iterator, class Function>
       inline bool combine_discontinuous_conditional(Iterator first1, Iterator last1, typename std::iterator_traits<Iterator>::difference_type d1,
                                                     Iterator first2, Iterator last2, typename std::iterator_traits<Iterator>::difference_type d2,
                                                     Function& f,
@@ -9550,7 +9550,7 @@ namespace strtk
          return true;
       }
 
-      template<class Function, typename Iterator>
+      template <class Function, typename Iterator>
       class bound_range
       {
       public:
@@ -9574,7 +9574,7 @@ namespace strtk
          Iterator last_;
       };
 
-      template<class Function, typename Iterator>
+      template <class Function, typename Iterator>
       class bound_range_conditional
       {
       public:
@@ -9600,7 +9600,7 @@ namespace strtk
 
    }
 
-   template<typename Iterator, typename Function>
+   template <typename Iterator, typename Function>
    inline void for_each_combination(Iterator begin, Iterator end, const std::size_t& size, Function function)
    {
       if (static_cast<typename std::iterator_traits<Iterator>::difference_type>(size) > std::distance(begin,end))
@@ -9614,7 +9614,7 @@ namespace strtk
                                      func);
    }
 
-   template<typename Iterator, typename Function>
+   template <typename Iterator, typename Function>
    inline void for_each_combination_conditional(Iterator begin, Iterator end, const std::size_t& size, Function function)
    {
       if (static_cast<typename std::iterator_traits<Iterator>::difference_type>(size) > std::distance(begin,end))
@@ -10589,14 +10589,14 @@ namespace strtk
 
       } // namespace details
 
-      template<int N, typename Iterator>
+      template <int N, typename Iterator>
       inline bool all_digits_check(Iterator itr)
       {
          typedef typename strtk::details::is_valid_iterator<Iterator>::type itr_type;
          return details::all_digits_check_impl<Iterator,N>::process(itr);
       }
 
-      template<int N, typename Iterator>
+      template <int N, typename Iterator>
       inline bool all_digits_check(const std::string& s)
       {
          return all_digits_check<N,const char*>(s.data());
@@ -10642,7 +10642,7 @@ namespace strtk
          return all_digits_check(s.size(),s.data());
       }
 
-      template<int N, typename Iterator>
+      template <int N, typename Iterator>
       inline bool signed_all_digits_check(Iterator itr)
       {
          if (('-' == (*itr)) || ('+' == (*itr)))
@@ -10660,7 +10660,7 @@ namespace strtk
             return all_digits_check(n - 1,(itr + 1));
       }
 
-      template<int N>
+      template <int N>
       inline bool signed_all_digits_check(const std::string& s)
       {
          return signed_all_digits_check<N,const char*>(s.data());
@@ -10677,7 +10677,7 @@ namespace strtk
          return signed_all_digits_check(s.size(),s.data());
       }
 
-      template<int N, typename T, typename Iterator>
+      template <int N, typename T, typename Iterator>
       inline void numeric_convert(Iterator itr, T& t,const bool digit_check = false)
       {
          typedef typename strtk::details::is_valid_iterator<Iterator>::type itr_type;
@@ -10693,7 +10693,7 @@ namespace strtk
          details::numeric_convert_impl<T,Iterator,N>::process(itr,t);
       }
 
-      template<int N, typename T>
+      template <int N, typename T>
       inline void numeric_convert(const std::string& s, T& t,const bool digit_check = false)
       {
          numeric_convert<N,T,const char*>(s.data(),t,digit_check);
@@ -10744,7 +10744,7 @@ namespace strtk
          numeric_convert(s.size(),s.data(),t,digit_check);
       }
 
-      template<int N, typename T, typename Iterator>
+      template <int N, typename T, typename Iterator>
       inline void signed_numeric_convert(Iterator itr, T& t, const bool digit_check = false)
       {
          if ('-' == (*itr))
@@ -10781,7 +10781,7 @@ namespace strtk
             return numeric_convert(n,itr,t,digit_check);
       }
 
-      template<int N, typename T>
+      template <int N, typename T>
       inline void signed_numeric_convert(const std::string& s,
                                          T& t,
                                          const bool digit_check = false)
@@ -16819,7 +16819,7 @@ namespace strtk
          hash ^= ~((hash << 11) + (itr[7] ^ (hash >> 5)));
       }
 
-      template<std::size_t block_size, typename Iterator>
+      template <std::size_t block_size, typename Iterator>
       inline void compute_block(Iterator itr, std::size_t& length, unsigned int& hash)
       {
          while (length >= block_size)
@@ -16832,7 +16832,7 @@ namespace strtk
          }
       }
 
-      template<std::size_t block_size>
+      template <std::size_t block_size>
       inline void compute_block(unsigned char* itr, std::size_t& length, unsigned int& hash)
       {
          unsigned int local_hash = hash;
@@ -16847,7 +16847,7 @@ namespace strtk
          hash = local_hash;
       }
 
-      template<std::size_t block_size>
+      template <std::size_t block_size>
       inline void compute_block(char* itr, std::size_t& length, unsigned int& hash)
       {
          compute_block<block_size>(reinterpret_cast<unsigned char*>(itr),length,hash);
@@ -17722,28 +17722,28 @@ namespace strtk
    {
       typedef const unsigned char* ptr;
 
-      template<typename T>
+      template <typename T>
       bool cmpimpl(ptr c1, ptr c2) { return (*reinterpret_cast<T>(c1)) == (*reinterpret_cast<T>(c2)); }
 
-      template<std::size_t K>
+      template <std::size_t K>
       struct size_impl { static inline bool cmp(ptr,ptr) { return true; } };
 
-      template<>
+      template <>
       struct size_impl<8> { static inline bool cmp(ptr c1, ptr c2) { return cmpimpl<const unsigned long long*>(c1,c2); } };
 
-      template<>
+      template <>
       struct size_impl<4> { static inline bool cmp(ptr c1, ptr c2) { return cmpimpl<const unsigned int*>(c1,c2); } };
 
-      template<>
+      template <>
       struct size_impl<2> { static inline bool cmp(ptr c1, ptr c2) { return cmpimpl<const unsigned short*>(c1,c2); } };
 
-      template<>
+      template <>
       struct size_impl<1> { static inline bool cmp(ptr c1, ptr c2) { return cmpimpl<const unsigned char*>(c1,c2); } };
 
-      template<std::size_t X>
+      template <std::size_t X>
       struct next_size { enum { size = (X >= 8) ? 8 : ((X >= 4) ? 4 : ((X >= 2) ? 2 : 1)) }; };
 
-      template<std::size_t N>
+      template <std::size_t N>
       struct memcmp_n_impl
       {
          static inline bool process(details::ptr c1, details::ptr c2)
@@ -17757,7 +17757,7 @@ namespace strtk
             return memcmp_n_impl<N>::process(reinterpret_cast<details::ptr>(c1),reinterpret_cast<details::ptr>(c2));
          }
 
-         template<std::size_t K1, std::size_t K2>
+         template <std::size_t K1, std::size_t K2>
          static inline bool process(const unsigned char (&c1)[K1], const unsigned char (&c2)[K2])
          {
             return memcmp_n_impl<N>::process(static_cast<ptr>(c1),static_cast<ptr>(c2));
@@ -17767,19 +17767,19 @@ namespace strtk
       template<> struct memcmp_n_impl<0> { static inline bool process(ptr,ptr) { return true; } };
    }
 
-   template<std::size_t N>
+   template <std::size_t N>
    inline bool memcmp_n(details::ptr c1, details::ptr c2)
    {
       return details::memcmp_n_impl<N>::process(c1,c2);
    }
 
-   template<std::size_t N>
+   template <std::size_t N>
    inline bool memcmp_n(const char* c1, const char* c2)
    {
       return details::memcmp_n_impl<N>::process(c1,c2);
    }
 
-   template<std::size_t N,std::size_t K1, std::size_t K2>
+   template <std::size_t N,std::size_t K1, std::size_t K2>
    inline bool memcmp_n(const unsigned char (&c1)[K1], const unsigned char (&c2)[K2])
    {
       return details::memcmp_n_impl<N>::process(c1,c2);
@@ -17827,7 +17827,7 @@ namespace strtk
       return make_pair<Iterator,Iterator>(p);
    }
 
-   template<std::size_t N>
+   template <std::size_t N>
    inline std::string make_string(const unsigned char (&s)[N], const std::size_t& length = N)
    {
       static const std::string null_string;
@@ -17837,7 +17837,7 @@ namespace strtk
          return std::string(&s[0],&s[0] + length);
    }
 
-   template<std::size_t N>
+   template <std::size_t N>
    inline std::string make_string(const char (&s)[N], const std::size_t& length = N)
    {
       static const std::string null_string;
@@ -17862,7 +17862,7 @@ namespace strtk
       return true;
    }
 
-   template<std::size_t N>
+   template <std::size_t N>
    inline bool set_array(unsigned char (&a)[N],
                          const std::string& s,
                          const bool pad = false,
@@ -17876,7 +17876,7 @@ namespace strtk
       return true;
    }
 
-   template<std::size_t N, std::size_t M>
+   template <std::size_t N, std::size_t M>
    inline bool set_array(unsigned char (&dest)[N],
                          unsigned char (&src)[M],
                          const bool pad = false,
@@ -17897,7 +17897,7 @@ namespace strtk
       std::reverse(begin,end);
    }
 
-   template<typename T>
+   template <typename T>
    inline void reverse(const range::adapter<T>& r)
    {
       T* begin = const_cast<T*>(r.begin());
@@ -17905,7 +17905,7 @@ namespace strtk
       std::reverse(begin,end);
    }
 
-   template<typename T>
+   template <typename T>
    inline void reverse(const range::adapter<const T>& r)
    {
       T* begin = const_cast<T*>(r.begin());
@@ -17930,7 +17930,7 @@ namespace strtk
       std::fill(begin,end,v);
    }
 
-   template<typename T>
+   template <typename T>
    inline void fill(const range::adapter<const T>& r, const typename range::adapter<const T>::value_type& v)
    {
       char* begin = const_cast<char*>(r.begin());
