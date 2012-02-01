@@ -1022,11 +1022,12 @@ namespace strtk
                                                   Iterator end)
    {
       if (0 == std::distance(begin,end)) return 0;
-      Iterator itr1 = begin; ++itr1;
-      Iterator itr2 = begin; ++itr2;
+      Iterator itr1 = begin;
+      Iterator itr2 = begin;
       typename std::iterator_traits<Iterator>::value_type prev = *begin;
       std::size_t removal_count = 0;
-
+      ++itr1;
+      ++itr2;
       while (end != itr1)
       {
          while ((end != itr1) && (!predicate(*itr1) || !predicate(prev)))
@@ -1035,7 +1036,6 @@ namespace strtk
             {
                (*itr2) = (*itr1);
             }
-
             prev = (*itr1);
             ++itr1;
             ++itr2;
@@ -1687,7 +1687,7 @@ namespace strtk
       std::size_t match_count = 0;
       while (end != (itr = std::search(itr, end, pattern_begin, pattern_end)))
       {
-         *out = std::make_pair(itr,itr + pattern_length);
+         (*out) = std::make_pair(itr,itr + pattern_length);
          itr += pattern_length;
          ++out;
          ++match_count;
@@ -1721,7 +1721,7 @@ namespace strtk
 
       while (end != (itr = std::search(itr, end, pattern_begin, pattern_end, imatch_char)))
       {
-         *out = std::make_pair(itr,itr + pattern_length);
+         (*out) = std::make_pair(itr,itr + pattern_length);
          itr += pattern_length;
          ++out;
          ++match_count;
@@ -1826,6 +1826,18 @@ namespace strtk
       }
       else
          return false;
+   }
+
+   inline std::size_t index_of(const std::string& pattern, const std::string& data)
+   {
+      if (pattern.empty())
+         return std::string::npos;
+      else if (data.empty())
+         return std::string::npos;
+      else if (pattern.size() > data.size())
+         return std::string::npos;
+      const char* itr = std::search(data.data(), data.data() + data.size(),pattern.data(),pattern.data() + pattern.size());
+      return ((data.data() + data.size()) == itr) ? std::string::npos : std::distance(data.data(),itr);
    }
 
    namespace tokenize_options
@@ -2715,14 +2727,14 @@ namespace strtk
                   ++range.second;
                else if (include_all_delimiters)
                   while ((end != range.second) && delimiter(*range.second)) ++range.second;
-               *out = range;
+               (*out) = range;
                ++out;
                if ((!include_all_delimiters) && compress_delimiters)
                   while ((end != range.second) && delimiter(*range.second)) ++range.second;
             }
             else
             {
-               *out = range;
+               (*out) = range;
                ++out;
                if (compress_delimiters)
                   while ((end != (++range.second)) && delimiter(*range.second)) ;
@@ -2738,7 +2750,7 @@ namespace strtk
 
       if ((range.first != range.second) || delimiter(*(range.second - 1)))
       {
-         *out = range;
+         (*out) = range;
          ++out;
          ++token_count;
       }
@@ -2925,7 +2937,7 @@ namespace strtk
             if (include_delimiters)
             {
                ++range.second;
-               *out = range;
+               (*out) = range;
                ++out;
                if (++match_count >= token_count)
                   return match_count;
@@ -2934,7 +2946,7 @@ namespace strtk
             }
             else
             {
-               *out = range;
+               (*out) = range;
                ++out;
                if (++match_count >= token_count)
                   return match_count;
@@ -2951,7 +2963,7 @@ namespace strtk
 
       if ((range.first != range.second) || delimiter(*(range.second - 1)))
       {
-         *out = range;
+         (*out) = range;
          ++out;
          ++match_count;
       }
@@ -3085,7 +3097,7 @@ namespace strtk
       {
          range.first = (*itr)[mode].first;
          range.second = (*itr)[mode].second;
-         *out = range;
+         (*out) = range;
          ++out;
          ++itr;
          ++match_count;
@@ -3147,7 +3159,7 @@ namespace strtk
       {
          range.first = (*itr)[mode].first;
          range.second = (*itr)[mode].second;
-         *out = range;
+         (*out) = range;
          ++out;
          ++itr;
          if (++match_count >= token_count)
@@ -3363,7 +3375,7 @@ namespace strtk
          range.first = range.second;
          range.second += increment_amount;
          length -= increment_amount;
-         *out = range;
+         (*out) = range;
          ++out;
          ++match_count;
       }
@@ -3979,7 +3991,7 @@ namespace strtk
             case 2 : {
                         unsigned int block  = base64_to_bin[*(itr++)] << 18;
                                      block |= base64_to_bin[*(itr++)] << 12;
-                        *out = static_cast<unsigned char>(( block >> 16 ) & 0xFF);
+                        (*out) = static_cast<unsigned char>(( block >> 16 ) & 0xFF);
                      }
                      break;
 
@@ -4056,6 +4068,12 @@ namespace strtk
          (*itr) = printable_char_table[static_cast<unsigned int>((*itr))];
          ++itr;
       }
+   }
+
+   inline void convert_to_printable_chars(char* begin, char* end)
+   {
+      convert_to_printable_chars(reinterpret_cast<unsigned char*>(begin),
+                                 reinterpret_cast<unsigned char*>(end));
    }
 
    inline void convert_to_printable_chars(std::string& str)
@@ -6198,7 +6216,7 @@ namespace strtk
       inline void process_column(const itr_list_type::value_type& range, OutputIterator out) const
       {
          typedef typename std::iterator_traits<OutputIterator>::value_type output_type;
-         *out = string_to_type_converter<output_type>(range.first,range.second);
+         (*out) = string_to_type_converter<output_type>(range.first,range.second);
          ++out;
       }
 
@@ -6209,7 +6227,7 @@ namespace strtk
          output_type value;
          if (string_to_type_converter(range.first,range.second,value))
          {
-            *out = value;
+            (*out) = value;
             ++out;
          }
       }
@@ -8993,7 +9011,7 @@ namespace strtk
    {
       while (count)
       {
-         *out = value++;
+         (*out) = value++;
          ++out;
          --count;
       }
@@ -9279,7 +9297,7 @@ namespace strtk
       while (!index.empty())
       {
          std::size_t idx = static_cast<std::size_t>(index.size() * rng());
-         *out = *(begin + index[idx]);
+         (*out) = *(begin + index[idx]);
          index.erase(index.begin() + idx);
          ++out;
       }
@@ -9326,7 +9344,7 @@ namespace strtk
       while (set_size)
       {
          std::size_t idx = static_cast<std::size_t>(index.size() * rng());
-         *out = *(begin + index[idx]);
+         (*out) = *(begin + index[idx]);
          index.erase(index.begin() + idx);
          ++out;
          --set_size;
@@ -9360,6 +9378,71 @@ namespace strtk
                                   const std::size_t& pregen = 0)
    {
       random_combination(sequence.begin(),sequence.end(),set_size,out,seed,pregen);
+   }
+
+   template <typename Iterator,
+             typename OutputIterator,
+             typename RandomNumberGenerator>
+   inline std::size_t select_k_randomly(const Iterator begin, const Iterator end,
+                                        const std::size_t k,
+                                        OutputIterator out,
+                                        RandomNumberGenerator& rng)
+   {
+      typedef typename std::iterator_traits<Iterator>::value_type T;
+      std::vector<T> selection;
+      selection.resize(k);
+      Iterator itr = begin;
+      std::size_t index = 0;
+      while ((index < k) && (end != itr))
+      {
+         selection[index] = (*itr);
+         ++index;
+         ++itr;
+      }
+      if (0 == index)
+         return 0;
+      else if (index < k)
+      {
+         std::copy(selection.begin(),selection.begin() + index, out);
+         return index;
+      }
+      double n = k + 1;
+      while (end != itr)
+      {
+         if (rng() < (k / n))
+         {
+            selection[static_cast<std::size_t>(rng() * k)] = (*itr);
+         }
+         ++itr;
+         ++n;
+      }
+      std::copy(selection.begin(),selection.end(),out);
+      return k;
+   }
+
+   template <typename Iterator,
+             typename OutputIterator,
+             typename RandomNumberGenerator>
+   inline void select_1_randomly(const Iterator begin, const Iterator end,
+                                 OutputIterator out,
+                                 RandomNumberGenerator& rng)
+   {
+      typedef typename std::iterator_traits<Iterator>::value_type T;
+      T selection;
+      if (begin == end)
+         return;
+      Iterator itr = begin;
+      std::size_t n = 0;
+      while (end != itr)
+      {
+         if (rng() < (1.0 / ++n))
+         {
+            selection = (*itr);
+         }
+         ++itr;
+      }
+      (*out) = selection;
+      ++out;
    }
    #endif // strtk_enable_random
 
@@ -9776,7 +9859,7 @@ namespace strtk
          {
             if (0 == exist_table[i])
             {
-               *out = i;
+               (*out) = i;
                ++out;
             }
          }
@@ -9796,7 +9879,7 @@ namespace strtk
       nth_combination_sequence(n,length,k,std::back_inserter(index_list),complete_index);
       for (std::size_t i = 0; i < index_list.size(); ++i)
       {
-         *out = *(begin + index_list[i]);
+         (*out) = *(begin + index_list[i]);
          ++out;
       }
    }
@@ -10118,16 +10201,16 @@ namespace strtk
          {
             static inline bool process(Iterator itr)
             {
-               return static_cast<unsigned char>(itr[ 0] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 1] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 2] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 3] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 4] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 5] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 6] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 7] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 8] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 9] - '0') < 10;
+               return static_cast<unsigned char>(itr[0] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[1] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[2] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[3] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[4] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[5] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[6] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[7] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[8] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[9] - '0') < 10;
            }
          };
 
@@ -10136,15 +10219,15 @@ namespace strtk
          {
             static inline bool process(Iterator itr)
             {
-               return static_cast<unsigned char>(itr[ 0] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 1] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 2] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 3] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 4] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 5] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 6] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 7] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 8] - '0') < 10;
+               return static_cast<unsigned char>(itr[0] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[1] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[2] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[3] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[4] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[5] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[6] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[7] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[8] - '0') < 10;
            }
          };
 
@@ -10153,14 +10236,14 @@ namespace strtk
          {
             static inline bool process(Iterator itr)
             {
-               return static_cast<unsigned char>(itr[ 0] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 1] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 2] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 3] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 4] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 5] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 6] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 7] - '0') < 10;
+               return static_cast<unsigned char>(itr[0] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[1] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[2] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[3] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[4] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[5] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[6] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[7] - '0') < 10;
            }
          };
 
@@ -10169,13 +10252,13 @@ namespace strtk
          {
             static inline bool process(Iterator itr)
             {
-               return static_cast<unsigned char>(itr[ 0] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 1] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 2] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 3] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 4] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 5] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 6] - '0') < 10;
+               return static_cast<unsigned char>(itr[0] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[1] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[2] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[3] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[4] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[5] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[6] - '0') < 10;
            }
          };
 
@@ -10184,12 +10267,12 @@ namespace strtk
          {
             static inline bool process(Iterator itr)
             {
-               return static_cast<unsigned char>(itr[ 0] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 1] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 2] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 3] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 4] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 5] - '0') < 10;
+               return static_cast<unsigned char>(itr[0] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[1] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[2] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[3] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[4] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[5] - '0') < 10;
            }
          };
 
@@ -10198,11 +10281,11 @@ namespace strtk
          {
             static inline bool process(Iterator itr)
             {
-               return static_cast<unsigned char>(itr[ 0] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 1] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 2] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 3] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 4] - '0') < 10;
+               return static_cast<unsigned char>(itr[0] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[1] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[2] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[3] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[4] - '0') < 10;
            }
          };
 
@@ -10211,10 +10294,10 @@ namespace strtk
          {
             static inline bool process(Iterator itr)
             {
-               return static_cast<unsigned char>(itr[ 0] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 1] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 2] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 3] - '0') < 10;
+               return static_cast<unsigned char>(itr[0] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[1] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[2] - '0') < 10 &&
+                      static_cast<unsigned char>(itr[3] - '0') < 10;
            }
          };
 
@@ -10224,9 +10307,9 @@ namespace strtk
             static inline bool process(Iterator itr)
             {
                return
-                static_cast<unsigned char>(itr[ 0] - '0') < 10 &&
-                static_cast<unsigned char>(itr[ 1] - '0') < 10 &&
-                static_cast<unsigned char>(itr[ 2] - '0') < 10;
+                static_cast<unsigned char>(itr[0] - '0') < 10 &&
+                static_cast<unsigned char>(itr[1] - '0') < 10 &&
+                static_cast<unsigned char>(itr[2] - '0') < 10;
            }
          };
 
@@ -11412,7 +11495,7 @@ namespace strtk
                    template <typename, typename> class Sequence>
          inline bool operator()(const Sequence<T,Allocator>& seq)
          {
-            const uint32_t size = seq.size();
+            const uint32_t size = static_cast<uint32_t>(seq.size());
             if (!operator()(size))
                return false;
 
@@ -11431,7 +11514,7 @@ namespace strtk
                    typename Allocator>
          inline bool operator()(const std::vector<T,Allocator>& vec)
          {
-            const uint32_t size = vec.size();
+            const uint32_t size = static_cast<uint32_t>(vec.size());
             const std::size_t raw_size = (size * sizeof(T));
             if (!buffer_capacity_ok(raw_size + sizeof(size)))
                return false;
@@ -11445,7 +11528,7 @@ namespace strtk
                    typename Comparator>
          inline bool operator()(const std::set<T,Allocator,Comparator>& set)
          {
-            const uint32_t size = set.size();
+            const uint32_t size = static_cast<uint32_t>(set.size());
             if (!operator()(size))
                return false;
 
@@ -11489,7 +11572,7 @@ namespace strtk
          }
 
          template <typename T>
-         inline bool native_to_le(T& input)
+         inline bool native_to_le(const T& input)
          {
             //From native to little-endian
             if (details::is_little_endian())
@@ -11662,7 +11745,7 @@ namespace strtk
          public:
 
             short_string_impl()
-            :s(0)
+            : s(0)
             {}
 
             short_string_impl(std::string& str)
@@ -11797,7 +11880,7 @@ namespace strtk
          }
 
          std::copy(s.first + offset, s.first + size, buffer + buffer_offset);
-         *t_ = 0;
+         (*t_) = 0;
          valid_= convert_hex_to_bin(buffer,
                                     buffer + (size - offset) + buffer_offset,
                                     reinterpret_cast<char*>(t_));
@@ -11888,7 +11971,7 @@ namespace strtk
             return (*this);
          }
 
-         *t_ = T(0);
+         (*t_) = T(0);
          convert_base64_to_bin(s.data(),
                                s.data() + s.size(),
                                reinterpret_cast<char*>(t_));
@@ -11905,7 +11988,7 @@ namespace strtk
             return (*this);
          }
 
-         *t_ = T(0);
+         (*t_) = T(0);
          convert_base64_to_bin(s.first, s.second,reinterpret_cast<char*>(t_));
          reverse_bytes();
          return (*this);
@@ -12647,7 +12730,7 @@ namespace strtk
          }
          else
          {
-            *out = found_itr;
+            (*out) = found_itr;
             ++out;
             ++match_count;
             itr_range.first = found_itr.second;
@@ -12679,7 +12762,7 @@ namespace strtk
          }
          else
          {
-            *out = found_itr;
+            (*out) = found_itr;
             ++out;
             ++match_count;
             itr_range.first = found_itr.second;
@@ -12710,7 +12793,7 @@ namespace strtk
          }
          else
          {
-            *out = found_itr;
+            (*out) = found_itr;
             ++out;
             ++match_count;
             itr_range.first = found_itr.second;
@@ -12742,7 +12825,7 @@ namespace strtk
          }
          else
          {
-            *out = found_itr;
+            (*out) = found_itr;
             ++out;
             ++match_count;
             itr_range.first = found_itr.second;
@@ -13126,12 +13209,12 @@ namespace strtk
       template<> struct supported_conversion_from_type<T> { typedef byte_type_tag type; };
 
       #define strtk_register_hex_number_type_tag(T)\
-      template<> struct supported_conversion_to_type<T>{ typedef hex_number_type_tag type; };
+      template<> struct supported_conversion_to_type<T >{ typedef hex_number_type_tag type; };
 
       template<> struct supported_conversion_to_type<hex_to_string_sink>{ typedef hex_string_type_tag type; };
 
       #define strtk_register_base64_type_tag(T)\
-      template<> struct supported_conversion_to_type<T>{ typedef base64_type_tag type; };
+      template<> struct supported_conversion_to_type<T >{ typedef base64_type_tag type; };
 
       #define strtk_register_supported_iterator_type(T)\
       template<> struct supported_iterator_type<T> { enum { value = true }; };
@@ -13285,7 +13368,7 @@ namespace strtk
       {  static void set(std::iostream&) {}  };
 
       #define strtk_register_iostream_precision(T)\
-      template<> struct precision<T> { static void set(std::iostream& s, const std::size_t& p = 10) { s.precision(p);} };
+      template<> struct precision<T> { static void set(std::iostream& s, const std::streamsize& p = 10) { s.precision(p);} };
 
       strtk_register_iostream_precision(float)
       strtk_register_iostream_precision(double)
@@ -13833,7 +13916,7 @@ namespace strtk
             #undef parse_digit_1
             #undef parse_digit_2
             if (curr != itr) instate = true;
-            pre_decimal = std::distance(post_zero_cull_itr,itr);
+            pre_decimal = static_cast<int>(std::distance(post_zero_cull_itr,itr));
          }
 
          int exponent = 0;
@@ -16303,7 +16386,7 @@ namespace strtk
 
          inline void insert(const std::string& key)
          {
-            insert(reinterpret_cast<const unsigned char*>(key.c_str()),key.size());
+            insert(reinterpret_cast<const unsigned char*>(key.data()),key.size());
          }
 
          inline void insert(const char* data, const std::size_t& length)
@@ -16344,7 +16427,7 @@ namespace strtk
 
          inline bool contains(const std::string& key) const
          {
-            return contains(reinterpret_cast<const unsigned char*>(key.c_str()),key.size());
+            return contains(reinterpret_cast<const unsigned char*>(key.data()),key.size());
          }
 
          inline bool contains(const char* data, const std::size_t& length) const
@@ -17749,7 +17832,7 @@ namespace strtk
          static inline bool process(details::ptr c1, details::ptr c2)
          {
             static const std::size_t size = details::next_size<N>::size;
-            return  details::size_impl<size>::cmp(c1,c2) && memcmp_n_impl<N - size>::process(c1 + size, c2 + size);
+            return details::size_impl<size>::cmp(c1,c2) && memcmp_n_impl<N - size>::process(c1 + size, c2 + size);
          }
 
          static inline bool process(const char* c1, const char* c2)

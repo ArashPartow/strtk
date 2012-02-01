@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * String Toolkit Library Examples                               *
- * Author: Arash Partow (2002-2011)                              *
+ * Author: Arash Partow (2002-2012)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -1686,6 +1686,29 @@ void split_on_consecutive_example()
    }
 }
 
+void index_of_example()
+{
+   std::string data = "0123456789ABC";
+   std::string pattern[] = {
+                              "0123456789ABC",
+                              "123456789ABC",
+                              "23456789ABC",
+                              "3456789ABC",
+                              "456789ABC",
+                              "56789ABC",
+                              "6789ABC",
+                              "789ABC",
+                              "89ABC",
+                              "9ABC",
+                           };
+   const std::size_t pattern_size = sizeof(pattern) / sizeof(std::string);
+   for (std::size_t i = 0; i < pattern_size; ++i)
+   {
+      std::cout << "Index of pattern[" << pattern[i] <<"]: " << strtk::index_of(pattern[i],data) << std::endl;
+   }
+   std::cout << "Index of pattern[xyz]: " << strtk::index_of("xyz",data) << std::endl;
+}
+
 int main()
 {
    information();
@@ -1759,5 +1782,6 @@ int main()
    translation_table_example();
    find_n_consecutive_example();
    split_on_consecutive_example();
+   index_of_example();
    return 0;
 }
