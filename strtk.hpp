@@ -287,6 +287,28 @@ namespace strtk
          enum { result = false };
       };
 
+      template <typename T>
+      struct is_stl_container
+      { typedef no_t result_t; };
+
+      #define register_stl_container1(C) \
+      template <typename T1, typename T2>struct is_stl_container<C<T1,T2> >{ typedef yes_t result_t; };
+
+      #define register_stl_container2(C) \
+      template <typename T1, typename T2, typename T3>struct is_stl_container<C<T1,T2,T3> >{ typedef yes_t result_t; };
+
+      register_stl_container1(std::vector)
+      register_stl_container1(std::deque)
+      register_stl_container1(std::list)
+      register_stl_container1(std::queue)
+      register_stl_container1(std::stack)
+      register_stl_container2(std::set)
+      register_stl_container2(std::multiset)
+      register_stl_container2(std::priority_queue)
+
+      #undef register_stl_container1
+      #undef register_stl_container2
+
    } // namespace details
 
    template <typename Iterator, typename T>
@@ -404,6 +426,25 @@ namespace strtk
      return line_count;
    }
 
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t load_from_text_file(std::istream& stream,
+                                          std::multiset<T,Comparator,Allocator>& multiset,
+                                          const std::size_t& buffer_size = one_kilobyte)
+   {
+     if (!stream) return 0;
+     std::string buffer;
+     buffer.reserve(buffer_size);
+     std::size_t line_count = 0;
+     while (std::getline(stream,buffer))
+     {
+        ++line_count;
+        multiset.insert(string_to_type_converter<T>(buffer));
+     }
+     return line_count;
+   }
+
    template <typename T, typename Container>
    inline std::size_t load_from_text_file(std::istream& stream,
                                           std::queue<T,Container>& queue,
@@ -485,6 +526,20 @@ namespace strtk
         return load_from_text_file(stream,set,buffer_size);
    }
 
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t load_from_text_file(const std::string& file_name,
+                                          std::multiset<T,Comparator,Allocator>& multiset,
+                                          const std::size_t& buffer_size = one_kilobyte)
+   {
+     std::ifstream stream(file_name.c_str());
+     if (!stream)
+        return 0;
+     else
+        return load_from_text_file(stream,multiset,buffer_size);
+   }
+
    template <typename T, typename Container>
    inline std::size_t load_from_text_file(const std::string& file_name,
                                           std::queue<T,Container>& queue,
@@ -554,7 +609,6 @@ namespace strtk
            ++count;
         }
      }
-
      return count;
    }
 
@@ -589,7 +643,40 @@ namespace strtk
            ++count;
         }
      }
+     return count;
+   }
 
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t write_to_text_file(std::ostream& stream,
+                                         const std::multiset<T,Comparator,Allocator>& multiset,
+                                         const std::string& delimiter = "")
+   {
+     if (!stream) return 0;
+
+     std::size_t count = 0;
+     typename std::multiset<T,Comparator,Allocator>::const_iterator itr = multiset.begin();
+     typename std::multiset<T,Comparator,Allocator>::const_iterator end = multiset.end();
+
+     if (!delimiter.empty())
+     {
+        while (end != itr)
+        {
+           stream << (*itr) << delimiter;
+           ++itr;
+           ++count;
+        }
+     }
+     else
+     {
+        while (end != itr)
+        {
+           stream << (*itr);
+           ++itr;
+           ++count;
+        }
+     }
      return count;
    }
 
@@ -619,6 +706,20 @@ namespace strtk
         return 0;
      else
         return write_to_text_file(stream,set,delimiter);
+   }
+
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t write_to_text_file(const std::string& file_name,
+                                         const std::multiset<T,Comparator,Allocator>& multiset,
+                                         const std::string& delimiter = "")
+   {
+     std::ofstream stream(file_name.c_str());
+     if (!stream)
+        return 0;
+     else
+        return write_to_text_file(stream,multiset,delimiter);
    }
 
    template <typename InputIterator, typename OutputIterator>
@@ -855,7 +956,7 @@ namespace strtk
 
       multiple_delimiter_predicate(const T d[], const std::size_t& length)
       : length_(length),
-        delimiter_(new T[length_]),
+        delimiter_((length_ <= sbo_buffer_size) ? sbo_buffer : new T[length_]),
         delimiter_end_(delimiter_ + length_)
       {
          std::copy(d,d + length, delimiter_);
@@ -1675,6 +1776,12 @@ namespace strtk
       return imatch(s,set.begin(),set.end());
    }
 
+   template <typename Comparator, typename Allocator>
+   inline bool imatch(const std::string& s, const std::multiset<std::string,Comparator,Allocator>& multiset)
+   {
+      return imatch(s,multiset.begin(),multiset.end());
+   }
+
    template <typename Iterator, typename OutputIterator>
    inline std::size_t find_all(const Iterator pattern_begin,
                                const Iterator pattern_end,
@@ -2011,6 +2118,7 @@ namespace strtk
                include_1st_delimiter_  = itr.include_1st_delimiter_;
                include_all_delimiters_ = itr.include_all_delimiters_;
                include_delimiters_     = itr.include_delimiters_;
+               last_token_done_        = itr.last_token_done_;
             }
             return (*this);
          }
@@ -3504,6 +3612,14 @@ namespace strtk
    }
 
    template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline T min_of_cont(const std::multiset<T,Comparator,Allocator>& multiset)
+   {
+      return (*multiset.begin());
+   }
+
+   template <typename T,
              typename Allocator,
              template <typename,typename> class Sequence>
    inline T max_of_cont(const Sequence<T,Allocator>& sequence)
@@ -3517,6 +3633,14 @@ namespace strtk
    inline T max_of_cont(const std::set<T,Comparator,Allocator>& set)
    {
       return (*set.rbegin());
+   }
+
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline T max_of_cont(const std::multiset<T,Comparator,Allocator>& multiset)
+   {
+      return (*multiset.rbegin());
    }
 
    template <typename InputIterator>
@@ -3557,6 +3681,17 @@ namespace strtk
    {
       min_value = (*set.begin());
       max_value = (*set.rbegin());
+   }
+
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline void min_max_of_cont(const std::multiset<T,Comparator,Allocator>& multiset,
+                               T& min_value,
+                               T& max_value)
+   {
+      min_value = (*multiset.begin());
+      max_value = (*multiset.rbegin());
    }
 
    template <typename Iterator>
@@ -5027,6 +5162,31 @@ namespace strtk
             return true;
          }
 
+         template <typename T,
+                   typename Comparator,
+                   typename Allocator>
+         inline bool parse(const col_range_type& range,
+                           std::multiset<T,Comparator,Allocator>& multiset) const
+         {
+            if (!validate_column_range(range))
+               return false;
+
+            itr_list_type::const_iterator itr = token_list_->begin() + range.first;
+            itr_list_type::const_iterator end = token_list_->begin() + range.second;
+            T t;
+
+            while (end != itr)
+            {
+               const itr_list_type::value_type& range = (*itr);
+               if (!string_to_type_converter(range.first,range.second,t))
+                  return false;
+               else
+                  multiset.insert(t);
+               ++itr;
+            }
+            return true;
+         }
+
          template <typename T, typename Container>
          inline bool parse(const col_range_type& range,
                            std::queue<T,Container>& queue) const
@@ -5114,6 +5274,14 @@ namespace strtk
             return parse(range(0),set);
          }
 
+         template <typename T,
+                   typename Comparator,
+                   typename Allocator>
+         inline bool parse(std::multiset<T,Comparator,Allocator>& multiset) const
+         {
+            return parse(range(0),multiset);
+         }
+
          template <typename T, typename Container>
          inline bool parse(std::queue<T,Container>& queue) const
          {
@@ -5189,6 +5357,14 @@ namespace strtk
          inline void parse_checked(std::set<T,Comparator,Allocator>& set) const
          {
             parse_checked<T>(std::inserter(set,set.end()));
+         }
+
+         template <typename T,
+                   typename Comparator,
+                   typename Allocator>
+         inline void parse_checked(std::multiset<T,Comparator,Allocator>& multiset) const
+         {
+            parse_checked<T>(std::inserter(multiset,multiset.end()));
          }
 
          template <typename T, typename Container>
@@ -5463,6 +5639,15 @@ namespace strtk
                                          std::set<T,Comparator,Allocator>& set) const
       {
          extract_column_checked(index,inserter_with_valuetype(set));
+      }
+
+      template <typename T,
+                typename Comparator,
+                typename Allocator>
+      inline void extract_column_checked(const std::size_t& index,
+                                         std::multiset<T,Comparator,Allocator>& multiset) const
+      {
+         extract_column_checked(index,inserter_with_valuetype(multiset));
       }
 
       template <typename OutputIterator>
@@ -5888,8 +6073,8 @@ namespace strtk
 
       template <typename T, typename Predicate>
       inline std::size_t accumulate_column(const std::size_t& col,
-                                    Predicate p,
-                                    T& result) const
+                                           Predicate p,
+                                           T& result) const
       {
          return accumulate_column(col,all_rows(),p,result);
       }
@@ -6469,6 +6654,14 @@ namespace strtk
          return length == set.size();
       }
 
+      template <typename T,
+                typename Comparator,
+                typename Allocator>
+      inline bool operator()(const std::multiset<T,Comparator,Allocator>& multiset) const
+      {
+         return length == multiset.size();
+      }
+
       inline bool operator()(const std::string& str) const
       {
          return length == str.size();
@@ -6500,6 +6693,14 @@ namespace strtk
          return set.size() < length;
       }
 
+      template <typename T,
+                typename Comparator,
+                typename Allocator>
+      inline bool operator()(const std::multiset<T,Comparator,Allocator>& multiset) const
+      {
+         return multiset.size() < length;
+      }
+
       inline bool operator()(const std::string& str) const
       {
          return str.size() < length;
@@ -6529,6 +6730,14 @@ namespace strtk
       inline bool operator()(const std::set<T,Comparator,Allocator>& set) const
       {
          return set.size() > length;
+      }
+
+      template <typename T,
+                typename Comparator,
+                typename Allocator>
+      inline bool operator()(const std::multiset<T,Comparator,Allocator>& multiset) const
+      {
+         return multiset.size() > length;
       }
 
       inline bool operator()(const std::string& str) const
@@ -6960,6 +7169,29 @@ namespace strtk
 
    template <typename InputIterator,
              typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t parse(const InputIterator begin,
+                            const InputIterator end,
+                            const std::string& delimiters,
+                            std::multiset<T,Comparator,Allocator>& multiset,
+                            const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (1 == delimiters.size())
+         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                      begin,end,
+                      range_to_type_inserter(multiset),
+                      split_option);
+      else
+         return split(multiple_char_delimiter_predicate(delimiters),
+                      begin,end,
+                      range_to_type_inserter(multiset),
+                      split_option);
+   }
+
+   template <typename InputIterator,
+             typename T,
              typename Container>
    inline std::size_t parse(const InputIterator begin,
                             const InputIterator end,
@@ -7071,6 +7303,28 @@ namespace strtk
 
    template <typename InputIterator,
              typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t parse(const std::pair<InputIterator,InputIterator>& range,
+                            const std::string& delimiters,
+                            std::multiset<T,Comparator,Allocator>& multiset,
+                            const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (1 == delimiters.size())
+         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                      range.first,range.second,
+                      range_to_type_inserter(multiset),
+                      split_option);
+      else
+         return split(multiple_char_delimiter_predicate(delimiters),
+                      range.first,range.second,
+                      range_to_type_inserter(multiset),
+                      split_option);
+   }
+
+   template <typename InputIterator,
+             typename T,
              typename Container>
    inline std::size_t parse(const std::pair<InputIterator,InputIterator>& range,
                             const std::string& delimiters,
@@ -7128,9 +7382,616 @@ namespace strtk
                       split_option);
       else
          return split(multiple_char_delimiter_predicate(delimiters),
-               range.first,range.second,
+                      range.first,range.second,
                       range_to_type_push_inserter(priority_queue),
                       split_option);
+   }
+
+   namespace details
+   {
+      class container_adder
+      {
+      private:
+
+      class container_adder_base
+      {
+      public:
+
+         typedef const char* itr_type;
+
+         virtual ~container_adder_base(){}
+
+         template <typename InputIterator>
+         inline bool add(const InputIterator begin, const InputIterator end) const
+         {
+            return add_impl(begin,end);
+         }
+
+         template <typename InputIterator>
+         inline bool add(const std::pair<InputIterator,InputIterator>& range) const
+         {
+            return add(range.first,range.second);
+         }
+
+      protected:
+
+         virtual bool add_impl(const itr_type begin, const itr_type end) const = 0;
+
+      };
+
+      template <typename T,
+                typename Allocator,
+                template <typename, typename> class Sequence>
+      class sequence_adder_impl : public container_adder_base
+      {
+      public:
+
+         typedef Sequence<T,Allocator> sequence_t;
+
+         sequence_adder_impl(sequence_t& seq)
+         : sequence_(seq)
+         {}
+
+      protected:
+
+         bool add_impl(const itr_type begin, const itr_type end) const
+         {
+            T t;
+            if (!string_to_type_converter(begin,end,t)) return false;
+            sequence_.push_back(t);
+            return true;
+         }
+
+      private:
+
+         sequence_adder_impl operator=(const sequence_adder_impl&);
+
+         sequence_t& sequence_;
+      };
+
+      template <typename T,
+                typename Comparator,
+                typename Allocator,
+                template <typename,typename,typename> class Set>
+      class set_adder_impl : public container_adder_base
+      {
+      public:
+
+         set_adder_impl(Set<T,Comparator,Allocator>& set)
+         : set_(set)
+         {}
+
+         bool add_impl(const itr_type begin, const itr_type end) const
+         {
+            T t;
+            if (!string_to_type_converter(begin,end,t)) return false;
+            set_.insert(t);
+            return true;
+         }
+
+      private:
+
+         set_adder_impl operator=(const set_adder_impl&);
+
+         Set<T,Comparator,Allocator>& set_;
+      };
+
+      template <typename T,
+                typename Container,
+                typename Comparator>
+      class pq_adder_impl : public container_adder_base
+      {
+      public:
+
+         pq_adder_impl(std::priority_queue<T,Container,Comparator>& pq)
+         : pq_(pq)
+         {}
+
+         bool add_impl(const itr_type begin, const itr_type end) const
+         {
+            T t;
+            if (!string_to_type_converter(begin,end,t)) return false;
+            pq_.push(t);
+            return true;
+         }
+
+      private:
+
+         pq_adder_impl operator=(const pq_adder_impl&);
+
+         std::priority_queue<T,Container,Comparator>& pq_;
+      };
+
+
+      template <typename T,
+                typename Container,
+                template <typename, typename> class SContainer>
+      class stack_queue_adder_impl : public container_adder_base
+      {
+      public:
+
+          stack_queue_adder_impl(SContainer<T,Container>& container)
+          : container_(container)
+          {}
+
+          bool add_impl(const itr_type begin, const itr_type end) const
+          {
+              T t;
+              if (!string_to_type_converter(begin,end,t)) return false;
+              container_.push(t);
+              return true;
+          }
+
+      private:
+
+         stack_queue_adder_impl operator=(const stack_queue_adder_impl&);
+
+          SContainer<T,Container>& container_;
+      };
+
+
+      public:
+
+      template <typename T, typename Allocator>
+      container_adder(std::vector<T,Allocator>& vec)
+      : container_adder_base_(new(buffer)sequence_adder_impl<T,Allocator,std::vector>(vec))
+      {}
+
+      template <typename T, typename Allocator>
+      container_adder(std::deque<T,Allocator>& deq)
+      : container_adder_base_(new(buffer)sequence_adder_impl<T,Allocator,std::deque>(deq))
+      {}
+
+      template <typename T, typename Allocator>
+      container_adder(std::list<T,Allocator>& list)
+      : container_adder_base_(new(buffer)sequence_adder_impl<T,Allocator,std::list>(list))
+      {}
+
+      template <typename T, typename Comparator, typename Allocator>
+      container_adder(std::set<T,Comparator,Allocator>& set)
+      : container_adder_base_(new(buffer)set_adder_impl<T,Comparator,Allocator,std::set>(set))
+      {}
+
+      template <typename T, typename Comparator, typename Allocator>
+      container_adder(std::multiset<T,Comparator,Allocator>& multiset)
+      : container_adder_base_(new(buffer)set_adder_impl<T,Comparator,Allocator,std::multiset>(multiset))
+      {}
+
+      template <typename T, typename Container, typename Comparator>
+      container_adder(std::priority_queue<T,Container,Comparator>& pq)
+      : container_adder_base_(new(buffer)pq_adder_impl<T,Container,Comparator>(pq))
+      {}
+
+      template <typename T, typename Container>
+      container_adder(std::queue<T,Container>& queue)
+      : container_adder_base_(new(buffer)stack_queue_adder_impl<T,Container,std::queue>(queue))
+      {}
+
+      template <typename T, typename Container>
+      container_adder(std::stack<T,Container>& stack)
+      : container_adder_base_(new(buffer)stack_queue_adder_impl<T,Container,std::stack>(stack))
+      {}
+
+      template <typename InputIterator>
+      inline bool add(InputIterator begin, InputIterator end) const
+      {
+         return container_adder_base_->add(begin,end);
+      }
+
+      template <typename InputIterator>
+      inline bool add(std::pair<InputIterator,InputIterator>& range) const
+      {
+         return add(range.first,range.second);
+      }
+
+      template <typename InputIterator>
+      inline bool operator()(const InputIterator begin, const InputIterator end)
+      {
+         InputIterator itr = begin;
+         while (end != itr)
+         {
+            if (!add(*itr)) return false;
+            ++itr;
+         }
+         return true;
+      }
+
+      private:
+
+         mutable container_adder_base* container_adder_base_;
+         unsigned char buffer[64];
+      };
+
+      template <typename T,typename is_stl_container_result>
+      struct ca_type { typedef T& type; };
+
+      template <typename T>
+      struct ca_type <T,details::yes_t> { typedef  details::container_adder type; };
+
+   }
+
+   template <typename InputIterator,
+             typename  T1, typename  T2, typename T3,
+             typename  T4, typename  T5, typename T6,
+             typename  T7, typename  T8, typename T9,
+             typename T10, typename T11>
+   inline bool parse(const InputIterator begin, const InputIterator end,
+                     const std::string& delimiters,
+                     T1& t1, T2& t2,  T3&  t3,  T4&  t4, T5& t5, T6& t6, T7& t7,
+                     T8& t8, T9& t9, T10& t10, T11& t11,
+                     details::container_adder ca)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      typedef std::pair<InputIterator,InputIterator> iterator_type;
+      typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      std::deque<iterator_type> token_list;
+      std::size_t parsed_token_count = 0;
+      if (1 == delimiters.size())
+          parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                                     begin,end,
+                                     std::back_inserter(token_list),
+                                     split_options::compress_delimiters);
+      else
+          parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
+                                     begin,end,
+                                     std::back_inserter(token_list),
+                                     split_options::compress_delimiters);
+      if (token_list.size() < 12) return false;
+      iterator_type_ptr itr = token_list.begin();
+      if (!string_to_type_converter((*itr).first,(*itr).second, t1)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t2)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t3)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t4)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t5)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t6)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t7)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t8)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t9)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t10)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t11)) return false; ++itr;
+      return ca(itr,token_list.end());
+   }
+
+   template <typename InputIterator,
+             typename T1, typename T2, typename T3,
+             typename T4, typename T5, typename T6,
+             typename T7, typename T8, typename T9,
+             typename T10>
+   inline bool parse(const InputIterator begin, const InputIterator end,
+                     const std::string& delimiters,
+                     T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6, T7& t7, T8& t8, T9& t9, T10& t10,
+                     details::container_adder ca)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      typedef std::pair<InputIterator,InputIterator> iterator_type;
+      typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      std::deque<iterator_type> token_list;
+      std::size_t parsed_token_count = 0;
+      if (1 == delimiters.size())
+          parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                                     begin,end,
+                                     std::back_inserter(token_list),
+                                     split_options::compress_delimiters);
+      else
+          parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
+                                     begin,end,
+                                     std::back_inserter(token_list),
+                                     split_options::compress_delimiters);
+      if (token_list.size() < 11) return false;
+      iterator_type_ptr itr = token_list.begin();
+      if (!string_to_type_converter((*itr).first,(*itr).second, t1)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t2)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t3)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t4)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t5)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t6)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t7)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t8)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second, t9)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t10)) return false; ++itr;
+      return ca(itr,token_list.end());
+   }
+
+   template <typename InputIterator,
+             typename T1, typename T2, typename T3,
+             typename T4, typename T5, typename T6,
+             typename T7, typename T8, typename T9>
+   inline bool parse(const InputIterator begin, const InputIterator end,
+                     const std::string& delimiters,
+                     T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6, T7& t7, T8& t8, T9& t9,
+                     details::container_adder ca)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      typedef std::pair<InputIterator,InputIterator> iterator_type;
+      typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      std::deque<iterator_type> token_list;
+      std::size_t parsed_token_count = 0;
+      if (1 == delimiters.size())
+          parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                                     begin,end,
+                                     std::back_inserter(token_list),
+                                     split_options::compress_delimiters);
+      else
+          parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
+                                     begin,end,
+                                     std::back_inserter(token_list),
+                                     split_options::compress_delimiters);
+      if (token_list.size() < 10) return false;
+      iterator_type_ptr itr = token_list.begin();
+      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t6)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t7)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t8)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t9)) return false; ++itr;
+      return ca(itr,token_list.end());
+   }
+
+   template <typename InputIterator,
+             typename T1, typename T2, typename T3,
+             typename T4, typename T5, typename T6,
+             typename T7, typename T8>
+   inline bool parse(const InputIterator begin, const InputIterator end,
+                     const std::string& delimiters,
+                     T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6, T7& t7, T8& t8,
+                     details::container_adder ca)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      typedef std::pair<InputIterator,InputIterator> iterator_type;
+      typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      std::deque<iterator_type> token_list;
+      std::size_t parsed_token_count = 0;
+      if (1 == delimiters.size())
+         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      else
+         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      if (token_list.size() < 9) return false;
+      iterator_type_ptr itr = token_list.begin();
+      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t6)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t7)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t8)) return false; ++itr;
+      return ca(itr,token_list.end());
+
+   }
+
+   template <typename InputIterator,
+             typename T1, typename T2, typename T3,
+             typename T4, typename T5, typename T6, typename T7>
+   inline bool parse(const InputIterator begin, const InputIterator end,
+                     const std::string& delimiters,
+                     T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6, T7& t7,
+                     details::container_adder ca)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      typedef std::pair<InputIterator,InputIterator> iterator_type;
+      typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      std::deque<iterator_type> token_list;
+      std::size_t parsed_token_count = 0;
+      if (1 == delimiters.size())
+         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      else
+         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      if (token_list.size() < 8) return false;
+      iterator_type_ptr itr = token_list.begin();
+      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t6)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t7)) return false; ++itr;
+      return ca(itr,token_list.end());
+
+   }
+
+   template <typename InputIterator,
+             typename T1, typename T2, typename T3,
+             typename T4, typename T5, typename T6>
+   inline bool parse(const InputIterator begin, const InputIterator end,
+                     const std::string& delimiters,
+                     T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6,
+                     details::container_adder ca)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      typedef std::pair<InputIterator,InputIterator> iterator_type;
+      typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      std::deque<iterator_type> token_list;
+      std::size_t parsed_token_count = 0;
+      if (1 == delimiters.size())
+         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      else
+         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      if (token_list.size() < 7) return false;
+      iterator_type_ptr itr = token_list.begin();
+      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t6)) return false; ++itr;
+      return ca(itr,token_list.end());
+
+   }
+
+   template <typename InputIterator,
+             typename T1, typename T2, typename T3,
+             typename T4, typename T5>
+   inline bool parse(const InputIterator begin, const InputIterator end,
+                     const std::string& delimiters,
+                     T1& t1, T2& t2, T3& t3, T4& t4, T5& t5,
+                     details::container_adder ca)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      typedef std::pair<InputIterator,InputIterator> iterator_type;
+      typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      std::deque<iterator_type> token_list;
+      std::size_t parsed_token_count = 0;
+      if (1 == delimiters.size())
+         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      else
+         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      if (token_list.size() < 6) return false;
+      iterator_type_ptr itr = token_list.begin();
+      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
+      return ca(itr,token_list.end());
+
+   }
+
+   template <typename InputIterator,
+             typename T1, typename T2, typename T3, typename T4>
+   inline bool parse(const InputIterator begin, const InputIterator end,
+                     const std::string& delimiters,
+                     T1& t1, T2& t2, T3& t3, T4& t4,
+                     details::container_adder ca)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      typedef std::pair<InputIterator,InputIterator> iterator_type;
+      typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      std::deque<iterator_type> token_list;
+      std::size_t parsed_token_count = 0;
+      if (1 == delimiters.size())
+         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      else
+         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      if (token_list.size() < 5) return false;
+      iterator_type_ptr itr = token_list.begin();
+      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
+      return ca(itr,token_list.end());
+
+   }
+
+   template <typename InputIterator,
+             typename T1, typename T2, typename T3>
+   inline bool parse(const InputIterator begin, const InputIterator end,
+                     const std::string& delimiters,
+                     T1& t1, T2& t2, T3& t3,
+                     details::container_adder ca)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      typedef std::pair<InputIterator,InputIterator> iterator_type;
+      typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      std::deque<iterator_type> token_list;
+      std::size_t parsed_token_count = 0;
+      if (1 == delimiters.size())
+         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      else
+         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      if (token_list.size() < 4) return false;
+      iterator_type_ptr itr = token_list.begin();
+      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
+      return ca(itr,token_list.end());
+
+   }
+
+   template <typename InputIterator,
+             typename T1, typename T2>
+   inline bool parse(const InputIterator begin, const InputIterator end,
+                     const std::string& delimiters,
+                     T1& t1, T2& t2,
+                     details::container_adder ca)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      typedef std::pair<InputIterator,InputIterator> iterator_type;
+      typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      std::deque<iterator_type> token_list;
+      std::size_t parsed_token_count = 0;
+      if (1 == delimiters.size())
+         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      else
+         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      if (token_list.size() < 3) return false;
+      iterator_type_ptr itr = token_list.begin();
+      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
+      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
+      return ca(itr,token_list.end());
+
+   }
+
+   template <typename InputIterator, typename T1>
+   inline bool parse(const InputIterator begin, const InputIterator end,
+                     const std::string& delimiters,
+                     T1& t1,
+                     details::container_adder ca)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      typedef std::pair<InputIterator,InputIterator> iterator_type;
+      typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      std::deque<iterator_type> token_list;
+      std::size_t parsed_token_count = 0;
+      if (1 == delimiters.size())
+         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      else
+         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
+                                    begin,end,
+                                    std::back_inserter(token_list),
+                                    split_options::compress_delimiters);
+      if (token_list.size() < 2) return false;
+      iterator_type_ptr itr = token_list.begin();
+      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
+      return ca(itr,token_list.end());
+
    }
 
    template <typename InputIterator,
@@ -7180,6 +8041,31 @@ namespace strtk
                         begin,end,
                         n,
                         range_to_type_inserter(set),
+                        split_option);
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t parse_n(const InputIterator begin,
+                              const InputIterator end,
+                              const std::string& delimiters,
+                              const std::size_t& n,
+                              std::multiset<T,Comparator,Allocator>& multiset,
+                              const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      if (1 == delimiters.size())
+         return split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                        begin,end,
+                        n,
+                        range_to_type_inserter(multiset),
+                        split_option);
+      else
+         return split_n(multiple_char_delimiter_predicate(delimiters),
+                        begin,end,
+                        n,
+                        range_to_type_inserter(multiset),
                         split_option);
    }
 
@@ -7306,6 +8192,31 @@ namespace strtk
                         range.first,range.second,
                         n,
                         range_to_type_inserter(set),
+                        split_option);
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t parse_n(const std::pair<InputIterator,InputIterator>& range,
+                              const std::string& delimiters,
+                              const std::size_t& n,
+                              std::multiset<T,Comparator,Allocator>& multiset,
+                              const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (1 == delimiters.size())
+         return split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                        range.first,range.second,
+                        n,
+                        range_to_type_inserter(multiset),
+                        split_option);
+      else
+         return split_n(multiple_char_delimiter_predicate(delimiters),
+                        range.first,range.second,
+                        n,
+                        range_to_type_inserter(multiset),
                         split_option);
    }
 
@@ -7394,7 +8305,8 @@ namespace strtk
       return parse(data.data(),
                    data.data() + data.size(),
                    delimiters,
-                   t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12);
+                   t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,
+                   typename details::ca_type<T12, typename details::is_stl_container<T12>::result_t>::type(t12));
    }
 
    template <typename T1, typename T2, typename T3, typename T4,
@@ -7409,7 +8321,8 @@ namespace strtk
       return parse(data.data(),
                    data.data() + data.size(),
                    delimiters,
-                   t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11);
+                   t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,
+                   typename details::ca_type<T11, typename details::is_stl_container<T11>::result_t>::type(t11));
    }
 
    template <typename T1, typename T2, typename T3, typename T4,
@@ -7424,7 +8337,8 @@ namespace strtk
       return parse(data.data(),
                    data.data() + data.size(),
                    delimiters,
-                   t1,t2,t3,t4,t5,t6,t7,t8,t9,t10);
+                   t1,t2,t3,t4,t5,t6,t7,t8,t9,
+                   typename details::ca_type<T10, typename details::is_stl_container<T10>::result_t>::type(t10));
    }
 
    template <typename T1, typename T2, typename T3, typename T4,
@@ -7439,7 +8353,8 @@ namespace strtk
       return parse(data.data(),
                    data.data() + data.size(),
                    delimiters,
-                   t1,t2,t3,t4,t5,t6,t7,t8,t9);
+                   t1,t2,t3,t4,t5,t6,t7,t8,
+                   typename details::ca_type<T9, typename details::is_stl_container<T9>::result_t>::type(t9));
    }
 
    template <typename T1, typename T2, typename T3, typename T4,
@@ -7452,7 +8367,8 @@ namespace strtk
       return parse(data.data(),
                    data.data() + data.size(),
                    delimiters,
-                   t1,t2,t3,t4,t5,t6,t7,t8);
+                   t1,t2,t3,t4,t5,t6,t7,
+                   typename details::ca_type<T8, typename details::is_stl_container<T8>::result_t>::type(t8));
    }
 
    template <typename T1, typename T2, typename T3, typename T4,
@@ -7465,7 +8381,8 @@ namespace strtk
       return parse(data.data(),
                    data.data() + data.size(),
                    delimiters,
-                   t1,t2,t3,t4,t5,t6,t7);
+                   t1,t2,t3,t4,t5,t6,
+                   typename details::ca_type<T7, typename details::is_stl_container<T7>::result_t>::type(t7));
    }
 
    template <typename T1, typename T2, typename T3, typename T4,
@@ -7478,7 +8395,8 @@ namespace strtk
       return parse(data.data(),
                    data.data() + data.size(),
                    delimiters,
-                   t1,t2,t3,t4,t5,t6);
+                   t1,t2,t3,t4,t5,
+                   typename details::ca_type<T6,typename details::is_stl_container<T6>::result_t>::type(t6));
    }
 
    template <typename T1, typename T2, typename T3, typename T4,
@@ -7491,7 +8409,8 @@ namespace strtk
       return parse(data.data(),
                    data.data() + data.size(),
                    delimiters,
-                   t1,t2,t3,t4,t5);
+                   t1,t2,t3,t4,
+                   typename details::ca_type<T5, typename details::is_stl_container<T5>::result_t>::type(t5));
    }
 
    template <typename T1, typename T2, typename T3, typename T4>
@@ -7502,7 +8421,8 @@ namespace strtk
       return parse(data.data(),
                    data.data() + data.size(),
                    delimiters,
-                   t1,t2,t3,t4);
+                   t1,t2,t3,
+                   typename details::ca_type<T4, typename details::is_stl_container<T4>::result_t>::type(t4));
    }
 
    template <typename T1, typename T2, typename T3>
@@ -7513,7 +8433,8 @@ namespace strtk
       return parse(data.data(),
                    data.data() + data.size(),
                    delimiters,
-                   t1,t2,t3);
+                   t1,t2,
+                   typename details::ca_type<T3, typename details::is_stl_container<T3>::result_t>::type(t3));
    }
 
    template <typename T1, typename T2>
@@ -7524,7 +8445,8 @@ namespace strtk
       return parse(data.data(),
                    data.data() + data.size(),
                    delimiters,
-                   t1,t2);
+                   t1,
+                   typename details::ca_type<T2, typename details::is_stl_container<T2>::result_t>::type(t2));
    }
 
    template <typename T>
@@ -7535,7 +8457,7 @@ namespace strtk
       return parse(data.data(),
                    data.data() + data.size(),
                    delimiters,
-                   t);
+                   typename details::ca_type<T,typename details::is_stl_container<T>::result_t>::type(t));
    }
 
    template <typename T,
@@ -7565,6 +8487,21 @@ namespace strtk
                    data.data() + data.size(),
                    delimiters,
                    set,
+                   split_option);
+   }
+
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t parse(const std::string& data,
+                            const std::string& delimiters,
+                            std::multiset<T,Comparator,Allocator>& multiset,
+                            const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      return parse(data.data(),
+                   data.data() + data.size(),
+                   delimiters,
+                   multiset,
                    split_option);
    }
 
@@ -7776,7 +8713,7 @@ namespace strtk
    #define strtk_parse_begin(Type)\
    namespace strtk {\
    bool parse(const std::string& data, const std::string& delimiters, Type& t)\
-   { return parse(data.data(),data.data() + data.size(),delimiters
+   { return parse(data,delimiters
 
    #define strtk_parse_type(T)\
    ,t.T
@@ -7821,6 +8758,23 @@ namespace strtk
                      delimiters,
                      n,
                      set,
+                     split_option);
+   }
+
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t parse_n(const std::string& data,
+                              const std::string& delimiters,
+                              const std::size_t& n,
+                              std::multiset<T,Comparator,Allocator>& multiset,
+                              const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      return parse_n(data.data(),
+                     data.data() + data.size(),
+                     delimiters,
+                     n,
+                     multiset,
                      split_option);
    }
 
@@ -8171,6 +9125,29 @@ namespace strtk
    }
 
    template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t parse_line(std::ifstream& stream,
+                                 const std::string& delimiters,
+                                 std::multiset<T,Comparator,Allocator>& multiset,
+                                 const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      if (!stream)
+         return 0;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return 0;
+      if (data.empty() || delimiters.empty())
+         return false;
+      return strtk::parse(data.data(),
+                          data.data() + data.size(),
+                          delimiters,
+                          multiset,
+                          split_option);
+   }
+
+   template <typename T,
              typename Container>
    inline std::size_t parse_line(std::ifstream& stream,
                                  const std::string& delimiters,
@@ -8285,6 +9262,31 @@ namespace strtk
                             delimiters,
                             n,
                             set,
+                            split_option);
+   }
+
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::size_t parse_line_n(std::ifstream& stream,
+                                   const std::string& delimiters,
+                                   const std::size_t& n,
+                                   std::multiset<T,Comparator,Allocator>& multiset,
+                                   const split_options::type& split_option = split_options::compress_delimiters)
+   {
+      if (!stream)
+         return 0;
+      std::string data;
+      data.reserve(strtk::one_kilobyte);
+      if (!std::getline(stream,data))
+         return 0;
+      if (data.empty() || delimiters.empty())
+         return 0;
+      return strtk::parse_n(data.data(),
+                            data.data() + data.size(),
+                            delimiters,
+                            n,
+                            multiset,
                             split_option);
    }
 
@@ -8593,6 +9595,16 @@ namespace strtk
       join(output,delimiter,set.begin(),set.end());
    }
 
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline void join(std::string& output,
+                    const std::string& delimiter,
+                    const std::multiset<T,Comparator,Allocator>& multiset)
+   {
+      join(output,delimiter,multiset.begin(),multiset.end());
+   }
+
    inline void join(std::string& output,
                     const std::string& delimiter,
                     int argc, char* argv[])
@@ -8632,7 +9644,10 @@ namespace strtk
    inline std::string join(const std::string& delimiter,
                            const Sequence<T,Allocator>& sequence)
    {
-      return join(delimiter,sequence.begin(),sequence.end());
+      if (sequence.empty())
+         return "";
+      else
+         return join(delimiter,sequence.begin(),sequence.end());
    }
 
    template <typename T,
@@ -8641,7 +9656,22 @@ namespace strtk
    inline std::string join(const std::string& delimiter,
                            const std::set<T,Comparator,Allocator>& set)
    {
-      return join(delimiter,set.begin(),set.end());
+      if (set.empty())
+         return "";
+      else
+         return join(delimiter,set.begin(),set.end());
+   }
+
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::string join(const std::string& delimiter,
+                           const std::multiset<T,Comparator,Allocator>& multiset)
+   {
+      if (multiset.empty())
+         return "";
+      else
+         return join(delimiter,multiset.begin(),multiset.end());
    }
 
    inline std::string join(const std::string& delimiter, int argc, char* argv[])
@@ -8708,7 +9738,7 @@ namespace strtk
                        Predicate predicate,
                        const Sequence<T,Allocator>& sequence)
    {
-      join(output,delimiter,predicate,sequence.begin(),sequence.end());
+      join_if(output,delimiter,predicate,sequence.begin(),sequence.end());
    }
 
    template <typename T,
@@ -8720,7 +9750,19 @@ namespace strtk
                        Predicate predicate,
                        const std::set<T,Comparator,Allocator>& set)
    {
-      join(output,delimiter,predicate,set.begin(),set.end());
+      join_if(output,delimiter,predicate,set.begin(),set.end());
+   }
+
+   template <typename T,
+             typename Predicate,
+             typename Comparator,
+             typename Allocator>
+   inline void join_if(std::string& output,
+                       const std::string& delimiter,
+                       Predicate predicate,
+                       const std::multiset<T,Comparator,Allocator>& multiset)
+   {
+      join_if(output,delimiter,predicate,multiset.begin(),multiset.end());
    }
 
    template <typename InputIterator, typename Predicate>
@@ -8765,7 +9807,18 @@ namespace strtk
                               Predicate predicate,
                               const std::set<T,Comparator,Allocator>& set)
    {
-      return join(delimiter,predicate,set.begin(),set.end());
+      return join_if(delimiter,predicate,set.begin(),set.end());
+   }
+
+   template <typename T,
+             typename Predicate,
+             typename Comparator,
+             typename Allocator>
+   inline std::string join_if(const std::string& delimiter,
+                              Predicate predicate,
+                              const std::multiset<T,Comparator,Allocator>& multiset)
+   {
+      return join_if(delimiter,predicate,multiset.begin(),multiset.end());
    }
 
    class build_string
@@ -8791,7 +9844,7 @@ namespace strtk
 
       inline operator const char* () const
       {
-         return data_.c_str();
+         return data_.data();
       }
 
    private:
@@ -8874,6 +9927,17 @@ namespace strtk
       bracketize(output,pre,post,set.begin(),set.end());
    }
 
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline void bracketize(std::string& output,
+                          const std::string& pre,
+                          const std::string& post,
+                          std::multiset<T,Comparator,Allocator>& multiset)
+   {
+      bracketize(output,pre,post,multiset.begin(),multiset.end());
+   }
+
    template <typename InputIterator>
    inline std::string bracketize(const std::string& pre,
                                  const std::string& post,
@@ -8904,6 +9968,16 @@ namespace strtk
                                  std::set<T,Comparator,Allocator>& set)
    {
       return bracketize(pre,post,set.begin(),set.end());
+   }
+
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline std::string bracketize(const std::string& pre,
+                                 const std::string& post,
+                                 std::multiset<T,Comparator,Allocator>& multiset)
+   {
+      return bracketize(pre,post,multiset.begin(),multiset.end());
    }
 
    template <typename T>
@@ -9006,6 +10080,18 @@ namespace strtk
       }
    }
 
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline void iota(std::multiset<T,Comparator,Allocator>& multiset, std::size_t count, T value)
+   {
+      while (count)
+      {
+         multiset.insert(value++);
+         --count;
+      }
+   }
+
    template <typename OutputIterator, typename T>
    inline void iota(std::size_t count, T value, OutputIterator out)
    {
@@ -9031,6 +10117,14 @@ namespace strtk
    inline void iota(std::set<T,Comparator,Allocator>& set, const T& value)
    {
       strtk::iota(set.begin(),set.end(),value);
+   }
+
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline void iota(std::multiset<T,Comparator,Allocator>& multiset, const T& value)
+   {
+      strtk::iota(multiset.begin(),multiset.end(),value);
    }
 
    template <typename InputIterator, typename OutputIterator>
@@ -9089,6 +10183,13 @@ namespace strtk
                    const std::set<std::string, Comparator, Allocator>& set)
    {
       cut(r0,r1,set.begin(),set.end());
+   }
+
+   template <typename Comparator, typename Allocator>
+   inline void cut(const std::size_t& r0, const std::size_t& r1,
+                   const std::multiset<std::string, Comparator, Allocator>& multiset)
+   {
+      cut(r0,r1,multiset.begin(),multiset.end());
    }
 
    class translation_table
@@ -9684,7 +10785,9 @@ namespace strtk
    }
 
    template <typename Iterator, typename Function>
-   inline void for_each_combination(Iterator begin, Iterator end, const std::size_t& size, Function function)
+   inline void for_each_combination(Iterator begin, Iterator end,
+                                    const std::size_t& size,
+                                    Function function)
    {
       if (static_cast<typename std::iterator_traits<Iterator>::difference_type>(size) > std::distance(begin,end))
          return;
@@ -9698,7 +10801,9 @@ namespace strtk
    }
 
    template <typename Iterator, typename Function>
-   inline void for_each_combination_conditional(Iterator begin, Iterator end, const std::size_t& size, Function function)
+   inline void for_each_combination_conditional(Iterator begin, Iterator end,
+                                                const std::size_t& size,
+                                                Function function)
    {
       if (static_cast<typename std::iterator_traits<Iterator>::difference_type>(size) > std::distance(begin,end))
          return;
@@ -11152,9 +12257,9 @@ namespace strtk
          }
 
          template <typename T,
-                   typename Allocator,
-                   typename Comparator>
-         inline bool operator()(std::set<T,Allocator,Comparator>& set)
+                   typename Comparator,
+                   typename Allocator>
+         inline bool operator()(std::set<T,Comparator,Allocator>& set)
          {
             uint32_t size = 0;
             if (!read_pod(size))
@@ -11170,6 +12275,30 @@ namespace strtk
                if (!operator()(t))
                   return false;
                set.insert(t);
+            }
+
+            return true;
+         }
+
+         template <typename T,
+                   typename Allocator,
+                   typename Comparator>
+         inline bool operator()(std::multiset<T,Allocator,Comparator>& multiset)
+         {
+            uint32_t size = 0;
+            if (!read_pod(size))
+               return false;
+
+            const std::size_t raw_size = size * sizeof(T);
+            if (!buffer_capacity_ok(raw_size))
+               return false;
+
+            T t;
+            for (std::size_t i = 0; i < size; ++i)
+            {
+               if (!operator()(t))
+                  return false;
+               multiset.insert(t);
             }
 
             return true;
@@ -11524,9 +12653,9 @@ namespace strtk
          }
 
          template <typename T,
-                   typename Allocator,
-                   typename Comparator>
-         inline bool operator()(const std::set<T,Allocator,Comparator>& set)
+                   typename Comparator,
+                   typename Allocator>
+         inline bool operator()(const std::set<T,Comparator,Allocator>& set)
          {
             const uint32_t size = static_cast<uint32_t>(set.size());
             if (!operator()(size))
@@ -11536,8 +12665,32 @@ namespace strtk
             if (!buffer_capacity_ok(raw_size))
                return false;
 
-            typename std::set<T,Allocator,Comparator>::const_iterator itr = set.begin();
-            typename std::set<T,Allocator,Comparator>::const_iterator end = set.end();
+            typename std::set<T,Comparator,Allocator>::const_iterator itr = set.begin();
+            typename std::set<T,Comparator,Allocator>::const_iterator end = set.end();
+            while (end != itr)
+            {
+               if (!operator()(*itr))
+                  return false;
+               ++itr;
+            }
+            return true;
+         }
+
+         template <typename T,
+                   typename Allocator,
+                   typename Comparator>
+         inline bool operator()(const std::multiset<T,Allocator,Comparator>& multiset)
+         {
+            const uint32_t size = static_cast<uint32_t>(multiset.size());
+            if (!operator()(size))
+               return false;
+
+            const std::size_t raw_size = size * sizeof(T);
+            if (!buffer_capacity_ok(raw_size))
+               return false;
+
+            typename std::multiset<T,Allocator,Comparator>::const_iterator itr = multiset.begin();
+            typename std::multiset<T,Allocator,Comparator>::const_iterator end = multiset.end();
             while (end != itr)
             {
                if (!operator()(*itr))
@@ -12107,6 +13260,19 @@ namespace strtk
 
       template <typename InputIterator,
                 typename T,
+                typename Comparator,
+                typename Allocator>
+      inline std::size_t parse_stl_container_proxy(const InputIterator begin,
+                                                   const InputIterator end,
+                                                   const std::string& delimiters,
+                                                   std::multiset<T,Comparator,Allocator>& multiset,
+                                                   const split_options::type& split_option = split_options::compress_delimiters)
+      {
+         return parse(begin,end,delimiters,multiset,split_option);
+      }
+
+      template <typename InputIterator,
+                typename T,
                 typename Container>
       inline std::size_t parse_stl_container_proxy(const InputIterator begin,
                                                    const InputIterator end,
@@ -12168,6 +13334,20 @@ namespace strtk
                                                      const split_options::type& split_option = split_options::compress_delimiters)
       {
          return parse_n(begin,end,delimiters,n,set,split_option);
+      }
+
+      template <typename InputIterator,
+                typename T,
+                typename Comparator,
+                typename Allocator>
+      inline std::size_t parse_n_stl_container_proxy(const InputIterator begin,
+                                                     const InputIterator end,
+                                                     const std::string& delimiters,
+                                                     const std::size_t& n,
+                                                     std::multiset<T,Comparator,Allocator>& multiset,
+                                                     const split_options::type& split_option = split_options::compress_delimiters)
+      {
+         return parse_n(begin,end,delimiters,n,multiset,split_option);
       }
 
       template <typename InputIterator,
@@ -12281,12 +13461,13 @@ namespace strtk
       std::size_t element_count_;
    };
 
-   template <typename T> struct vector_sink { typedef sink_type<std::vector<T> > type; };
-   template <typename T> struct deque_sink  { typedef sink_type<std::deque<T> >  type; };
-   template <typename T> struct list_sink   { typedef sink_type<std::list<T> >   type; };
-   template <typename T> struct set_sink    { typedef sink_type<std::set<T> >    type; };
-   template <typename T> struct queue_sink  { typedef sink_type<std::queue<T> >  type; };
-   template <typename T> struct stack_sink  { typedef sink_type<std::stack<T> >  type; };
+   template <typename T> struct vector_sink   { typedef sink_type<std::vector<T> >   type; };
+   template <typename T> struct deque_sink    { typedef sink_type<std::deque<T> >    type; };
+   template <typename T> struct list_sink     { typedef sink_type<std::list<T> >     type; };
+   template <typename T> struct set_sink      { typedef sink_type<std::set<T> >      type; };
+   template <typename T> struct multiset_sink { typedef sink_type<std::multiset<T> > type; };
+   template <typename T> struct queue_sink    { typedef sink_type<std::queue<T> >    type; };
+   template <typename T> struct stack_sink    { typedef sink_type<std::stack<T> >    type; };
    template <typename T> struct priority_queue_sink { typedef sink_type<std::priority_queue<T> > type; };
 
    namespace text
@@ -13237,6 +14418,7 @@ namespace strtk
       template<> struct supported_conversion_to_type<sink_type<std::deque<T> > > { typedef sink_type_tag type; };\
       template<> struct supported_conversion_to_type<sink_type<std::list<T> > > { typedef sink_type_tag type; };\
       template<> struct supported_conversion_to_type<sink_type<std::set<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_to_type<sink_type<std::multiset<T> > > { typedef sink_type_tag type; };\
       template<> struct supported_conversion_to_type<sink_type<std::queue<T> > > { typedef sink_type_tag type; };\
       template<> struct supported_conversion_to_type<sink_type<std::stack<T> > > { typedef sink_type_tag type; };\
       template<> struct supported_conversion_to_type<sink_type<std::priority_queue<T> > > { typedef sink_type_tag type; };\
@@ -13244,6 +14426,7 @@ namespace strtk
       template<> struct supported_conversion_from_type<sink_type<std::deque<T> > > { typedef sink_type_tag type; };\
       template<> struct supported_conversion_from_type<sink_type<std::list<T> > > { typedef sink_type_tag type; };\
       template<> struct supported_conversion_from_type<sink_type<std::set<T> > > { typedef sink_type_tag type; };\
+      template<> struct supported_conversion_from_type<sink_type<std::multiset<T> > > { typedef sink_type_tag type; };\
       template<> struct supported_conversion_from_type<sink_type<std::queue<T> > > { typedef sink_type_tag type; };\
       template<> struct supported_conversion_from_type<sink_type<std::stack<T> > > { typedef sink_type_tag type; };\
       template<> struct supported_conversion_from_type<sink_type<std::priority_queue<T> > > { typedef sink_type_tag type; };\
@@ -13253,6 +14436,7 @@ namespace strtk
       template<> struct supported_conversion_from_type<std::deque<T> > { typedef stl_seq_type_tag type; };\
       template<> struct supported_conversion_from_type<std::list<T> > { typedef stl_seq_type_tag type; };\
       template<> struct supported_conversion_from_type<std::set<T> > { typedef stl_seq_type_tag type; };\
+      template<> struct supported_conversion_from_type<std::multiset<T> > { typedef stl_seq_type_tag type; };\
       template<> struct supported_conversion_from_type<std::queue<T> > { typedef stl_seq_type_tag type; };\
       template<> struct supported_conversion_from_type<std::stack<T> > { typedef stl_seq_type_tag type; };\
       template<> struct supported_conversion_from_type<std::priority_queue<T> > { typedef stl_seq_type_tag type; };\
@@ -14420,6 +15604,7 @@ namespace strtk
    strtk_register_sequence_type_name(std::deque)
    strtk_register_sequence_type_name(std::list)
    strtk_register_set_type_name(std::set)
+   strtk_register_set_type_name(std::multiset)
 
    template <typename T>
    inline std::size_t type_length()
@@ -15078,6 +16263,24 @@ namespace strtk
          return true;
       }
 
+      template <typename T,
+                typename Comparator,
+                typename Allocator>
+      inline bool read_pod(std::ifstream& stream,
+                           const std::size_t& count,
+                           std::multiset<T,Comparator,Allocator>& multiset)
+      {
+         T t;
+         for (std::size_t i = 0; i < count; ++i)
+         {
+            if (details::read_pod_proxy(stream,t))
+               multiset.insert(t);
+            else
+               return false;
+         }
+         return true;
+      }
+
       template <typename T1, typename T2, typename T3, typename T4,
                 typename T5, typename T6, typename T7, typename T8,
                 typename T9, typename T10>
@@ -15248,15 +16451,32 @@ namespace strtk
          }
       }
 
+      template <typename T,
+                typename Comparator,
+                typename Allocator>
+      inline bool write_pod(std::ofstream& stream,
+                            const std::multiset<T,Comparator,Allocator>& multiset)
+      {
+         typename std::multiset<T,Comparator,Allocator>::iterator itr = multiset.begin();
+         typename std::multiset<T,Comparator,Allocator>::iterator end = multiset.end();
+         while (end != itr)
+         {
+            if (details::write_pod_proxy(stream,*itr))
+               ++itr;
+            else
+               return false;
+         }
+      }
+
       inline bool read_at_offset(std::ifstream& stream,
                                  const std::size_t& offset,
                                  char* buffer,
                                  const std::size_t& buffer_size)
       {
          if (!stream) return false;
-         stream.seekg(offset,std::ios_base::beg);
+         stream.seekg(static_cast<std::ifstream::off_type>(offset),std::ios_base::beg);
          if (stream.fail()) return false;
-         stream.read(buffer,buffer_size);
+         stream.read(buffer,static_cast<std::streamsize>(buffer_size));
          if (stream.fail()) return false;
          stream.close();
          return true;
@@ -15496,8 +16716,8 @@ namespace strtk
    }
 
    template <typename T,
-             typename Allocator,
-             typename Comparator>
+             typename Comparator,
+             typename Allocator>
    inline unsigned char* read_pod(unsigned char* data,
                                   const std::size_t& n,
                                   const std::set<T,Comparator,Allocator>& set)
@@ -15505,6 +16725,18 @@ namespace strtk
       T* ptr = reinterpret_cast<T>(data);
       std::copy(ptr, ptr + n, std::inserter(set,set.begin()));
       return data + (set.size() * sizeof(T));
+   }
+
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline unsigned char* read_pod(unsigned char* data,
+                                  const std::size_t& n,
+                                  const std::multiset<T,Comparator,Allocator>& multiset)
+   {
+      T* ptr = reinterpret_cast<T>(data);
+      std::copy(ptr, ptr + n, std::inserter(multiset,multiset.begin()));
+      return data + (multiset.size() * sizeof(T));
    }
 
    template <typename T1,  typename T2, typename  T3, typename  T4,
@@ -15713,14 +16945,25 @@ namespace strtk
    }
 
    template <typename T,
-             typename Allocator,
-             typename Comparator>
+             typename Comparator,
+             typename Allocator>
    inline unsigned char* write_pod(unsigned char* data,
                                    const std::set<T,Comparator,Allocator>& set)
    {
       T* ptr = reinterpret_cast<T>(data);
       std::copy(set.begin(),set.end(),ptr);
       return data + (set.size() * sizeof(T));
+   }
+
+   template <typename T,
+             typename Comparator,
+             typename Allocator>
+   inline unsigned char* write_pod(unsigned char* data,
+                                   const std::multiset<T,Comparator,Allocator>& multiset)
+   {
+      T* ptr = reinterpret_cast<T>(data);
+      std::copy(multiset.begin(),multiset.end(),ptr);
+      return data + (multiset.size() * sizeof(T));
    }
 
    class string_condition
@@ -16550,7 +17793,7 @@ namespace strtk
             const std::size_t buffer_size = sizeof(                        salt_count_) +
                                             sizeof(                        table_size_) +
                                             sizeof(                    raw_table_size_) +
-                                            sizeof(  projected_element_count_) +
+                                            sizeof(           projected_element_count_) +
                                             sizeof(            inserted_element_count_) +
                                             sizeof(                       random_seed_) +
                                             sizeof(desired_false_positive_probability_) +
@@ -16626,7 +17869,7 @@ namespace strtk
 
          inline virtual void compute_indices(const bloom_type& hash, std::size_t& bit_index, std::size_t& bit) const
          {
-            bit_index = hash % table_size_;
+            bit_index = static_cast<std::size_t>(hash % table_size_);
             bit = bit_index % bits_per_char;
          }
 
@@ -17534,6 +18777,17 @@ namespace strtk
                 typename T,
                 typename Comparator,
                 typename MapAllocator,
+                typename SetAllocator>
+      inline void make_key_list(const std::map<Key,T,Comparator,MapAllocator>& map,
+                                std::multiset<Key,Comparator,SetAllocator>& multiset)
+      {
+         make_key_list(map,std::inserter(multiset,multiset.begin()));
+      }
+
+      template <typename Key,
+                typename T,
+                typename Comparator,
+                typename MapAllocator,
                 typename SequenceAllocator,
                 template <typename,typename> class Sequence>
       inline void make_key_list(const std::map<Key,T,Comparator,MapAllocator>& map,
@@ -17605,6 +18859,22 @@ namespace strtk
          cont.clear();
       }
 
+      template <typename Key,
+                typename T,
+                typename Comparator,
+                typename Allocator>
+      inline void delete_all(std::multimap<Key,T*,Comparator,Allocator>& cont)
+      {
+         typename std::multimap<Key,T*,Comparator,Allocator>::iterator itr = cont.begin();
+         typename std::multimap<Key,T*,Comparator,Allocator>::iterator end = cont.end();
+         while (end != itr)
+         {
+            delete (*itr).second;
+            ++itr;
+         }
+         cont.clear();
+      }
+
       template <typename T,
                 typename Comparator,
                 typename Allocator>
@@ -17620,12 +18890,27 @@ namespace strtk
          cont.clear();
       }
 
+      template <typename T,
+                typename Comparator,
+                typename Allocator>
+      inline void delete_all(std::multiset<T*,Comparator,Allocator>& cont)
+      {
+         typename std::multiset<T*,Comparator,Allocator>::iterator itr = cont.begin();
+         typename std::multiset<T*,Comparator,Allocator>::iterator end = cont.end();
+         while (end != itr)
+         {
+            delete (*itr);
+            ++itr;
+         }
+         cont.clear();
+      }
+
       template <typename Predicate,
                 typename T,
                 typename Allocator,
                 template <typename,typename> class Sequence>
       inline void delete_if(const Predicate& p,
-                           Sequence<T*,Allocator>& sequence)
+                            Sequence<T*,Allocator>& sequence)
       {
          typename Sequence<T*,Allocator>::iterator itr = sequence.begin();
          while (sequence.end() != itr)
@@ -17662,6 +18947,27 @@ namespace strtk
       }
 
       template <typename Predicate,
+                typename Key,
+                typename T,
+                typename Comparator,
+                typename Allocator>
+      inline void delete_if(const Predicate& p,
+                            std::multimap<Key,T*,Comparator,Allocator>& cont)
+      {
+         typename std::multimap<Key,T*,Comparator,Allocator>::iterator itr = cont.begin();
+         while (cont.end() != itr)
+         {
+            if (p(*itr))
+            {
+               delete (*itr).second;
+               itr = cont.erase(itr);
+            }
+            else
+               ++itr;
+         }
+      }
+
+      template <typename Predicate,
                 typename T,
                 typename Comparator,
                 typename Allocator>
@@ -17669,6 +18975,26 @@ namespace strtk
                             std::set<T*,Comparator,Allocator>& cont)
       {
          typename std::set<T*,Comparator,Allocator>::iterator itr = cont.begin();
+         while (cont.end() != itr)
+         {
+            if (p(*itr))
+            {
+               delete (*itr).second;
+               itr = cont.erase(itr);
+            }
+            else
+               ++itr;
+         }
+      }
+
+      template <typename Predicate,
+                typename T,
+                typename Comparator,
+                typename Allocator>
+      inline void delete_if(const Predicate& p,
+                            std::multiset<T*,Comparator,Allocator>& cont)
+      {
+         typename std::multiset<T*,Comparator,Allocator>::iterator itr = cont.begin();
          while (cont.end() != itr)
          {
             if (p(*itr))
@@ -17797,6 +19123,55 @@ namespace strtk
                             const T& v1)
       {
          sequence.push_back(v1);
+      }
+
+      template <typename T,
+                typename Allocator,
+                template <typename,typename> class Sequence>
+      inline void clear(Sequence<T,Allocator>& sequence)
+      {
+         sequence.clear();
+      }
+
+      template <typename T,
+                typename Comparator,
+                typename Allocator>
+      inline void clear(std::set<T,Comparator,Allocator>& set)
+      {
+          std::set<T> null_set;
+          std::swap(set,null_set);
+      }
+
+      template <typename T,
+                typename Comparator,
+                typename Allocator>
+      inline void clear(std::multiset<T,Comparator,Allocator>& multiset)
+      {
+          std::multiset<T> null_set;
+          std::swap(multiset,null_set);
+      }
+
+      template <typename T, typename Container>
+      inline void clear(std::queue<T,Container>& queue)
+      {
+          std::queue<T> null_que;
+          std::swap(queue,null_que);
+      }
+
+      template <typename T, typename Container>
+      inline void clear(std::stack<T,Container>& stack)
+      {
+          std::stack<T> null_stack;
+          std::swap(stack,null_stack);
+      }
+
+      template <typename T,
+                typename Container,
+                typename Comparator>
+      inline void clear(std::priority_queue<T,Container,Comparator>& priority_queue)
+      {
+          std::priority_queue<T> null_pqueue;
+          std::swap(priority_queue,null_pqueue);
       }
 
    } // namespace util
@@ -18510,7 +19885,7 @@ namespace strtk
    namespace information
    {
       static const char* library = "String Toolkit";
-      static const char* version = "2.71828182845904523536028747135266249775724";
+      static const char* version = "2.71828182845904523536028747135266249775724709";
       static const char* date    = "20111111";
 
       static inline std::string data()

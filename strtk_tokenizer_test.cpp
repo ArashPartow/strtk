@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * String Tokenizer Test                                         *
- * Author: Arash Partow (2002-2011)                              *
+ * Author: Arash Partow (2002-2012)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -39,6 +39,16 @@
 
 #include "strtk.hpp"
 
+
+template <typename T>
+inline bool not_equal(const T& t1,
+                      const T& t2,
+                      const T& epsilon = 0.0000000001/*std::numeric_limits<T>::epsilon()*/)
+{
+   if (t1 != t1) return true;
+   if (t2 != t2) return true;
+   return std::abs(t1 - t2) > (std::max(T(1.0),std::max(std::abs(t1),std::abs(t2))) * epsilon);
+}
 
 template<typename Predicate>
 bool test_tokenizer_split(const Predicate& p,
@@ -437,6 +447,26 @@ bool test_tokenizer_options()
             std::cout << "test_tokenizer_options() - IAD Failed match @ " << i << std::endl;
             return false;
          }
+      }
+   }
+
+   {
+      std::string data = "abc def";
+      strtk::single_delimiter_predicate<char> delimiter(' ');
+      typedef strtk::std_string::tokenizer<strtk::single_delimiter_predicate<char> >::type tokenizer_type;
+      tokenizer_type tokenizer(data,delimiter);
+      tokenizer_type::iterator itr = tokenizer.begin();
+      ++itr;
+      itr = tokenizer.begin();
+      unsigned int count = 0;
+      while (tokenizer.end() != itr)
+      {
+         if (++count > 2)
+         {
+            std::cout << "test_tokenizer_options() - Failed iterator test." << std::endl;
+            return false;
+         }
+         ++itr;
       }
    }
 
@@ -1056,7 +1086,7 @@ bool test_double_convert()
             return false;
          }
 
-         if (std::abs(t - v) > 0.0000000001)
+         if (not_equal(t,v,0.0000000001))
          {
             std::cout << "test_double_convert() - Failed decimal r == t  r: " << t << std::endl;
             return false;
@@ -1089,7 +1119,7 @@ bool test_double_convert()
             return false;
          }
 
-         if (std::abs(d1 - tmp) > 0.000000001)
+         if (not_equal(d1,tmp,0.000000001))
          {
             std::cout << "test_double_convert() - (1) final test compare failure @ " << i << std::endl;
             return false;
@@ -1104,7 +1134,7 @@ bool test_double_convert()
             return false;
          }
 
-         if (std::abs(d2 - tmp) > 0.000000001)
+         if (not_equal(d2,tmp,0.000000001))
          {
             std::cout << "test_double_convert() - (2) final test compare failure @ " << i << std::endl;
             return false;
@@ -1751,19 +1781,19 @@ bool test_parse4()
       {
          double expected_value = i +  (i / 10.0);
 
-         if (double_vec[i] != expected_value)
+         if (not_equal(double_vec[i],expected_value))
          {
             std::cout << "test_parse4() - failed double_vec[" << i <<"] == " << i << std::endl;
             return false;
          }
 
-         if (double_deq[i] != expected_value)
+         if (not_equal(double_deq[i],expected_value))
          {
             std::cout << "test_parse4() - failed double_deq[" << i <<"] == " << i << std::endl;
             return false;
          }
 
-         if (*(double_lst_itr) != -expected_value)
+         if (not_equal(*(double_lst_itr),-expected_value))
          {
             std::cout << "test_parse4() - failed double_lst[" << i <<"] == " << i << std::endl;
             return false;
@@ -1957,7 +1987,7 @@ bool test_kv_parse()
             return false;
          }
 
-         if (std::abs(x - f) > 0.0000001f)
+         if (not_equal(x,f,0.0000001f))
          {
             std::cout << "test_kv_parse() - (float) failed value test at index: " << i << " x:" << x << std::endl;
             return false;
@@ -1983,7 +2013,7 @@ bool test_kv_parse()
             return false;
          }
 
-         if (std::abs(x - d) > 0.0000001)
+         if (not_equal(x,d,0.0000001))
          {
             std::cout << "test_kv_parse() - (double) failed value test at index: " << i << " x:" << x << std::endl;
             return false;
@@ -2174,13 +2204,13 @@ bool test_keyvalue_parser()
          return false;
       }
 
-      if (std::abs(d3 - 1234.5678) > 0.0000001)
+      if (not_equal(d3,1234.5678,0.0000001))
       {
          std::cout << "test_keyvalue_parser() - Error d3 parse failure. d3: " << d3 << std::endl;
          return false;
       }
 
-      if (std::abs(d4 - 90123.4567f) > 0.0000001f)
+      if (not_equal(d4,90123.4567f,0.0000001f))
       {
          std::cout << "test_keyvalue_parser() - Error d3 parse failure. d4: " << d4 << std::endl;
          return false;
@@ -2237,13 +2267,13 @@ bool test_keyvalue_parser()
          return false;
       }
 
-      if (std::abs(d3 - 1234.5678) > 0.0000001)
+      if (not_equal(d3,1234.5678,0.0000001))
       {
          std::cout << "test_keyvalue_parser() - Error d3 parse failure. d3: " << d3 << std::endl;
          return false;
       }
 
-      if (std::abs(d4 - 90123.4567f) > 0.0000001f)
+      if (not_equal(d4,90123.4567f,0.0000001f))
       {
          std::cout << "test_keyvalue_parser() - Error d3 parse failure. d4: " << d4 << std::endl;
          return false;
@@ -2388,16 +2418,13 @@ bool test_keyvalue_parser()
          return false;
       }
 
-      if ((std::abs(d3 - 1234.5678) > 0.0000001) &&
-          (std::abs(1234.5678 - d3) > 0.0000001))
-
+      if (not_equal<double>(d3,1234.5678,0.0000001))
       {
          std::cout << "test_keyvalue_parser() - Error d3 parse failure. d3: " << d3 << std::endl;
          return false;
       }
 
-      if ((std::abs(d4 - 90123.4567f) > 0.0000001f) &&
-          (std::abs(90123.4567f - d4) > 0.0000001f))
+      if (not_equal<double>(d4,90123.4567f,0.0000001f))
       {
          std::cout << "test_keyvalue_parser() - Error d3 parse failure. d4: " << d4 << std::endl;
          return false;

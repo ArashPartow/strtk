@@ -555,7 +555,8 @@ void parse_example02()
    std::vector<int> int_list;
    std::deque<double> double_list;
    std::list<std::string> string_list;
-   std::set<float> float_list;
+   std::set<float> float_set;
+   std::multiset<float> float_multiset;
    std::queue<unsigned int> uint_queue;
    std::stack<unsigned int> uint_stack;
    std::priority_queue<unsigned int> uint_prique;
@@ -563,7 +564,8 @@ void parse_example02()
    strtk::parse(int_string,",",int_list);
    strtk::parse(double_string,",",double_list);
    strtk::parse(string_string,",",string_list);
-   strtk::parse(float_string,",",float_list);
+   strtk::parse(float_string,",",float_set);
+   strtk::parse(float_string,",",float_multiset);
    strtk::parse(uint_string,",",uint_queue);
    strtk::parse(uint_string,",",uint_stack);
    strtk::parse(uint_string,",",uint_prique);
@@ -571,7 +573,8 @@ void parse_example02()
    std::cout << strtk::join("\t",int_list) << std::endl;
    std::cout << strtk::join("\t",double_list) << std::endl;
    std::cout << strtk::join("\t",string_list) << std::endl;
-   std::cout << strtk::join("\t",float_list) << std::endl;
+   std::cout << strtk::join("\t",float_set) << std::endl;
+   std::cout << strtk::join("\t",float_multiset) << std::endl;
 }
 
 void parse_example03()
@@ -733,16 +736,29 @@ void parse_example07()
       static const std::string data = "1,+2,-3|abc,ijk,xyz|123.456,+234.567,-345.678|-7-6,-5-4,-3-2,-1";
 
       std::set<int> int_set;
+      std::multiset<int> int_multiset;
       std::queue<std::string> string_queue;
       std::stack<double> double_stack;
       std::priority_queue<int> int_priority_queue;
 
       strtk::set_sink<int>::type            set_sink(",");
+      strtk::multiset_sink<int>::type       multiset_sink(",");
       strtk::queue_sink<std::string>::type  que_sink(",");
       strtk::stack_sink<double>::type       stk_sink(",");
       strtk::priority_queue_sink<int>::type prq_sink(",");
 
       strtk::parse(data,"|",set_sink(int_set),
+                            que_sink(string_queue),
+                            stk_sink(double_stack),
+                            prq_sink(int_priority_queue));
+
+      strtk::util::clear(int_set);
+      strtk::util::clear(int_multiset);
+      strtk::util::clear(string_queue);
+      strtk::util::clear(double_stack);
+      strtk::util::clear(int_priority_queue);
+
+      strtk::parse(data,"|",multiset_sink(int_multiset),
                             que_sink(string_queue),
                             stk_sink(double_stack),
                             prq_sink(int_priority_queue));
@@ -780,6 +796,64 @@ void parse_example08()
    strtk::ignore_token ignore;
    strtk::parse(data,",",i,ignore,d,ignore,s);
    std::cout << "i=" << i << " d=" << d << " s=" << s << std::endl;
+}
+
+void parse_example09()
+{
+   {
+      std::string data = "A String Value,111.111,222.222,333.333,444.444,555.555";
+      std::string token;
+      std::deque<double> double_list;
+      strtk::parse(data,",",token,double_list);
+      std::cout << "parse_example09(): " << token << strtk::join(" ",double_list) << "\n";
+   }
+   {
+      std::string data = "A String Value,01-01-2000,111.111,222.222,333.333,444.444,555.555";
+      std::string token;
+      std::string date;
+      std::vector<double> double_list;
+      strtk::parse(data,",",token,date,double_list);
+      std::cout << "parse_example09(): " << token << " " << date << " " << strtk::join(" ",double_list) << "\n";
+   }
+   {
+      std::string data = "A String Value,01-01-2000,123456789,111.111,222.222,333.333,444.444,555.555";
+      std::string token;
+      std::string date;
+      int i;
+      std::set<double> double_list;
+      strtk::parse(data,",",token,date,i,double_list);
+      std::cout << "parse_example09(): " << token << " " << date << " " << i << " " << strtk::join(" ",double_list) << "\n";
+   }
+   {
+      std::string data = "A String Value,01-01-2000,123456789,111.111,222.222,333.333,444.444,555.555";
+      std::string token;
+      std::string date;
+      int i;
+      double d;
+      std::stack<double> double_list;
+      strtk::parse(data,",",token,date,i,d,double_list);
+   }
+   {
+      std::string data = "A String Value,01-01-2000,123456789,111.111,222.222,333.333,444.444,555.555";
+      std::string token;
+      std::string date;
+      int i;
+      double d1;
+      double d2;
+      std::queue<double> double_list;
+      strtk::parse(data,",",token,date,i,d1,d2,double_list);
+   }
+   {
+      std::string data = "A String Value,01-01-2000,123456789,111.111,222.222,333.333,444.444,555.555";
+      std::string token;
+      std::string date;
+      int i;
+      double d1;
+      double d2;
+      std::multiset<double> double_list;
+      strtk::parse(data,",",token,date,i,d1,d2,double_list);
+      std::cout << "parse_example09(): " << token << " " << date << " " << i << " " << d1 << " " << d2 << " " << strtk::join(" ",double_list) << "\n";
+   }
 }
 
 void remove_inplace_example01()
@@ -1749,6 +1823,7 @@ int main()
    parse_example06();
    parse_example07();
    parse_example08();
+   parse_example09();
    remove_inplace_example01();
    remove_consecutives_example01();
    remove_consecutives_example02();
