@@ -1448,26 +1448,26 @@ namespace strtk
       }
    }
 
-   template<typename Allocator,
-           template <typename,typename> class Sequence>
+   template <typename Allocator,
+             template <typename,typename> class Sequence>
    void remove_empty_strings(Sequence<std::string,Allocator>& seq)
    {
       struct is_empty { static inline bool check(const std::string& s) { return s.empty(); } };
       seq.erase(remove_if(seq.begin(),seq.end(),is_empty::check),seq.end());
    }
 
-   template<typename Allocator>
+   template <typename Allocator>
    void remove_empty_strings(std::list<std::string,Allocator>& l)
    {
       struct is_empty { static inline bool check(const std::string& s) { return s.empty(); } };
       l.remove_if(is_empty::check);
    }
 
-   template<typename Comparator, typename Allocator>
+   template <typename Comparator, typename Allocator>
    void remove_empty_strings(std::set<std::string,Comparator,Allocator>& set)
    {
       struct is_empty { static inline bool check(const std::string& s) { return s.empty(); } };
-      std::set<std::string,Comparator,Allocator>::iterator itr = set.begin();
+      typename std::set<std::string,Comparator,Allocator>::iterator itr = set.begin();
       while (set.end() != itr)
       {
          if ((*itr).empty())
@@ -1477,11 +1477,11 @@ namespace strtk
       }
    }
 
-   template<typename Comparator, typename Allocator>
+   template <typename Comparator, typename Allocator>
    void remove_empty_strings(std::multiset<std::string,Comparator,Allocator>& set)
    {
       struct is_empty { static inline bool check(const std::string& s) { return s.empty(); } };
-      std::multiset<std::string,Comparator,Allocator>::iterator itr = set.begin();
+      typename std::multiset<std::string,Comparator,Allocator>::iterator itr = set.begin();
       while (set.end() != itr)
       {
          if ((*itr).empty())
@@ -18936,8 +18936,8 @@ namespace strtk
                 typename SequenceAllocator,
                 template <typename,typename> class Sequence>
       inline void make_value_list(const std::multimap<Key,T,Comparator,MapAllocator>& map,
-                           const Key& key,
-                           Sequence<T,SequenceAllocator>& sequence)
+                                  const Key& key,
+                                  Sequence<T,SequenceAllocator>& sequence)
       {
          make_value_list(map,key,std::back_inserter(sequence));
       }
@@ -19508,8 +19508,8 @@ namespace strtk
       template <>
       struct size_impl<1> { static inline bool cmp(ptr c1, ptr c2) { return cmpimpl<const unsigned char*>(c1,c2); } };
 
-      template <std::size_t X>
-      struct next_size { enum { size = (X >= 8) ? 8 : ((X >= 4) ? 4 : ((X >= 2) ? 2 : 1)) }; };
+      template <std::size_t N>
+      struct next_size { enum { size = (N >= 8) ? 8 : ((N >= 4) ? 4 : ((N >= 2) ? 2 : 1)) }; };
 
       template <std::size_t N>
       struct memcmp_n_impl
@@ -19719,6 +19719,16 @@ namespace strtk
       char* begin = const_cast<char*>(range.first);
       char* end = const_cast<char*>(range.second);
       std::fill(begin,end,v);
+   }
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline void fill(Sequence<T,Allocator>& seq, const T& t)
+   {
+      if (seq.empty())
+         return;
+      fill_n(seq.begin(),seq.size(),t);
    }
 
    namespace keyvalue
