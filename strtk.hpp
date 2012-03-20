@@ -6491,18 +6491,14 @@ namespace strtk
          std::ifstream stream(file_name_.c_str(),std::ios::binary);
          if (!stream)
             return false;
-
          stream.seekg (0,std::ios::end);
          buffer_size_ = static_cast<std::size_t>(stream.tellg());
          if (0 == buffer_size_)
             return false;
-
          stream.seekg (0,std::ios::beg);
-
          buffer_ = new unsigned char[buffer_size_];
          stream.read(reinterpret_cast<char*>(buffer_),static_cast<std::streamsize>(buffer_size_));
-         stream.close(); // scope should handle this.
-
+         stream.close();
          return true;
       }
 
