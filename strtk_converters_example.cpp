@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * Converters Examples                                           *
- * Author: Arash Partow (2002-2011)                              *
+ * Author: Arash Partow (2002-2012)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *

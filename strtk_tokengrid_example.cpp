@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * Token Grid Example                                            *
- * Author: Arash Partow (2002-2011)                              *
+ * Author: Arash Partow (2002-2012)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -274,7 +274,7 @@ void token_grid_test04()
       strtk::token_grid::row_type row = grid.row(i);
       for (unsigned j = 0; j < row.size(); ++j)
       {
-         strtk::token_grid::range_type r = row.token(j);
+         strtk::token_grid::range_t r = row.token(j);
          std::cout << r << "\t";
       }
       std::cout << std::endl;
@@ -403,6 +403,19 @@ void token_grid_test08()
    }
 }
 
+struct is_even
+{
+   inline bool operator()(const strtk::token_grid::row_type& row)
+   {
+      return 0 == (static_cast<unsigned int>(strtk::string_to_type_converter<double>(row.token(0))) % 2);
+   }
+
+   inline bool operator()(const strtk::token_grid::range_t& range)
+   {
+      return 0 == (static_cast<unsigned int>(strtk::string_to_type_converter<double>(range)) % 2);
+   }
+};
+
 void token_grid_test09()
 {
    std::string data;
@@ -414,25 +427,50 @@ void token_grid_test09()
            "6.6,6.6,6.6,6.6,6.6,6.6\n"
            "7.7,7.7,7.7,7.7,7.7,7.7\n";
 
-   strtk::token_grid grid(data,data.size(),",");
-
-   for (std::size_t r = 0; r < grid.row_count(); ++r)
    {
-      std::string row = "";
-      if (grid.join_row(r,"|",row))
-         std::cout << "row["<< r <<"] = " << row << std::endl;
-      else
-         std::cout << "failed row["<< r <<"]" << std::endl;
+      strtk::token_grid grid(data,data.size(),",");
+
+      for (std::size_t r = 0; r < grid.row_count(); ++r)
+      {
+         std::string row = "";
+         if (grid.join_row(r,"|",row))
+            std::cout << "row["<< r <<"] = " << row << std::endl;
+         else
+            std::cout << "failed row["<< r <<"]" << std::endl;
+      }
+
+      for (std::size_t c = 0; c < grid.max_column_count(); ++c)
+      {
+         std::string col = "";
+         if (grid.join_column(c,"|",col))
+            std::cout << "col["<< c <<"] = " << col << std::endl;
+         else
+            std::cout << "failed col["<< c <<"]" << std::endl;
+      }
    }
 
-   for (std::size_t c = 0; c < grid.max_column_count(); ++c)
    {
-      std::string col = "";
-      if (grid.join_column(c,"|",col))
-         std::cout << "col["<< c <<"] = " << col << std::endl;
-      else
-         std::cout << "failed col["<< c <<"]" << std::endl;
+      strtk::token_grid grid(data,data.size(),",");
+
+      for (std::size_t r = 0; r < grid.row_count(); ++r)
+      {
+         std::string row = "";
+         if (grid.join_row(r,is_even(),"|",row))
+            std::cout << "row["<< r <<"] = " << row << std::endl;
+         else
+            std::cout << "failed row["<< r <<"]" << std::endl;
+      }
+
+      for (std::size_t c = 0; c < grid.max_column_count(); ++c)
+      {
+         std::string col = "";
+         if (grid.join_column(c,is_even(),"|",col))
+            std::cout << "col["<< c <<"] = " << col << std::endl;
+         else
+            std::cout << "failed col["<< c <<"]" << std::endl;
+      }
    }
+
 }
 
 struct symbol_predicate
@@ -518,10 +556,9 @@ void token_grid_test11()
    {
       if ((0 < r) && (r < grid.row_count() - 1))
       {
-         strtk::token_grid::row_type row = grid.row(r);
-         const strtk::token_grid::row_type& next = row.next_row();
-         const strtk::token_grid::row_type& prev = row.prev_row();
-
+         strtk::token_grid::row_type row  = grid.row(r    );
+         strtk::token_grid::row_type next = grid.row(r + 1);
+         strtk::token_grid::row_type prev = grid.row(r - 1);
          for (std::size_t c = 0; c < row.size(); c++)
          {
             double average = (row.get<double>(c) + next.get<double>(c) + prev.get<double>(c)) / 3.0;
@@ -561,7 +598,7 @@ public:
    }
 
    bool operator()(const strtk::token_grid& grid,
-                   const strtk::token_grid::row_range_type& range)
+                   const strtk::token_grid::row_range_t& range)
    {
       double bucket_sum = 0.0;
       if (!grid.accumulate_column(tick_value_column,range,bucket_sum))
@@ -605,9 +642,14 @@ void token_grid_test12()
 
 struct match_predicate
 {
-   inline bool operator()(const unsigned char* begin, const unsigned char* end)
+   inline bool operator()(const strtk::token_grid::row_type& row) const
    {
-      return end != std::find(begin,end,'6');
+      return (*this)(row.range());
+   }
+
+   inline bool operator()(const strtk::token_grid::range_t& range) const
+   {
+      return range.second != std::find(range.first,range.second,'6');
    }
 };
 
@@ -627,7 +669,7 @@ void token_grid_test13()
       std::cout << r << "[" << grid.row(r).as_string() << "]" << std::endl;
    }
 
-   strtk::token_grid::row_range_type range(1,4);
+   strtk::token_grid::row_range_t range(1,4);
 
    grid.remove_row_if(range,match_predicate());
 
@@ -703,7 +745,7 @@ void token_grid_test14()
          std::cout << std::endl;
       }
 
-      strtk::token_grid::row_range_type range(3,7);
+      strtk::token_grid::row_range_t range(3,7);
       grid.remove_empty_tokens(range);
 
       std::cout << "After Empty Token Removal" << std::endl;
@@ -738,7 +780,7 @@ void token_grid_test14()
          std::cout << std::endl;
       }
 
-      strtk::token_grid::row_range_type range(4,8);
+      strtk::token_grid::row_range_t range(4,8);
       grid.remove_token_if(range,strtk::size_equal_to<0>());
 
       std::cout << "After Empty Token Removal" << std::endl;

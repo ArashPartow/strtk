@@ -342,7 +342,7 @@ namespace strtk
    template <typename T, typename Iterator>
    inline T string_to_type_converter(const std::pair<Iterator,Iterator>& range)
    {
-      return string_to_type_converter<T>(range.first.range.second);
+      return string_to_type_converter<T>(range.first,range.second);
    }
 
    template <typename T>
@@ -859,6 +859,16 @@ namespace strtk
             return stringify(begin_,end_);
          }
 
+         inline const T& operator[](const std::size_t& index) const
+         {
+            return *(begin_ + index);
+         }
+
+         inline T& operator[](const std::size_t& index)
+         {
+            return *(begin_ + index);
+         }
+
       private:
 
          template <typename Type>
@@ -1049,6 +1059,51 @@ namespace strtk
       bool delimiter_table_[table_size];
    };
 
+   namespace details
+   {
+      template <typename Allocator,
+                template <typename,typename> class Sequence>
+      struct index_remover_impl
+      {
+         typedef Sequence<std::size_t,Allocator> sequence_t;
+         index_remover_impl(const sequence_t& sequence)
+         : itr_(sequence.begin()),
+           end_(sequence.end()),
+           current_index_(0),
+           check_(true)
+         {}
+
+         template <typename T>
+         inline bool operator()(const T&)
+         {
+            if (check_)
+            {
+               if (current_index_++ == *itr_)
+               {
+                  if (end_ == ++itr_)
+                  {
+                     check_ = false;
+                  }
+                  return true;
+               }
+            }
+            return false;
+         }
+
+         typename sequence_t::const_iterator itr_;
+         typename sequence_t::const_iterator end_;
+         std::size_t current_index_;
+         bool check_;
+      };
+   }
+
+   template <typename Allocator,
+             template <typename,typename> class Sequence>
+   inline details::index_remover_impl<Allocator,Sequence> index_remover(const Sequence<std::size_t,Allocator>& sequence)
+   {
+      return details::index_remover_impl<Allocator,Sequence>(sequence);
+   }
+
    template <typename Iterator, typename Predicate>
    inline std::size_t remove_inplace(Predicate predicate,
                                      Iterator begin,
@@ -1057,10 +1112,14 @@ namespace strtk
       Iterator itr1 = begin;
       Iterator itr2 = begin;
       std::size_t removal_count = 0;
-
       while (end != itr1)
       {
-         while ((end != itr1) && !predicate(*itr1))
+         if (predicate(*itr1))
+         {
+            ++itr1;
+            ++removal_count;
+         }
+         else
          {
             if (itr1 != itr2)
             {
@@ -1068,12 +1127,6 @@ namespace strtk
             }
             ++itr1;
             ++itr2;
-         }
-
-         while ((end != itr1) && predicate(*itr1))
-         {
-            ++itr1;
-            ++removal_count;
          }
       }
       return removal_count;
@@ -1085,13 +1138,15 @@ namespace strtk
       return remove_inplace(predicate,r.begin(),r.end());
    }
 
-   template <typename T,
+   template <typename Predicate,
+             typename T,
              typename Allocator,
              template <typename,typename> class Sequence>
-   inline void remove_inplace(Sequence<T,Allocator>& sequence)
+   inline std::size_t remove_inplace(Predicate predicate, Sequence<T,Allocator>& sequence)
    {
-      const std::size_t removal_count = remove_inplace(sequence.begin(),sequence.end());
+      const std::size_t removal_count = remove_inplace(predicate,sequence.begin(),sequence.end());
       sequence.resize(sequence.size() - removal_count);
+      return removal_count;
    }
 
    inline void remove_inplace(const std::string::value_type c, std::string& s)
@@ -1184,22 +1239,18 @@ namespace strtk
 
    namespace details
    {
-      inline std::size_t strnlen(const char* s, const std::size_t& n)
-      {
-         // Not the most optimal implementation. Waiting for
-         // strn* extensions to become mandatory.
-         const char* itr = s;
-         for (std::size_t i = 0; i < n; ++i, ++itr)
+      #if defined(__MINGW32_VERSION) || (defined(__APPLE__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070))
+         inline std::size_t strnlength(const char* s, const std::size_t& n)
          {
-            if ('\0' == (*itr)) return i;
+            const char *last = memchr(text, '\0', maxlen);
+            return last ? (size_t) (last - text) : maxlen;
          }
-         return n;
-      }
-
-      inline std::size_t strnlen(const unsigned char* s, std::size_t n)
-      {
-         return strnlen(reinterpret_cast<const char*>(s),n);
-      }
+      #else
+         inline std::size_t strnlength(const char* s, const std::size_t& n)
+         {
+            return strnlen(s,n);
+         }
+      #endif
    }
 
    inline void remove_consecutives_inplace(const char* rem_chars, std::string& s)
@@ -1207,7 +1258,7 @@ namespace strtk
       if (s.empty()) return;
       const std::size_t removal_count = remove_consecutives_inplace(multiple_char_delimiter_predicate(
                                                                     rem_chars,
-                                                                    rem_chars + details::strnlen(rem_chars,256)),
+                                                                    rem_chars + details::strnlength(rem_chars,256)),
                                                                     const_cast<char*>(s.data()),
                                                                     const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
@@ -1342,7 +1393,7 @@ namespace strtk
    {
       const std::size_t removal_count = remove_trailing(multiple_char_delimiter_predicate(
                                                         rem_chars,
-                                                        rem_chars + details::strnlen(rem_chars,256)),
+                                                        rem_chars + details::strnlength(rem_chars,256)),
                                                         const_cast<char*>(s.data()),
                                                         const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
@@ -1420,7 +1471,7 @@ namespace strtk
       if (s.empty()) return;
       const std::size_t removal_count = remove_leading(multiple_char_delimiter_predicate(
                                                        rem_chars,
-                                                       rem_chars + details::strnlen(rem_chars,256)),
+                                                       rem_chars + details::strnlength(rem_chars,256)),
                                                        const_cast<char*>(s.data()),
                                                        const_cast<char*>(s.data() + s.size()));
       if (removal_count > 0)
@@ -1453,7 +1504,7 @@ namespace strtk
    void remove_empty_strings(Sequence<std::string,Allocator>& seq)
    {
       struct is_empty { static inline bool check(const std::string& s) { return s.empty(); } };
-      seq.erase(remove_if(seq.begin(),seq.end(),is_empty::check),seq.end());
+      seq.erase(std::remove_if(seq.begin(),seq.end(),is_empty::check),seq.end());
    }
 
    template <typename Allocator>
@@ -1854,7 +1905,7 @@ namespace strtk
    template <typename Iterator,
              typename Range,
              typename Allocator,
-             template <typename, typename> class Sequence>
+             template <typename,typename> class Sequence>
    inline std::size_t find_all(const Iterator pattern_begin,
                                const Iterator pattern_end,
                                const Iterator begin,
@@ -1911,7 +1962,7 @@ namespace strtk
 
    template <typename Range,
              typename Allocator,
-             template <typename, typename> class Sequence>
+             template <typename,typename> class Sequence>
    inline std::size_t find_all(const std::string& pattern,
                                const std::string& data,
                                Sequence<Range,Allocator>& seq)
@@ -1931,7 +1982,7 @@ namespace strtk
 
    template <typename Range,
              typename Allocator,
-             template <typename, typename> class Sequence>
+             template <typename,typename> class Sequence>
    inline std::size_t ifind_all(const std::string& pattern,
                                 const std::string& data,
                                 Sequence<Range,Allocator>& seq)
@@ -2950,7 +3001,7 @@ namespace strtk
                             OutputIterator out,
                             const split_options::type split_option = split_options::default_mode)
    {
-      if (1 == details::strnlen(delimiters,256))
+      if (1 == details::strnlength(delimiters,256))
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       range.first,range.second,
                       out,
@@ -2988,7 +3039,7 @@ namespace strtk
                             OutputIterator out,
                             const split_options::type& split_option = split_options::default_mode)
    {
-      if (1 == details::strnlen(delimiters,256))
+      if (1 == details::strnlength(delimiters,256))
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       str.data(), str.data() + str.size(),
                       out,
@@ -3037,7 +3088,7 @@ namespace strtk
                             Sequence<std::pair<const char*, const char*>,Allocator>& sequence,
                             const split_options::type& split_option = split_options::default_mode)
    {
-      if (1 == details::strnlen(delimiters,256))
+      if (1 == details::strnlength(delimiters,256))
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       str.data(), str.data() + str.size(),
                       std::back_inserter(sequence),
@@ -4662,28 +4713,244 @@ namespace strtk
    {
    public:
 
-      typedef std::pair<unsigned char*, unsigned char*> range_type;
-      typedef std::deque<range_type> itr_list_type;
-      typedef std::deque<itr_list_type> itr_list_list_type;
-      typedef std::pair<std::size_t,std::size_t> row_range_type;
-      typedef std::pair<std::size_t,std::size_t> col_range_type;
+      typedef const unsigned char* iterator_t;
+      typedef unsigned int index_t;
+      typedef std::pair<iterator_t,iterator_t> range_t;
+      typedef std::deque<range_t> token_list_t;
+      typedef std::pair<index_t,index_t> row_index_range_t;
+      typedef std::deque<row_index_range_t> row_index_t;
+      typedef std::pair<index_t,index_t> row_range_t;
+      typedef std::pair<index_t,index_t> col_range_t;
 
-      inline row_range_type range(std::size_t lower_bound,
+   private:
+
+      struct store
+      {
+         token_list_t token_list;
+         row_index_t   row_index;
+         std::size_t  max_column;
+
+         static const range_t null_range;
+
+         inline void clear()
+         {
+            token_list.clear();
+            row_index.clear();
+         }
+
+         inline range_t operator()(const std::size_t& col, const std::size_t& row) const
+         {
+            if (row < row_index.size())
+            {
+               const row_index_range_t& r = row_index[row];
+               if (col < (r.second - r.first + 1))
+                  return *(token_list.begin() + (r.first + col));
+               else
+                  return null_range;
+            }
+            else
+               return null_range;
+         }
+
+         inline bool remove_row(const std::size_t& row)
+         {
+            if (row >= row_index.size()) return false;
+            row_index_range_t& r = row_index[row];
+            std::size_t number_of_tokens = r.second - r.first + 1;
+            token_list_t::iterator remove_begin = token_list.begin() + r.first;
+            token_list_t::iterator remove_end = token_list.begin() + r.first + number_of_tokens;
+            token_list.erase(remove_begin,remove_end);
+            row_index.erase(row_index.begin() + row);
+            for (std::size_t i = row; i < row_index.size(); ++i)
+            {
+               row_index_range_t& r = row_index[i];
+               r.first  -= static_cast<unsigned int>(number_of_tokens);
+               r.second -= static_cast<unsigned int>(number_of_tokens);
+            }
+            return true;
+         }
+
+         inline std::size_t token_count(const row_index_range_t& r) const
+         {
+            return (r.second - r.first + 1);
+         }
+
+         inline std::size_t token_count(const std::size_t& index) const
+         {
+            return token_count(row_index[index]);
+         }
+
+         inline bool remove_row_range(const std::size_t& r0, const std::size_t& r1)
+         {
+            if (r0 > r1)
+               return false;
+            else if (r0 >= row_index.size())
+               return false;
+            else if (r1 >= row_index.size())
+               return false;
+            std::size_t number_of_tokens = 0;
+            for (std::size_t i = r0; i <= r1; ++i)
+            {
+               row_index_range_t& r = row_index[i];
+               number_of_tokens += token_count(r);
+            }
+            row_index_range_t rr0 = row_index[r0];
+            token_list_t::iterator remove_begin = token_list.begin() + rr0.first;
+            token_list_t::iterator remove_end = token_list.begin() + rr0.first + number_of_tokens;
+            token_list.erase(remove_begin,remove_end);
+            row_index.erase(row_index.begin() + r0,row_index.begin() + r0 + (r1 - r0 + 1));
+            for (std::size_t i = r0; i < row_index.size(); ++i)
+            {
+               row_index_range_t& r = row_index[i];
+               r.first  -= static_cast<unsigned int>(number_of_tokens);
+               r.second -= static_cast<unsigned int>(number_of_tokens);
+            }
+            return true;
+         }
+
+         struct remove_column_impl
+         {
+            std::size_t column;
+            std::size_t counter;
+            std::size_t remainder;
+            std::size_t current_row;
+
+            inline void update(store& idx)
+            {
+               current_row++;
+               while (current_row < idx.row_index.size())
+               {
+                  std::size_t number_of_tokens = idx.token_count(current_row);
+                  if (number_of_tokens > column)
+                     break;
+                  counter += number_of_tokens;
+                  ++current_row;
+               }
+               if (current_row < idx.row_index.size())
+               {
+                  counter += column + remainder;
+                  row_index_range_t& r = idx.row_index[current_row];
+                  remainder = (r.second - r.first) - column;
+               }
+               else
+                  counter = std::numeric_limits<std::size_t>::max();
+            }
+
+            inline void process(store& idx)
+            {
+               token_list_t::iterator itr1 = idx.token_list.begin();
+               token_list_t::iterator itr2 = idx.token_list.begin();
+               token_list_t::iterator end  = idx.token_list.end();
+               counter = 0;
+               remainder = 0;
+               current_row = static_cast<std::size_t>(-1);
+               update(idx);
+               while (end != itr1)
+               {
+                  while ((end != itr1) && (0 != counter))
+                  {
+                     if (itr1 != itr2)
+                     {
+                        (*itr2) = (*itr1);
+                     }
+                     ++itr1;
+                     ++itr2;
+                     --counter;
+                  }
+                  if (0 == counter)
+                  {
+                     update(idx);
+                     ++itr1;
+                  }
+               }
+               std::size_t remove_count = 0;
+               idx.max_column = std::numeric_limits<std::size_t>::min();
+               for (std::size_t i = 0; i < idx.row_index.size(); ++i)
+               {
+                  row_index_range_t& r = idx.row_index[i];
+                  std::size_t token_count = (r.second - r.first + 1);
+                  r.first -= static_cast<unsigned int>(remove_count);
+                  if (token_count > column)
+                  {
+                     ++remove_count;
+                  }
+                  r.second -= remove_count;
+                  token_count = (r.second - r.first + 1);
+                  if (token_count > idx.max_column)
+                     idx.max_column = token_count;
+               }
+               idx.token_list.resize(idx.token_list.size() - remove_count);
+            }
+         };
+
+         inline bool remove_column(const std::size_t& column)
+         {
+            if (column >= max_column) return false;
+            remove_column_impl rc;
+            rc.column = column;
+            rc.process(*this);
+            return true;
+         }
+
+      };
+
+      template <typename DelimiterPredicate = multiple_char_delimiter_predicate>
+      struct row_processor
+      {
+         row_processor(store& idx,
+                       DelimiterPredicate& tp,
+                       const split_options::type split_mode = split_options::compress_delimiters)
+         : idx_(idx),
+           row_start_index_(0),
+           row_end_index_(0),
+           token_predicate_(tp),
+           split_mode_(split_mode)
+         {
+            idx_.max_column = std::numeric_limits<std::size_t>::min();
+         }
+
+         inline void operator()(const range_t& range)
+         {
+            if (0 == std::distance(range.first,range.second))
+               return;
+            row_start_index_ = idx_.token_list.size();
+            std::size_t token_count = split(token_predicate_,
+                                            range.first,range.second,
+                                            std::back_inserter(idx_.token_list),
+                                            split_mode_);
+            row_end_index_ = row_start_index_ + token_count - 1;
+            idx_.row_index.push_back(std::make_pair(row_start_index_,row_end_index_));
+            if (token_count > idx_.max_column)
+               idx_.max_column = token_count;
+         }
+
+         row_processor<DelimiterPredicate> operator=(const row_processor<DelimiterPredicate>&);
+
+         store& idx_;
+         std::size_t row_start_index_;
+         std::size_t row_end_index_;
+         DelimiterPredicate& token_predicate_;
+         split_options::type split_mode_;
+      };
+
+   public:
+
+      inline row_range_t range(std::size_t lower_bound,
                                   std::size_t upper_bound = std::numeric_limits<std::size_t>::max()) const
       {
          if (upper_bound == std::numeric_limits<std::size_t>::max())
          {
-            upper_bound = token_list_.size();
+            upper_bound = dsv_index_.token_list.size();
          }
-         else if (upper_bound > token_list_.size())
+         else if (upper_bound > dsv_index_.token_list.size())
          {
-            return row_range_type(std::numeric_limits<std::size_t>::max(),std::numeric_limits<std::size_t>::max());
+            return row_range_t(std::numeric_limits<std::size_t>::max(),std::numeric_limits<std::size_t>::max());
          }
          else if (lower_bound > upper_bound)
          {
-            return row_range_type(std::numeric_limits<std::size_t>::max(),std::numeric_limits<std::size_t>::max());
+            return row_range_t(std::numeric_limits<std::size_t>::max(),std::numeric_limits<std::size_t>::max());
          }
-         return row_range_type(lower_bound,upper_bound);
+         return row_range_t(lower_bound,upper_bound);
       }
 
       struct options
@@ -4747,58 +5014,22 @@ namespace strtk
 
       public:
 
-         typedef itr_list_type::value_type range_type;
-
          row_type()
-         : index_(std::numeric_limits<std::size_t>::max()),
-           row_list_(0),
-           token_list_(0),
-           next_row_(false,static_cast<row_type*>(0)),
-           prev_row_(false,static_cast<row_type*>(0))
-         {}
-
-         row_type(const itr_list_type& token_list)
-         : index_(std::numeric_limits<std::size_t>::max()),
-           row_list_(0),
-           token_list_(const_cast<itr_list_type*>(&token_list)),
-           next_row_(false,static_cast<row_type*>(0)),
-           prev_row_(false,static_cast<row_type*>(0))
+         : index_(std::numeric_limits<std::size_t>::max())
          {}
 
          row_type(const std::size_t& index,
-                  const itr_list_list_type& row_list)
+                  const store& dsv_index)
          : index_(index),
-           row_list_(const_cast<itr_list_list_type*>(&row_list)),
-           token_list_(&(*row_list_)[index_]),
-           next_row_(index < (row_list.size() - 1),static_cast<row_type*>(0)),
-           prev_row_(index > 0,static_cast<row_type*>(0))
+           size_ (dsv_index.token_count(index)),
+           begin_(dsv_index.token_list.begin() +  dsv_index.row_index[index].first)
          {}
-
-        ~row_type()
-         {
-            if (next_row_.second) { delete next_row_.second; next_row_.second = 0; }
-            if (prev_row_.second) { delete prev_row_.second; prev_row_.second = 0; }
-         }
 
          template <typename T>
          inline T operator[](const std::size_t& index) const
          {
-            itr_list_type::value_type curr_range = (*token_list_)[index];
-            return string_to_type_converter<T>(curr_range.first,curr_range.second);
-         }
-
-         inline const row_type& next_row() const
-         {
-            if (next_row_.first && (0 == next_row_.second))
-               next_row_.second = new row_type(index_ + 1,*row_list_);
-            return *next_row_.second;
-         }
-
-         inline const row_type& prev_row() const
-         {
-            if (prev_row_.first && (0 == prev_row_.second))
-               prev_row_.second = new row_type(index_ - 1,*row_list_);
-            return *prev_row_.second;
+            const range_t& range = *(begin_ + index);
+            return string_to_type_converter<T>(range.first,range.second);
          }
 
          template <typename T>
@@ -4807,14 +5038,19 @@ namespace strtk
             return row_type::operator[]<T>(index);
          }
 
-         inline col_range_type all_columns() const
+         inline col_range_t all_columns() const
          {
-            return col_range_type(0,(*token_list_).size());
+            return col_range_t(0,size());
          }
 
-         inline range_type token(const std::size_t& index) const
+         inline range_t range() const
          {
-            return (*token_list_)[index];
+            return range_t((*begin_).first,(*(begin_ + (size_ - 1))).second);
+         }
+
+         inline range_t token(const std::size_t& index) const
+         {
+            return *(begin_ + index);
          }
 
          inline std::size_t index() const
@@ -4824,348 +5060,345 @@ namespace strtk
 
          inline std::size_t size() const
          {
-            return token_list_->size();
+            return size_;
          }
 
          inline std::size_t raw_length() const
          {
-            return std::distance(token_list_->begin()->first,token_list_->back().second);
+            std::size_t result = 0;
+            token_list_t::const_iterator itr = begin_;
+            for (std::size_t i = 0; i < size_; ++i, ++itr)
+            {
+               const range_t& range = (*itr);
+               result += std::distance(range.first,range.second);
+            }
+            return result;
          }
 
          inline std::size_t raw_length(const std::size_t& column_index) const
          {
-            const itr_list_type::value_type& range = (*token_list_)[column_index];
+            const range_t& range = *(begin_ + column_index);
             return std::distance(range.first,range.second);
          }
 
          inline std::string as_string() const
          {
-            return std::string(token_list_->begin()->first,token_list_->back().second);
+            std::string result;
+            result.reserve(std::distance(begin_->first,(begin_ + (size_ - 1))->second));
+            token_list_t::const_iterator itr = begin_;
+            for (std::size_t i = 0; i < size_; ++i, ++itr)
+            {
+               const range_t& range = (*itr);
+               result.append(range.first,range.second);
+            }
+            return result;
          }
 
          inline void as_string(std::string& out) const
          {
-            out.assign(token_list_->begin()->first,token_list_->back().second);
+            out = as_string();
          }
 
-         template <typename T1, typename T2,
-                   typename T3, typename T4,
-                   typename T5, typename T6,
-                   typename T7, typename T8,
-                   typename T9, typename T10>
-         inline bool parse_with_index(const std::size_t& col1, const std::size_t& col2,
-                                      const std::size_t& col3, const std::size_t& col4,
-                                      const std::size_t& col5, const std::size_t& col6,
-                                      const std::size_t& col7, const std::size_t& col8,
-                                      const std::size_t& col9, const std::size_t& col10,
-                                      T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6,
-                                      T7& t7, T8& t8, T9& t9, T10& t10) const
+         template <typename T0, typename T1, typename T2, typename T3,
+                   typename T4, typename T5, typename T6, typename T7,
+                   typename T8, typename T9>
+         inline bool parse_with_index(const std::size_t& col0, const std::size_t& col1,
+                                      const std::size_t& col2, const std::size_t& col3,
+                                      const std::size_t& col4, const std::size_t& col5,
+                                      const std::size_t& col6, const std::size_t& col7,
+                                      const std::size_t& col8, const std::size_t& col9,
+                                      T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5,
+                                      T6& t6, T7& t7, T8& t8, T9& t9) const
          {
-            if (!process((*token_list_)[ col1], t1)) return false;
-            if (!process((*token_list_)[ col2], t2)) return false;
-            if (!process((*token_list_)[ col3], t3)) return false;
-            if (!process((*token_list_)[ col4], t4)) return false;
-            if (!process((*token_list_)[ col5], t5)) return false;
-            if (!process((*token_list_)[ col6], t6)) return false;
-            if (!process((*token_list_)[ col7], t7)) return false;
-            if (!process((*token_list_)[ col8], t8)) return false;
-            if (!process((*token_list_)[ col9], t9)) return false;
-            if (!process((*token_list_)[col10],t10)) return false;
+            if (!process(*(begin_ + col0),t0)) return false;
+            if (!process(*(begin_ + col1),t1)) return false;
+            if (!process(*(begin_ + col2),t2)) return false;
+            if (!process(*(begin_ + col3),t3)) return false;
+            if (!process(*(begin_ + col4),t4)) return false;
+            if (!process(*(begin_ + col5),t5)) return false;
+            if (!process(*(begin_ + col6),t6)) return false;
+            if (!process(*(begin_ + col7),t7)) return false;
+            if (!process(*(begin_ + col8),t8)) return false;
+            if (!process(*(begin_ + col9),t9)) return false;
             return true;
          }
 
-         template <typename T1, typename T2,
-                   typename T3, typename T4,
-                   typename T5, typename T6,
-                   typename T7, typename T8,
-                   typename T9>
-         inline bool parse_with_index(const std::size_t& col1, const std::size_t& col2,
-                                      const std::size_t& col3, const std::size_t& col4,
-                                      const std::size_t& col5, const std::size_t& col6,
-                                      const std::size_t& col7, const std::size_t& col8,
-                                      const std::size_t& col9,
-                                      T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6,
-                                      T7& t7, T8& t8, T9& t9) const
+         template <typename T0, typename T1, typename T2, typename T3,
+                   typename T4, typename T5, typename T6, typename T7,
+                   typename T8>
+         inline bool parse_with_index(const std::size_t& col0, const std::size_t& col1,
+                                      const std::size_t& col2, const std::size_t& col3,
+                                      const std::size_t& col4, const std::size_t& col5,
+                                      const std::size_t& col6, const std::size_t& col7,
+                                      const std::size_t& col8,
+                                      T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5,
+                                      T6& t6, T7& t7, T8& t8) const
          {
-            if (!process((*token_list_)[col1],t1)) return false;
-            if (!process((*token_list_)[col2],t2)) return false;
-            if (!process((*token_list_)[col3],t3)) return false;
-            if (!process((*token_list_)[col4],t4)) return false;
-            if (!process((*token_list_)[col5],t5)) return false;
-            if (!process((*token_list_)[col6],t6)) return false;
-            if (!process((*token_list_)[col7],t7)) return false;
-            if (!process((*token_list_)[col8],t8)) return false;
-            if (!process((*token_list_)[col9],t9)) return false;
+            if (!process(*(begin_ + col0),t0)) return false;
+            if (!process(*(begin_ + col1),t1)) return false;
+            if (!process(*(begin_ + col2),t2)) return false;
+            if (!process(*(begin_ + col3),t3)) return false;
+            if (!process(*(begin_ + col4),t4)) return false;
+            if (!process(*(begin_ + col5),t5)) return false;
+            if (!process(*(begin_ + col6),t6)) return false;
+            if (!process(*(begin_ + col7),t7)) return false;
+            if (!process(*(begin_ + col8),t8)) return false;
             return true;
          }
 
-         template <typename T1, typename T2,
-                   typename T3, typename T4,
-                   typename T5, typename T6,
-                   typename T7, typename T8>
-         inline bool parse_with_index(const std::size_t& col1, const std::size_t& col2,
-                                      const std::size_t& col3, const std::size_t& col4,
-                                      const std::size_t& col5, const std::size_t& col6,
-                                      const std::size_t& col7, const std::size_t& col8,
-                                      T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6,
-                                      T7& t7, T8& t8) const
+         template <typename T0, typename T1, typename T2, typename T3,
+                   typename T4, typename T5, typename T6, typename T7>
+         inline bool parse_with_index(const std::size_t& col0, const std::size_t& col1,
+                                      const std::size_t& col2, const std::size_t& col3,
+                                      const std::size_t& col4, const std::size_t& col5,
+                                      const std::size_t& col6, const std::size_t& col7,
+                                      T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5,
+                                      T6& t6, T7& t7) const
          {
-            if (!process((*token_list_)[col1],t1)) return false;
-            if (!process((*token_list_)[col2],t2)) return false;
-            if (!process((*token_list_)[col3],t3)) return false;
-            if (!process((*token_list_)[col4],t4)) return false;
-            if (!process((*token_list_)[col5],t5)) return false;
-            if (!process((*token_list_)[col6],t6)) return false;
-            if (!process((*token_list_)[col7],t7)) return false;
-            if (!process((*token_list_)[col8],t8)) return false;
+            if (!process(*(begin_ + col0),t0)) return false;
+            if (!process(*(begin_ + col1),t1)) return false;
+            if (!process(*(begin_ + col2),t2)) return false;
+            if (!process(*(begin_ + col3),t3)) return false;
+            if (!process(*(begin_ + col4),t4)) return false;
+            if (!process(*(begin_ + col5),t5)) return false;
+            if (!process(*(begin_ + col6),t6)) return false;
+            if (!process(*(begin_ + col7),t7)) return false;
             return true;
          }
 
-         template <typename T1, typename T2,
-                   typename T3, typename T4,
-                   typename T5, typename T6, typename T7>
-         inline bool parse_with_index(const std::size_t& col1, const std::size_t& col2,
-                                      const std::size_t& col3, const std::size_t& col4,
-                                      const std::size_t& col5, const std::size_t& col6,
-                                      const std::size_t& col7,
-                                      T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6,
-                                      T7& t7) const
+         template <typename T0, typename T1, typename T2, typename T3,
+                   typename T4, typename T5, typename T6>
+         inline bool parse_with_index(const std::size_t& col0, const std::size_t& col1,
+                                      const std::size_t& col2, const std::size_t& col3,
+                                      const std::size_t& col4, const std::size_t& col5,
+                                      const std::size_t& col6,
+                                      T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5,
+                                      T6& t6) const
          {
-            if (!process((*token_list_)[col1],t1)) return false;
-            if (!process((*token_list_)[col2],t2)) return false;
-            if (!process((*token_list_)[col3],t3)) return false;
-            if (!process((*token_list_)[col4],t4)) return false;
-            if (!process((*token_list_)[col5],t5)) return false;
-            if (!process((*token_list_)[col6],t6)) return false;
-            if (!process((*token_list_)[col7],t7)) return false;
+            if (!process(*(begin_ + col0),t0)) return false;
+            if (!process(*(begin_ + col1),t1)) return false;
+            if (!process(*(begin_ + col2),t2)) return false;
+            if (!process(*(begin_ + col3),t3)) return false;
+            if (!process(*(begin_ + col4),t4)) return false;
+            if (!process(*(begin_ + col5),t5)) return false;
+            if (!process(*(begin_ + col6),t6)) return false;
             return true;
          }
 
-         template <typename T1, typename T2,
-                   typename T3, typename T4,
-                   typename T5, typename T6>
-         inline bool parse_with_index(const std::size_t& col1, const std::size_t& col2,
-                                      const std::size_t& col3, const std::size_t& col4,
-                                      const std::size_t& col5, const std::size_t& col6,
-                                      T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6) const
+         template <typename T0, typename T1, typename T2, typename T3,
+                   typename T4, typename T5>
+         inline bool parse_with_index(const std::size_t& col0, const std::size_t& col1,
+                                      const std::size_t& col2, const std::size_t& col3,
+                                      const std::size_t& col4, const std::size_t& col5,
+                                      T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5) const
          {
-            if (!process((*token_list_)[col1],t1)) return false;
-            if (!process((*token_list_)[col2],t2)) return false;
-            if (!process((*token_list_)[col3],t3)) return false;
-            if (!process((*token_list_)[col4],t4)) return false;
-            if (!process((*token_list_)[col5],t5)) return false;
-            if (!process((*token_list_)[col6],t6)) return false;
+            if (!process(*(begin_ + col0),t0)) return false;
+            if (!process(*(begin_ + col1),t1)) return false;
+            if (!process(*(begin_ + col2),t2)) return false;
+            if (!process(*(begin_ + col3),t3)) return false;
+            if (!process(*(begin_ + col4),t4)) return false;
+            if (!process(*(begin_ + col5),t5)) return false;
             return true;
          }
 
-         template <typename T1, typename T2,
-                   typename T3, typename T4,typename T5>
-         inline bool parse_with_index(const std::size_t& col1, const std::size_t& col2,
-                                      const std::size_t& col3, const std::size_t& col4,
-                                      const std::size_t& col5,
-                                      T1& t1, T2& t2, T3& t3, T4& t4, T5& t5) const
+         template <typename T0, typename T1, typename T2, typename T3, typename T4>
+         inline bool parse_with_index(const std::size_t& col0, const std::size_t& col1,
+                                      const std::size_t& col2, const std::size_t& col3,
+                                      const std::size_t& col4,
+                                      T0& t0, T1& t1, T2& t2, T3& t3, T4& t4) const
          {
-            if (!process((*token_list_)[col1],t1)) return false;
-            if (!process((*token_list_)[col2],t2)) return false;
-            if (!process((*token_list_)[col3],t3)) return false;
-            if (!process((*token_list_)[col4],t4)) return false;
-            if (!process((*token_list_)[col5],t5)) return false;
+            if (!process(*(begin_ + col0),t0)) return false;
+            if (!process(*(begin_ + col1),t1)) return false;
+            if (!process(*(begin_ + col2),t2)) return false;
+            if (!process(*(begin_ + col3),t3)) return false;
+            if (!process(*(begin_ + col4),t4)) return false;
             return true;
          }
 
-         template <typename T1, typename T2,
-                   typename T3, typename T4>
-         inline bool parse_with_index(const std::size_t& col1, const std::size_t& col2,
-                                      const std::size_t& col3, const std::size_t& col4,
-                                      T1& t1, T2& t2, T3& t3, T4& t4) const
+         template <typename T0, typename T1, typename T2, typename T3>
+         inline bool parse_with_index(const std::size_t& col0, const std::size_t& col1,
+                                      const std::size_t& col2, const std::size_t& col3,
+                                      T0& t0, T1& t1, T2& t2, T3& t3) const
          {
-            if (!process((*token_list_)[col1],t1)) return false;
-            if (!process((*token_list_)[col2],t2)) return false;
-            if (!process((*token_list_)[col3],t3)) return false;
-            if (!process((*token_list_)[col4],t4)) return false;
+            if (!process(*(begin_ + col0),t0)) return false;
+            if (!process(*(begin_ + col1),t1)) return false;
+            if (!process(*(begin_ + col2),t2)) return false;
+            if (!process(*(begin_ + col3),t3)) return false;
             return true;
          }
 
-         template <typename T1, typename T2, typename T3>
-         inline bool parse_with_index(const std::size_t& col1, const std::size_t& col2,
-                                      const std::size_t& col3,
-                                      T1& t1, T2& t2, T3& t3) const
+         template <typename T0, typename T1, typename T2>
+         inline bool parse_with_index(const std::size_t& col0, const std::size_t& col1,
+                                      const std::size_t& col2,
+                                      T0& t0, T1& t1, T2& t2) const
          {
-            if (!process((*token_list_)[col1],t1)) return false;
-            if (!process((*token_list_)[col2],t2)) return false;
-            if (!process((*token_list_)[col3],t3)) return false;
+            if (!process(*(begin_ + col0),t0)) return false;
+            if (!process(*(begin_ + col1),t1)) return false;
+            if (!process(*(begin_ + col2),t2)) return false;
             return true;
          }
 
-         template <typename T1, typename T2>
-         inline bool parse_with_index(const std::size_t& col1, const std::size_t& col2,
-                                      T1& t1, T2& t2) const
+         template <typename T0, typename T1>
+         inline bool parse_with_index(const std::size_t& col0, const std::size_t& col1,
+                                      T0& t0, T1& t1) const
          {
-            if (!process((*token_list_)[col1],t1)) return false;
-            if (!process((*token_list_)[col2],t2)) return false;
+            if (!process(*(begin_ + col0),t0)) return false;
+            if (!process(*(begin_ + col1),t1)) return false;
             return true;
          }
 
-         template <typename T1>
-         inline bool parse_with_index(const std::size_t& col, T1& t) const
+         template <typename T>
+         inline bool parse_with_index(const std::size_t& col, T& t) const
          {
-            return process((*token_list_)[col],t);
+            return process(*(begin_ + col),t);
          }
 
-         template <typename T1, typename T2,
-                   typename T3, typename T4,
-                   typename T5, typename T6,
-                   typename T7, typename T8,
-                   typename T9, typename T10 >
-         inline bool parse(T1& t1, T2& t2, T3& t3, T4& t4,
-                           T5& t5, T6& t6, T7& t7, T8& t8,
-                           T9& t9, T10& t10) const
+         template <typename T0, typename T1, typename T2, typename T3,
+                   typename T4, typename T5, typename T6, typename T7,
+                   typename T8, typename T9 >
+         inline bool parse(T0& t0, T1& t1, T2& t2, T3& t3,
+                           T4& t4, T5& t5, T6& t6, T7& t7,
+                           T8& t8, T9& t9) const
          {
-            if (!process((*token_list_)[0], t1)) return false;
-            if (!process((*token_list_)[1], t2)) return false;
-            if (!process((*token_list_)[2], t3)) return false;
-            if (!process((*token_list_)[3], t4)) return false;
-            if (!process((*token_list_)[4], t5)) return false;
-            if (!process((*token_list_)[5], t6)) return false;
-            if (!process((*token_list_)[6], t7)) return false;
-            if (!process((*token_list_)[7], t8)) return false;
-            if (!process((*token_list_)[8], t9)) return false;
-            if (!process((*token_list_)[9],t10)) return false;
+            if (!process(*(begin_ + 0),t0)) return false;
+            if (!process(*(begin_ + 1),t1)) return false;
+            if (!process(*(begin_ + 2),t2)) return false;
+            if (!process(*(begin_ + 3),t3)) return false;
+            if (!process(*(begin_ + 4),t4)) return false;
+            if (!process(*(begin_ + 5),t5)) return false;
+            if (!process(*(begin_ + 6),t6)) return false;
+            if (!process(*(begin_ + 7),t7)) return false;
+            if (!process(*(begin_ + 8),t8)) return false;
+            if (!process(*(begin_ + 9),t9)) return false;
             return true;
          }
 
-         template <typename T1, typename T2,
-                   typename T3, typename T4,
-                   typename T5, typename T6,
-                   typename T7, typename T8,
-                   typename T9 >
-         inline bool parse(T1& t1, T2& t2, T3& t3, T4& t4,
-                           T5& t5, T6& t6, T7& t7, T8& t8,
-                           T9& t9) const
+         template <typename T0, typename T1, typename T2, typename T3,
+                   typename T4, typename T5, typename T6, typename T7,
+                   typename T8>
+         inline bool parse(T0& t0, T1& t1, T2& t2, T3& t3,
+                           T4& t4, T5& t5, T6& t6, T7& t7,
+                           T8& t8) const
          {
-            if (!process((*token_list_)[0],t1)) return false;
-            if (!process((*token_list_)[1],t2)) return false;
-            if (!process((*token_list_)[2],t3)) return false;
-            if (!process((*token_list_)[3],t4)) return false;
-            if (!process((*token_list_)[4],t5)) return false;
-            if (!process((*token_list_)[5],t6)) return false;
-            if (!process((*token_list_)[6],t7)) return false;
-            if (!process((*token_list_)[7],t8)) return false;
-            if (!process((*token_list_)[8],t9)) return false;
+            if (!process(*(begin_ + 0),t0)) return false;
+            if (!process(*(begin_ + 1),t1)) return false;
+            if (!process(*(begin_ + 2),t2)) return false;
+            if (!process(*(begin_ + 3),t3)) return false;
+            if (!process(*(begin_ + 4),t4)) return false;
+            if (!process(*(begin_ + 5),t5)) return false;
+            if (!process(*(begin_ + 6),t6)) return false;
+            if (!process(*(begin_ + 7),t7)) return false;
+            if (!process(*(begin_ + 8),t8)) return false;
             return true;
          }
 
-         template <typename T1, typename T2,
-                   typename T3, typename T4,
-                   typename T5, typename T6,
-                   typename T7, typename T8>
-         inline bool parse(T1& t1, T2& t2, T3& t3, T4& t4,
-                           T5& t5, T6& t6, T7& t7, T8& t8) const
+         template <typename T0, typename T1, typename T2, typename T3,
+                   typename T4, typename T5, typename T6, typename T7>
+         inline bool parse(T0& t0, T1& t1, T2& t2, T3& t3,
+                           T4& t4, T5& t5, T6& t6, T7& t7) const
          {
-            if (!process((*token_list_)[0],t1)) return false;
-            if (!process((*token_list_)[1],t2)) return false;
-            if (!process((*token_list_)[2],t3)) return false;
-            if (!process((*token_list_)[3],t4)) return false;
-            if (!process((*token_list_)[4],t5)) return false;
-            if (!process((*token_list_)[5],t6)) return false;
-            if (!process((*token_list_)[6],t7)) return false;
-            if (!process((*token_list_)[7],t8)) return false;
+            if (!process(*(begin_ + 0),t0)) return false;
+            if (!process(*(begin_ + 1),t1)) return false;
+            if (!process(*(begin_ + 2),t2)) return false;
+            if (!process(*(begin_ + 3),t3)) return false;
+            if (!process(*(begin_ + 4),t4)) return false;
+            if (!process(*(begin_ + 5),t5)) return false;
+            if (!process(*(begin_ + 6),t6)) return false;
+            if (!process(*(begin_ + 7),t7)) return false;
             return true;
          }
 
-         template <typename T1, typename T2,
-                   typename T3, typename T4,
-                   typename T5, typename T6, typename T7>
-         inline bool parse(T1& t1, T2& t2, T3& t3, T4& t4,
-                           T5& t5, T6& t6, T7& t7) const
+         template <typename T0, typename T1, typename T2, typename T3,
+                   typename T4, typename T5, typename T6>
+         inline bool parse(T0& t0, T1& t1, T2& t2, T3& t3,
+                           T4& t4, T5& t5, T6& t6) const
          {
-            if (!process((*token_list_)[0],t1)) return false;
-            if (!process((*token_list_)[1],t2)) return false;
-            if (!process((*token_list_)[2],t3)) return false;
-            if (!process((*token_list_)[3],t4)) return false;
-            if (!process((*token_list_)[4],t5)) return false;
-            if (!process((*token_list_)[5],t6)) return false;
-            if (!process((*token_list_)[6],t7)) return false;
+            if (!process(*(begin_ + 0),t0)) return false;
+            if (!process(*(begin_ + 1),t1)) return false;
+            if (!process(*(begin_ + 2),t2)) return false;
+            if (!process(*(begin_ + 3),t3)) return false;
+            if (!process(*(begin_ + 4),t4)) return false;
+            if (!process(*(begin_ + 5),t5)) return false;
+            if (!process(*(begin_ + 6),t6)) return false;
             return true;
          }
 
-         template <typename T1, typename T2,
-                   typename T3, typename T4,
-                   typename T5, typename T6>
-         inline bool parse(T1& t1, T2& t2, T3& t3, T4& t4,
-                           T5& t5, T6& t6) const
+         template <typename T0, typename T1, typename T2, typename T3,
+                   typename T4, typename T5>
+         inline bool parse(T0& t0, T1& t1, T2& t2, T3& t3,
+                           T4& t4, T5& t5) const
          {
-            if (!process((*token_list_)[0],t1)) return false;
-            if (!process((*token_list_)[1],t2)) return false;
-            if (!process((*token_list_)[2],t3)) return false;
-            if (!process((*token_list_)[3],t4)) return false;
-            if (!process((*token_list_)[4],t5)) return false;
-            if (!process((*token_list_)[5],t6)) return false;
+            if (!process(*(begin_ + 0),t0)) return false;
+            if (!process(*(begin_ + 1),t1)) return false;
+            if (!process(*(begin_ + 2),t2)) return false;
+            if (!process(*(begin_ + 3),t3)) return false;
+            if (!process(*(begin_ + 4),t4)) return false;
+            if (!process(*(begin_ + 5),t5)) return false;
             return true;
          }
 
-         template <typename T1, typename T2,
-                   typename T3, typename T4,typename T5>
-         inline bool parse(T1& t1, T2& t2, T3& t3, T4& t4, T5& t5) const
+         template <typename T0, typename T1,
+                   typename T2, typename T3,typename T4>
+         inline bool parse(T0& t0, T1& t1, T2& t2, T3& t3, T4& t4) const
          {
-            if (!process((*token_list_)[0],t1)) return false;
-            if (!process((*token_list_)[1],t2)) return false;
-            if (!process((*token_list_)[2],t3)) return false;
-            if (!process((*token_list_)[3],t4)) return false;
-            if (!process((*token_list_)[4],t5)) return false;
+            if (!process(*(begin_ + 0),t0)) return false;
+            if (!process(*(begin_ + 1),t1)) return false;
+            if (!process(*(begin_ + 2),t2)) return false;
+            if (!process(*(begin_ + 3),t3)) return false;
+            if (!process(*(begin_ + 4),t4)) return false;
             return true;
          }
 
-         template <typename T1, typename T2,
-                   typename T3, typename T4>
-         inline bool parse(T1& t1, T2& t2, T3& t3, T4& t4) const
+         template <typename T0, typename T1,
+                   typename T2, typename T3>
+         inline bool parse(T0& t0, T1& t1, T2& t2, T3& t3) const
          {
-            if (!process((*token_list_)[0],t1)) return false;
-            if (!process((*token_list_)[1],t2)) return false;
-            if (!process((*token_list_)[2],t3)) return false;
-            if (!process((*token_list_)[3],t4)) return false;
+            if (!process(*(begin_ + 0),t0)) return false;
+            if (!process(*(begin_ + 1),t1)) return false;
+            if (!process(*(begin_ + 2),t2)) return false;
+            if (!process(*(begin_ + 3),t3)) return false;
             return true;
          }
 
-         template <typename T1, typename T2, typename T3>
-         inline bool parse(T1& t1, T2& t2, T3& t3) const
+         template <typename T0, typename T1, typename T2>
+         inline bool parse(T0& t0, T1& t1, T2& t2) const
          {
-            if (!process((*token_list_)[0],t1)) return false;
-            if (!process((*token_list_)[1],t2)) return false;
-            if (!process((*token_list_)[2],t3)) return false;
+            if (!process(*(begin_ + 0),t0)) return false;
+            if (!process(*(begin_ + 1),t1)) return false;
+            if (!process(*(begin_ + 2),t2)) return false;
             return true;
          }
 
-         template <typename T1, typename T2>
-         inline bool parse(T1& t1, T2& t2) const
+         template <typename T0, typename T1>
+         inline bool parse(T0& t0, T1& t1) const
          {
-            if (!process((*token_list_)[0],t1)) return false;
-            if (!process((*token_list_)[1],t2)) return false;
+            if (!process(*(begin_ + 0),t0)) return false;
+            if (!process(*(begin_ + 1),t1)) return false;
             return true;
          }
 
-         template <typename T1>
-         inline bool parse(T1& t) const
+         template <typename T0>
+         inline bool parse(T0& t) const
          {
-            return process((*token_list_)[0],t);
+            return process(*begin_,t);
          }
 
          template <typename T, typename OutputIterator>
          inline void parse(OutputIterator out) const
          {
-            itr_list_type::const_iterator itr = token_list_->begin();
-            itr_list_type::const_iterator end = token_list_->end();
+            token_list_t::const_iterator itr = begin_;
+            const token_list_t::const_iterator end = begin_ + size_;
             while (end != itr)
             {
-               const itr_list_type::value_type& range = (*itr);
+               const range_t& range = (*itr);
                *(out++) = string_to_type_converter<T>(range.first,range.second);
                ++itr;
             }
          }
 
-         bool validate_column_range(const col_range_type& range) const
+         bool validate_column_range(const col_range_t& range) const
          {
-            if ((range.first > token_list_->size()) || (range.second > token_list_->size()))
+            if ((range.first > size()) || (range.second > size()))
                return false;
             else if (range.first > range.second)
                return false;
@@ -5173,35 +5406,33 @@ namespace strtk
                return true;
          }
 
-         col_range_type range(const std::size_t& lower_bound,
-                              const std::size_t& upper_bound = std::numeric_limits<std::size_t>::max()) const
+         col_range_t range(const std::size_t& lower_bound,
+                           const std::size_t& upper_bound = std::numeric_limits<std::size_t>::max()) const
          {
             if (std::numeric_limits<std::size_t>::max() != upper_bound)
-               return col_range_type(lower_bound,upper_bound);
+               return col_range_t(lower_bound,upper_bound);
             else
-              return col_range_type(lower_bound,token_list_->size());
+              return col_range_t(lower_bound,size());
          }
 
          template <typename T,
                    typename Allocator,
                    template <typename,typename> class Sequence>
-         inline bool parse(const col_range_type& range,
+         inline bool parse(const col_range_t& range,
                            Sequence<T,Allocator>& sequence) const
          {
             if (!validate_column_range(range))
                return false;
-
-            itr_list_type::const_iterator itr = token_list_->begin() + range.first;
-            itr_list_type::const_iterator end = token_list_->begin() + range.second;
+            token_list_t::const_iterator itr = (begin_ + range.first);
+            token_list_t::const_iterator end = (begin_ + range.second);
             T t;
-
             while (end != itr)
             {
-               const itr_list_type::value_type& range = (*itr);
-               if (!string_to_type_converter(range.first,range.second,t))
-                  return false;
-               else
+               const range_t& range = (*itr);
+               if (string_to_type_converter(range.first,range.second,t))
                   sequence.push_back(t);
+               else
+                  return false;
                ++itr;
             }
             return true;
@@ -5210,23 +5441,21 @@ namespace strtk
          template <typename T,
                    typename Comparator,
                    typename Allocator>
-         inline bool parse(const col_range_type& range,
+         inline bool parse(const col_range_t& range,
                            std::set<T,Comparator,Allocator>& set) const
          {
             if (!validate_column_range(range))
                return false;
-
-            itr_list_type::const_iterator itr = token_list_->begin() + range.first;
-            itr_list_type::const_iterator end = token_list_->begin() + range.second;
+            token_list_t::const_iterator itr = (begin_ + range.first);
+            token_list_t::const_iterator end = (begin_ + range.second);
             T t;
-
             while (end != itr)
             {
-               const itr_list_type::value_type& range = (*itr);
-               if (!string_to_type_converter(range.first,range.second,t))
-                  return false;
-               else
+               const range_t& range = (*itr);
+               if (string_to_type_converter(range.first,range.second,t))
                   set.insert(t);
+               else
+                  return false;
                ++itr;
             }
             return true;
@@ -5235,69 +5464,63 @@ namespace strtk
          template <typename T,
                    typename Comparator,
                    typename Allocator>
-         inline bool parse(const col_range_type& range,
+         inline bool parse(const col_range_t& range,
                            std::multiset<T,Comparator,Allocator>& multiset) const
          {
             if (!validate_column_range(range))
                return false;
-
-            itr_list_type::const_iterator itr = token_list_->begin() + range.first;
-            itr_list_type::const_iterator end = token_list_->begin() + range.second;
+            token_list_t::const_iterator itr = (begin_ + range.first);
+            token_list_t::const_iterator end = (begin_ + range.second);
             T t;
-
             while (end != itr)
             {
-               const itr_list_type::value_type& range = (*itr);
-               if (!string_to_type_converter(range.first,range.second,t))
-                  return false;
-               else
+               const range_t& range = (*itr);
+               if (string_to_type_converter(range.first,range.second,t))
                   multiset.insert(t);
+               else
+                  return false;
                ++itr;
             }
             return true;
          }
 
          template <typename T, typename Container>
-         inline bool parse(const col_range_type& range,
+         inline bool parse(const col_range_t& range,
                            std::queue<T,Container>& queue) const
          {
             if (!validate_column_range(range))
                return false;
-
-            itr_list_type::const_iterator itr = token_list_->begin() + range.first;
-            itr_list_type::const_iterator end = token_list_->begin() + range.second;
+            token_list_t::const_iterator itr = (begin_ + range.first);
+            token_list_t::const_iterator end = (begin_ + range.second);
             T t;
-
             while (end != itr)
             {
-               const itr_list_type::value_type& range = (*itr);
-               if (!string_to_type_converter(range.first,range.second,t))
-                  return false;
-               else
+               const range_t& range = (*itr);
+               if (string_to_type_converter(range.first,range.second,t))
                   queue.push(t);
+               else
+                  return false;
                ++itr;
             }
             return true;
          }
 
          template <typename T, typename Container>
-         inline bool parse(const col_range_type& range,
+         inline bool parse(const col_range_t& range,
                            std::stack<T,Container>& stack) const
          {
             if (!validate_column_range(range))
                return false;
-
-            itr_list_type::const_iterator itr = token_list_->begin() + range.first;
-            itr_list_type::const_iterator end = token_list_->begin() + range.second;
+            token_list_t::const_iterator itr = (begin_ + range.first);
+            token_list_t::const_iterator end = (begin_ + range.second);
             T t;
-
             while (end != itr)
             {
-               const itr_list_type::value_type& range = (*itr);
-               if (!string_to_type_converter(range.first,range.second,t))
-                  return false;
-               else
+               const range_t& range = (*itr);
+               if (string_to_type_converter(range.first,range.second,t))
                   stack.push(t);
+               else
+                  return false;
                ++itr;
             }
             return true;
@@ -5306,23 +5529,21 @@ namespace strtk
          template <typename T,
                    typename Container,
                    typename Comparator>
-         inline bool parse(const col_range_type& range,
+         inline bool parse(const col_range_t& range,
                            std::priority_queue<T,Container,Comparator>& priority_queue) const
          {
             if (!validate_column_range(range))
                return false;
-
-            itr_list_type::const_iterator itr = token_list_->begin() + range.first;
-            itr_list_type::const_iterator end = token_list_->begin() + range.second;
+            token_list_t::const_iterator itr = (begin_ + range.first);
+            token_list_t::const_iterator end = (begin_ + range.second);
             T t;
-
             while (end != itr)
             {
-               const itr_list_type::value_type& range = (*itr);
-               if (!string_to_type_converter(range.first,range.second,t))
-                  return false;
-               else
+               const range_t& range = (*itr);
+               if (string_to_type_converter(range.first,range.second,t))
                   priority_queue.push(t);
+               else
+                  return false;
                ++itr;
             }
             return true;
@@ -5380,11 +5601,11 @@ namespace strtk
             if (0 == n) return 0;
             T t;
             std::size_t count = 0;
-            itr_list_type::const_iterator itr = token_list_->begin();
-            itr_list_type::const_iterator end = token_list_->end();
+            token_list_t::const_iterator itr = begin_;
+            const token_list_t::const_iterator end = begin_ + size_;
             while (end != itr)
             {
-               const itr_list_type::value_type& range = (*itr);
+               const range_t& range = (*itr);
                if (!string_to_type_converter(range.first,range.second,t))
                   return false;
                else
@@ -5400,11 +5621,11 @@ namespace strtk
          inline void parse_checked(OutputIterator out) const
          {
             T value;
-            itr_list_type::const_iterator itr = token_list_->begin();
-            itr_list_type::const_iterator end = token_list_->end();
+            token_list_t::const_iterator itr = begin_;
+            const token_list_t::const_iterator end = begin_ + size_;
             while (end != itr)
             {
-               const itr_list_type::value_type& range = (*itr);
+               const range_t& range = (*itr);
                if (string_to_type_converter(range.first,range.second,value))
                {
                   *(out++) = value;
@@ -5458,18 +5679,16 @@ namespace strtk
          }
 
          template <typename Function>
-         inline std::size_t for_each_column(const col_range_type& range, Function f) const
+         inline std::size_t for_each_column(const col_range_t& range, Function f) const
          {
             if (!validate_column_range(range))
                return false;
-
-            itr_list_type::const_iterator itr = token_list_->begin() + range.first;
-            itr_list_type::const_iterator end = token_list_->begin() + range.second;
+            token_list_t::const_iterator itr = begin_ + range.first;
+            token_list_t::const_iterator end = begin_ + range.second;
             std::size_t col_count = 0;
-
             while (end != itr)
             {
-               const itr_list_type::value_type& range = (*itr);
+               const range_t& range = (*itr);
                f(range);
                ++itr;
                ++col_count;
@@ -5486,19 +5705,16 @@ namespace strtk
       private:
 
          template <typename T>
-         inline bool process(const itr_list_type::value_type& range, T& t) const
+         inline bool process(const range_t& range, T& t) const
          {
             return string_to_type_converter(range.first,range.second,t);
          }
 
       private:
 
-
          std::size_t index_;
-         itr_list_list_type* row_list_;
-         itr_list_type* token_list_;
-         mutable row_pair_type next_row_;
-         mutable row_pair_type prev_row_;
+         std::size_t size_;
+         token_list_t::const_iterator begin_;
       };
 
       token_grid()
@@ -5638,59 +5854,70 @@ namespace strtk
          }
       }
 
-      inline bool operator!()               const { return !state_;            }
-      inline std::string source_file()      const { return file_name_;         }
-      inline std::size_t row_count()        const { return token_list_.size(); }
-      inline std::size_t min_column_count() const { return min_column_count_;  }
-      inline std::size_t max_column_count() const { return max_column_count_;  }
-
-      inline range_type token(const unsigned int& row, const std::size_t& col) const
+      inline bool operator!() const
       {
-         return token_list_[row][col];
+         return !state_;
+      }
+
+      inline std::string source_file() const
+      {
+         return file_name_;
+      }
+
+      inline std::size_t row_count() const
+      {
+         return dsv_index_.row_index.size();
+      }
+
+      inline std::size_t min_column_count() const
+      {
+         return min_column_count_;
+      }
+
+      inline std::size_t max_column_count() const
+      {
+         return max_column_count_;
+      }
+
+      inline range_t token(const unsigned int& row, const std::size_t& col) const
+      {
+         return dsv_index_(col,row);
       }
 
       template <typename T>
       inline T get(const unsigned int& row, const std::size_t& col)
       {
-         range_type r = token(row,col);
+         range_t r = token(row,col);
          return string_to_type_converter<T>(r.first,r.second);
       }
 
       inline row_type row(const unsigned int& row_index) const
       {
-         return row_type(row_index,token_list_);
+         return row_type(row_index,dsv_index_);
       }
 
-      inline row_range_type all_rows() const
+      inline row_range_t all_rows() const
       {
-         return row_range_type(0,token_list_.size());
+         return row_range_t(0,dsv_index_.row_index.size());
       }
 
       template <typename OutputIterator>
-      inline bool extract_column_checked(const row_range_type& range,
+      inline bool extract_column_checked(const row_range_t& row_range,
                                          const std::size_t& index,
                                          OutputIterator out) const
       {
          if (index > max_column_count_)
             return false;
-
-         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
+         else if (row_range_invalid(row_range))
             return false;
-
-         if (range.first > range.second)
-            return false;
-
-         itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
-         itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
-
-         while (end != itr)
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
          {
-            if (index < (*itr).size())
+            const row_index_range_t& row = dsv_index_.row_index[i];
+            if (index < dsv_index_.token_count(row))
             {
-               process_column_checked((*itr++)[index],out);
+               dsv_index_.token_list.begin() + (row.first + index);
+               process_token_checked(*(dsv_index_.token_list.begin() + (row.first + index)),out);
             }
-            else
-               ++itr;
          }
          return true;
       }
@@ -5730,25 +5957,22 @@ namespace strtk
       }
 
       template <typename OutputIterator>
-      inline bool extract_column(const row_range_type& range,
+      inline bool extract_column(const row_range_t& row_range,
                                  const std::size_t& index,
                                  OutputIterator out) const
       {
+
          if (index > max_column_count_)
             return false;
-
-         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
+         else if (row_range_invalid(row_range))
             return false;
-
-         if (range.first > range.second)
-            return false;
-
-         itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
-         itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
-
-         while (end != itr)
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
          {
-            process_column((*itr++)[index],out);
+            const row_index_range_t& row = dsv_index_.row_index[i];
+            if (index < dsv_index_.token_count(row))
+            {
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index)),out);
+            }
          }
          return true;
       }
@@ -5760,171 +5984,180 @@ namespace strtk
          return extract_column(all_rows(),index,out);
       }
 
-      template <typename OutputIterator1, typename OutputIterator2>
-      inline bool extract_column(const row_range_type& range,
+      template <typename OutputIterator0, typename OutputIterator1>
+      inline bool extract_column(const row_range_t& row_range,
+                                 const std::size_t& index0,
                                  const std::size_t& index1,
-                                 const std::size_t& index2,
-                                 OutputIterator1 out1,
-                                 OutputIterator2 out2) const
+                                 OutputIterator0 out0,
+                                 OutputIterator1 out1) const
       {
-         if ((index1 > max_column_count_) ||
-             (index2 > max_column_count_))
+         if ((index0 > max_column_count_) ||
+             (index1 > max_column_count_))
             return false;
-
-         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
+         else if (row_range_invalid(row_range))
             return false;
-
-         if (range.first > range.second)
-            return false;
-
-         itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
-         itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
-
-         while (end != itr)
+         std::size_t max_index = std::max(index0,index1);
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
          {
-            process_column((*itr)[index1],out1);
-            process_column((*itr)[index2],out2);
-            ++itr;
+            const row_index_range_t& row = dsv_index_.row_index[i];
+            if (max_index < dsv_index_.token_count(row))
+            {
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index0)),out0);
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index1)),out1);
+            }
          }
          return true;
       }
 
-      template <typename OutputIterator1, typename OutputIterator2, typename OutputIterator3>
-      inline bool extract_column(const row_range_type& range,
+      template <typename OutputIterator0, typename OutputIterator1, typename OutputIterator2>
+      inline bool extract_column(const row_range_t& row_range,
+                                 const std::size_t& index0,
+                                 const std::size_t& index1,
+                                 const std::size_t& index2,
+                                 OutputIterator0 out0,
+                                 OutputIterator1 out1,
+                                 OutputIterator2 out2) const
+      {
+         if ((index0 > max_column_count_) ||
+             (index1 > max_column_count_) ||
+             (index2 > max_column_count_))
+            return false;
+         else if (row_range_invalid(row_range))
+            return false;
+         std::size_t max_index = std::max(index0,std::max(index1,index2));
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
+         {
+            const row_index_range_t& row = dsv_index_.row_index[i];
+            if (max_index < dsv_index_.token_count(row))
+            {
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index0)),out0);
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index1)),out1);
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index2)),out2);
+            }
+         }
+         return true;
+      }
+
+      template <typename OutputIterator0, typename OutputIterator1,
+                typename OutputIterator2, typename OutputIterator3>
+      inline bool extract_column(const row_range_t& row_range,
+                                 const std::size_t& index0,
                                  const std::size_t& index1,
                                  const std::size_t& index2,
                                  const std::size_t& index3,
+                                 OutputIterator0 out0,
                                  OutputIterator1 out1,
                                  OutputIterator2 out2,
                                  OutputIterator3 out3) const
       {
-         if ((index1 > max_column_count_) ||
+         if ((index0 > max_column_count_) ||
+             (index1 > max_column_count_) ||
              (index2 > max_column_count_) ||
              (index3 > max_column_count_))
             return false;
-
-         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
+         else if (row_range_invalid(row_range))
             return false;
-
-         if (range.first > range.second)
-            return false;
-
-         itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
-         itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
-
-         while (end != itr)
+         std::size_t max_index = std::max(std::max(index0,index1),std::max(index2,index3));
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
          {
-            process_column((*itr)[index1],out1);
-            process_column((*itr)[index2],out2);
-            process_column((*itr)[index3],out3);
-            ++itr;
+            const row_index_range_t& row = dsv_index_.row_index[i];
+            if (max_index < dsv_index_.token_count(row))
+            {
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index0)),out0);
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index1)),out1);
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index2)),out2);
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index3)),out3);
+            }
          }
          return true;
       }
 
-      template <typename OutputIterator1, typename OutputIterator2,
-                typename OutputIterator3, typename OutputIterator4>
-      inline bool extract_column(const row_range_type& range,
+      template <typename OutputIterator0, typename OutputIterator1,
+                typename OutputIterator2, typename OutputIterator3,
+                typename OutputIterator4>
+      inline bool extract_column(const row_range_t& row_range,
+                                 const std::size_t& index0,
                                  const std::size_t& index1,
                                  const std::size_t& index2,
                                  const std::size_t& index3,
                                  const std::size_t& index4,
+                                 OutputIterator0 out0,
                                  OutputIterator1 out1,
                                  OutputIterator2 out2,
                                  OutputIterator3 out3,
                                  OutputIterator4 out4) const
       {
-         if ((index1 > max_column_count_) ||
+         if ((index0 > max_column_count_) ||
+             (index1 > max_column_count_) ||
              (index2 > max_column_count_) ||
              (index3 > max_column_count_) ||
              (index4 > max_column_count_))
             return false;
-
-         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
+         else if (row_range_invalid(row_range))
             return false;
-
-         if (range.first > range.second)
-            return false;
-
-         itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
-         itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
-
-         while (end != itr)
+         std::size_t max_index = std::max(index4,std::max(std::max(index0,index1),std::max(index2,index3)));
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
          {
-            process_column((*itr)[index1],out1);
-            process_column((*itr)[index2],out2);
-            process_column((*itr)[index3],out3);
-            process_column((*itr)[index4],out4);
-            ++itr;
-         }
-         return true;
-      }
-
-      template <typename OutputIterator1, typename OutputIterator2,
-                typename OutputIterator3, typename OutputIterator4,
-                typename OutputIterator5>
-      inline bool extract_column(const row_range_type& range,
-                                 const std::size_t& index1,
-                                 const std::size_t& index2,
-                                 const std::size_t& index3,
-                                 const std::size_t& index4,
-                                 const std::size_t& index5,
-                                 OutputIterator1 out1,
-                                 OutputIterator2 out2,
-                                 OutputIterator3 out3,
-                                 OutputIterator4 out4,
-                                 OutputIterator5 out5) const
-      {
-         if ((index1 > max_column_count_) ||
-             (index2 > max_column_count_) ||
-             (index3 > max_column_count_) ||
-             (index4 > max_column_count_) ||
-             (index5 > max_column_count_))
-            return false;
-
-         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
-            return false;
-
-         if (range.first > range.second)
-            return false;
-
-         itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
-         itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
-
-         while (end != itr)
-         {
-            process_column((*itr)[index1],out1);
-            process_column((*itr)[index2],out2);
-            process_column((*itr)[index3],out3);
-            process_column((*itr)[index4],out4);
-            process_column((*itr)[index5],out5);
-            ++itr;
+            const row_index_range_t& row = dsv_index_.row_index[i];
+            if (max_index < dsv_index_.token_count(row))
+            {
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index0)),out0);
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index1)),out1);
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index2)),out2);
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index3)),out3);
+               process_token(*(dsv_index_.token_list.begin() + (row.first + index4)),out4);
+            }
          }
          return true;
       }
 
       inline void remove_row(const std::size_t& index)
       {
-         if (index < token_list_.size()) token_list_.erase(token_list_.begin() + index);
+         if (index < dsv_index_.row_index.size())
+         {
+            dsv_index_.remove_row(index);
+         }
       }
 
       template <typename Predicate>
-      inline bool remove_row_if(const row_range_type& range, Predicate predicate)
+      inline bool remove_row_if(const row_range_t& row_range, Predicate predicate)
       {
-         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
+         if (row_range_invalid(row_range))
             return false;
-
-         if (range.first > range.second)
-            return false;
-
-         itr_list_list_type::iterator begin = token_list_.begin() + range.first;
-         itr_list_list_type::iterator end   = token_list_.begin() + range.second;
-
-         itr_list_list_type::iterator new_end = std::remove_if(begin,end,
-                                                               remove_row_if_predicate<Predicate>(predicate));
-
-         token_list_.erase(new_end,token_list_.begin() + range.second);
-
+         std::size_t removed_token_count = 0;
+         std::deque<std::size_t> remove_token_list;
+         std::deque<std::size_t> remove_row_list;
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
+         {
+            row_index_range_t& r = dsv_index_.row_index[i];
+            std::size_t temp_r_first = r.first - removed_token_count;
+            row_type row(i,dsv_index_);
+            if (predicate(row))
+            {
+               remove_row_list.push_back(i);
+               for (std::size_t j = r.first; j <= r.second; ++j)
+               {
+                  remove_token_list.push_back(j);
+               }
+               removed_token_count += row.size();
+            }
+            r.first   = temp_r_first;
+            r.second -= removed_token_count;
+         }
+         for (std::size_t i = row_range.second; i < dsv_index_.row_index.size(); ++i)
+         {
+            row_index_range_t& r = dsv_index_.row_index[i];
+            r.first  -= removed_token_count;
+            r.second -= removed_token_count;
+         }
+         if (!remove_row_list.empty())
+         {
+            remove_inplace(index_remover(remove_row_list),dsv_index_.row_index);
+         }
+         if (!remove_token_list.empty())
+         {
+            remove_inplace(index_remover(remove_token_list),dsv_index_.token_list);
+         }
          return true;
       }
 
@@ -5934,106 +6167,95 @@ namespace strtk
          return remove_row_if(all_rows(),predicate);
       }
 
-      inline void remove_empty_tokens(const row_range_type& range)
-      {
-         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
-            return;
-
-         if (range.first > range.second)
-            return;
-
-         itr_list_list_type::iterator itr = token_list_.begin() + range.first;
-         itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
-
-         while (end != itr)
-         {
-            itr_list_type& row_deq = (*itr);
-            itr_list_type::iterator row_itr = row_deq.begin();
-
-            while (row_deq.end() != row_itr)
-            {
-               if (0 == std::distance(row_itr->first,row_itr->second))
-               {
-                  row_itr = (*itr).erase(row_itr);
-               }
-               else
-                  ++row_itr;
-            }
-            ++itr;
-         }
-      }
-
       template <typename Predicate>
-      inline void remove_token_if(const row_range_type& range, Predicate p)
+      inline std::size_t remove_token_if(const row_range_t& row_range, Predicate predicate)
       {
-         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
-            return;
-
-         if (range.first > range.second)
-            return;
-
-         itr_list_list_type::iterator itr = token_list_.begin() + range.first;
-         itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
-
-         while (end != itr)
+         if (row_range_invalid(row_range))
+            return 0;
+         std::size_t removed_token_count = 0;
+         std::deque<std::size_t> remove_token_list;
+         std::deque<std::size_t> remove_row_list;
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
          {
-            itr_list_type& row_deq = (*itr);
-            itr_list_type::iterator row_itr = row_deq.begin();
-
-            while (row_deq.end() != row_itr)
+            row_index_range_t& r = dsv_index_.row_index[i];
+            std::size_t temp_r_first = r.first - removed_token_count;
+            row_type row(i,dsv_index_);
+            for (std::size_t j = 0; j < row.size(); ++j)
             {
-               if (p(row_itr->first,row_itr->second))
+               if (predicate(row.token(j)))
                {
-                  row_itr = (*itr).erase(row_itr);
+                  remove_token_list.push_back(r.first + j);
+                  ++removed_token_count;
                }
-               else
-                  ++row_itr;
             }
-            ++itr;
+            r.first   = temp_r_first;
+            r.second -= removed_token_count;
+            if (0 == dsv_index_.token_count(r))
+            {
+               remove_row_list.push_back(i);
+            }
          }
+         for (std::size_t i = row_range.second; i < dsv_index_.row_index.size(); ++i)
+         {
+            row_index_range_t& r = dsv_index_.row_index[i];
+            r.first  -= removed_token_count;
+            r.second -= removed_token_count;
+         }
+         if (!remove_row_list.empty())
+         {
+            remove_inplace(index_remover(remove_row_list),dsv_index_.row_index);
+         }
+         if (!remove_token_list.empty())
+         {
+            remove_inplace(index_remover(remove_token_list),dsv_index_.token_list);
+         }
+         if (remove_token_list.size() > 0)
+         {
+            update_minmax_columns();
+         }
+         return remove_token_list.size();
       }
 
-      inline void remove_empty_tokens()
+      inline std::size_t remove_empty_tokens(const row_range_t& range)
       {
-         remove_empty_tokens(all_rows());
+         return remove_token_if(range,is_empty_token());
+      }
+
+      inline std::size_t remove_empty_tokens()
+      {
+         return remove_empty_tokens(all_rows());
+      }
+
+      inline void enforce_column_count(const row_range_t& row_range,
+                                       const std::size_t& column_count)
+      {
+         if (row_range_invalid(row_range))
+            return;
+         remove_row_if(insufficient_number_of_columns(column_count));
+         min_column_count_ = column_count;
+         max_column_count_ = column_count;
       }
 
       inline void enforce_column_count(const std::size_t& column_count)
       {
-         itr_list_list_type::iterator itr = token_list_.begin();
-         itr_list_list_type::iterator end = token_list_.end();
-         itr_list_list_type new_token_list;
-         while (end != itr)
-         {
-            if (itr->size() == column_count)
-            {
-               new_token_list.push_back(*itr);
-            }
-            ++itr;
-         }
-         token_list_.swap(new_token_list);
-         min_column_count_ = column_count;
-         max_column_count_ = column_count;
+         enforce_column_count(all_rows(),column_count);
+      }
+
+      inline void enforce_min_max_column_count(const row_range_t& row_range,
+                                               const std::size_t& min_column_count,
+                                               const std::size_t& max_column_count)
+      {
+         if (row_range_invalid(row_range))
+            return;
+         remove_row_if(insufficient_number_of_minmax_columns(min_column_count,max_column_count));
+         min_column_count_ = min_column_count;
+         max_column_count_ = max_column_count;
       }
 
       inline void enforce_min_max_column_count(const std::size_t& min_column_count,
                                                const std::size_t& max_column_count)
       {
-         itr_list_list_type::iterator itr = token_list_.begin();
-         itr_list_list_type::iterator end = token_list_.end();
-         itr_list_list_type new_token_list;
-         while (end != itr)
-         {
-            std::size_t column_count = itr->size();
-            if ((min_column_count <= column_count) && (column_count <= max_column_count))
-            {
-               new_token_list.push_back(*itr);
-            }
-            ++itr;
-         }
-         token_list_.swap(new_token_list);
-         min_column_count_ = min_column_count;
-         max_column_count_ = max_column_count;
+         enforce_min_max_column_count(all_rows(),min_column_count,max_column_count);
       }
 
       inline void clear(const bool force_delete_buffer = false)
@@ -6042,7 +6264,7 @@ namespace strtk
             delete[] buffer_;
          buffer_ = 0;
          buffer_size_ = 0;
-         token_list_.clear();
+         dsv_index_.clear();
          min_column_count_ = 0;
          max_column_count_ = 0;
          state_ = false;
@@ -6050,57 +6272,52 @@ namespace strtk
       }
 
       template <typename T>
-      inline bool accumulate_row(const std::size_t& row, T& result) const
+      inline std::size_t accumulate_row(const std::size_t& row, T& result) const
       {
-         if (row >= token_list_.size())
-            return false;
-         itr_list_type::const_iterator itr = token_list_[row].begin();
-         itr_list_type::const_iterator end = token_list_[row].end();
+         if (row >= dsv_index_.row_index.size())
+            return 0;
+         const row_index_range_t& r = dsv_index_.row_index[row];
+         token_list_t::const_iterator itr = dsv_index_.token_list.begin() + r.first;
+         token_list_t::const_iterator end = dsv_index_.token_list.begin() + r.second + 1;
+         std::size_t process_count = 0;
          T current_value = T();
          while (end != itr)
          {
             if (string_to_type_converter((*itr).first,(*itr).second,current_value))
+            {
               result += current_value;
+              ++process_count;
+            }
             else
-               return false;
+               return 0;
             ++itr;
          }
-         return true;
+         return process_count;
       }
 
       template <typename T>
       inline std::size_t accumulate_column(const std::size_t& col,
-                                           const row_range_type& range,
+                                           const row_range_t& row_range,
                                            T& result) const
       {
          if (col > max_column_count_)
             return 0;
-
-         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
+         else if (row_range_invalid(row_range))
             return 0;
-
-         if (range.first > range.second)
-            return 0;
-
-         itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
-         itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
-         T current_value = T();
-
          std::size_t process_count = 0;
-
-         while (end != itr)
+         T current_value = T();
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
          {
-            if (!(*itr).empty())
+            const row_index_range_t& r = dsv_index_.row_index[i];
+            if (col < dsv_index_.token_count(r))
             {
-               if (string_to_type_converter((*itr)[col].first, (*itr)[col].second, current_value))
-               {
+               const range_t& range = *(dsv_index_.token_list.begin() + r.first + col);
+               if (string_to_type_converter(range.first,range.second,current_value))
                   result += current_value;
-                  ++process_count;
-               }
                else
                   return 0;
             }
-            ++itr;
+            ++process_count;
          }
          return process_count;
       }
@@ -6113,40 +6330,36 @@ namespace strtk
 
       template <typename T, typename Predicate>
       inline std::size_t accumulate_column(const std::size_t& col,
-                                           const row_range_type& range,
+                                           const row_range_t& row_range,
                                            Predicate p,
                                            T& result) const
       {
          if (col > max_column_count_)
             return 0;
-
-         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
+         else if (row_range_invalid(row_range))
             return 0;
-
-         if (range.first > range.second)
-            return 0;
-
-         itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
-         itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
-         T current_value = T();
-
          std::size_t process_count = 0;
-
-         while (end != itr)
+         T current_value = T();
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
          {
-            if (!(*itr).empty() && p(row_type(*itr)))
+            const row_index_range_t& r = dsv_index_.row_index[i];
+            if (col < dsv_index_.token_count(r))
             {
-               if (string_to_type_converter((*itr)[col].first, (*itr)[col].second, current_value))
+               row_type row = row_type(i,dsv_index_);
+               if (p(row))
                {
-                  result += current_value;
-                  ++process_count;
+                  const range_t& range = row.token(col);
+                  if (string_to_type_converter(range.first,range.second,current_value))
+                  {
+                     result += current_value;
+                     ++process_count;
+                  }
+                  else
+                     return 0;
                }
-               else
-                  return 0;
             }
-            ++itr;
-         }
 
+         }
          return process_count;
       }
 
@@ -6158,16 +6371,16 @@ namespace strtk
          return accumulate_column(col,all_rows(),p,result);
       }
 
-      inline bool join_row(const std::size_t& row, const std::string& delimiter, std::string& result)
+      inline bool join_row(const std::size_t& row,
+                           const std::string& delimiter,
+                           std::string& result)
       {
-         if (row >= token_list_.size())
+         if (row >= dsv_index_.row_index.size())
             return false;
-         itr_list_type::const_iterator itr = token_list_[row].begin();
-         itr_list_type::const_iterator end = token_list_[row].end();
-         result.reserve(std::distance(token_list_[row].front().first,
-                                      token_list_[row].back().second) +
-                        (delimiter.size() * token_list_[row].size()) +
-                        result.size());
+         const row_index_range_t& r = dsv_index_.row_index[row];
+         token_list_t::const_iterator itr = dsv_index_.token_list.begin() + r.first;
+         token_list_t::const_iterator end = dsv_index_.token_list.begin() + r.second + (row < (dsv_index_.row_index.size() - 1) ? 1 : 0);
+         result.reserve(delimiter.size() * dsv_index_.token_count(r) + std::distance(itr->first,end->second));
          bool appended = false;
          while (end != itr)
          {
@@ -6184,42 +6397,73 @@ namespace strtk
          return true;
       }
 
-      inline bool join_column(const std::size_t& col,
-                              const row_range_type& row_range,
-                              const std::string& delimiter,
-                              std::string& result) const
+      template <typename Predicate>
+      inline bool join_row(const std::size_t& row,
+                           Predicate predicate,
+                           const std::string& delimiter,
+                           std::string& result)
       {
-         if (col > max_column_count_)
+         if (row >= dsv_index_.row_index.size())
             return false;
-
-         if ((row_range.first > token_list_.size()) || (row_range.second > token_list_.size()))
-            return false;
-
-         if (row_range.first > row_range.second)
-            return false;
-
-         itr_list_list_type::const_iterator itr = token_list_.begin() + row_range.first;
-         itr_list_list_type::const_iterator end = token_list_.begin() + row_range.second;
-         range_type range;
+         const row_index_range_t& r = dsv_index_.row_index[row];
+         token_list_t::const_iterator itr = (dsv_index_.token_list.begin() + r.first);
+         token_list_t::const_iterator end = dsv_index_.token_list.begin() + r.second + (row < (dsv_index_.row_index.size() - 1) ? 1 : 0);
+         result.reserve(delimiter.size() * dsv_index_.token_count(r) + std::distance(itr->first,end->second));
          bool appended = false;
-
          while (end != itr)
          {
             if (!delimiter.empty() && appended)
                result.append(delimiter);
             appended = false;
-            if (!(*itr).empty())
+            if ((*itr).first != (*itr).second)
             {
-               range = (*itr)[col];
+               if (predicate(*itr))
+               {
+                  result.append((*itr).first,(*itr).second);
+                  appended = true;
+               }
+            }
+            ++itr;
+         }
+         return true;
+      }
+
+      template <typename Predicate>
+      inline bool join_row(const std::size_t& row,
+                           Predicate predicate,
+                           const char* delimiter,
+                           std::string& result)
+      {
+         return join_row(row,predicate,std::string(delimiter),result);
+      }
+
+      inline bool join_column(const std::size_t& col,
+                              const row_range_t& row_range,
+                              const std::string& delimiter,
+                              std::string& result) const
+      {
+         if (col > max_column_count_)
+            return false;
+         else if (row_range_invalid(row_range))
+            return false;
+         bool appended = false;
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
+         {
+            const row_index_range_t& r = dsv_index_.row_index[i];
+            if (col < dsv_index_.token_count(r))
+            {
+               row_type row = row_type(i,dsv_index_);
+               const range_t& range = row.token(col);
+               if (!delimiter.empty() && appended)
+                  result.append(delimiter);
+               appended = false;
                if (range.first != range.second)
                {
                   result.append(range.first,range.second);
                   appended = true;
                }
             }
-            ++itr;
          }
-
          return true;
       }
 
@@ -6232,41 +6476,37 @@ namespace strtk
 
       template <typename Predicate>
       inline bool join_column(const std::size_t& col,
-                              const row_range_type& range,
-                              Predicate p,
+                              const row_range_t& row_range,
+                              Predicate predicate,
                               const std::string& delimiter,
                               std::string& result) const
       {
          if (col > max_column_count_)
             return false;
-
-         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
+         else if (row_range_invalid(row_range))
             return false;
-
-         if (range.first > range.second)
-            return false;
-
-         itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
-         itr_list_list_type::const_iterator end = token_list_.begin() + range.second;
          bool appended = false;
-
-         while (end != itr)
+         const std::size_t pre_end_index = row_range.second - 1;
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
          {
-            if (!delimiter.empty() && appended)
-               result.append(delimiter);
-            appended = false;
-            if (!(*itr).empty() && p(row_type(*itr)))
+            const row_index_range_t& r = dsv_index_.row_index[i];
+            if (col < dsv_index_.token_count(r))
             {
-               range_type r = (*itr)[col];
-               if (r.first != r.second)
+               row_type row = row_type(i,dsv_index_);
+               const range_t& range = row.token(col);
+               if (!delimiter.empty() && appended && (pre_end_index != i))
+                  result.append(delimiter);
+               appended = false;
+               if (range.first != range.second)
                {
-                  result.append(r.first,r.second);
-                  appended = true;
+                  if (predicate(row))
+                  {
+                     result.append(range.first,range.second);
+                     appended = true;
+                  }
                }
             }
-            ++itr;
          }
-
          return true;
       }
 
@@ -6280,23 +6520,16 @@ namespace strtk
       }
 
       template <typename TransitionPredicate, typename Function>
-      inline bool sequential_partition(const row_range_type& range,
+      inline bool sequential_partition(const row_range_t& row_range,
                                        TransitionPredicate p,
                                        Function f)
       {
-
-         if ((range.first > token_list_.size()) || (range.second > token_list_.size()))
+         if (row_range_invalid(row_range))
             return false;
-
-         if (range.first >= range.second)
-            return false;
-
-         itr_list_list_type::const_iterator itr = token_list_.begin() + range.first;
-         row_range_type r(range.first,range.first);
-
-         for (std::size_t i = range.first; i < range.second; ++i, ++itr)
+         row_range_t r(row_range.first,row_range.first);
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
          {
-            if (p(row_type(*itr)))
+            if (p(row_type(i,dsv_index_)))
             {
                if (r.first != r.second)
                {
@@ -6309,14 +6542,12 @@ namespace strtk
             else
                r.second = i;
          }
-
-         if (r.first != range.second)
+         if (r.first != row_range.second)
          {
-            r.second = range.second;
+            r.second = row_range.second;
             if (!f(*this,r))
                return false;
          }
-
          return true;
       }
 
@@ -6332,26 +6563,14 @@ namespace strtk
       }
 
       template <typename Function>
-      inline std::size_t for_each_row(const row_range_type& row_range, Function f) const
+      inline std::size_t for_each_row(const row_range_t& row_range, Function f) const
       {
-         if ((row_range.first > token_list_.size()) || (row_range.second > token_list_.size()))
-            return false;
-
-         if (row_range.first > row_range.second)
-            return false;
-
+         if (row_range_invalid(row_range))
+            return 0;
          std::size_t row_count = 0;
-
-         itr_list_list_type::const_iterator itr = token_list_.begin() + row_range.first;
-         itr_list_list_type::const_iterator end = token_list_.begin() + row_range.second;
-
-         while (end != itr)
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
          {
-            if (!(*itr).empty())
-            {
-               f(row_type(*itr));
-            }
-            ++itr;
+            f(row_type(i,dsv_index_));
             ++row_count;
          }
          return row_count;
@@ -6392,10 +6611,79 @@ namespace strtk
          }
       }
 
+      bool load(unsigned char* buffer,
+                const std::size_t buffer_size,
+                const token_grid::options& options)
+      {
+         file_name_ = "";
+         if ((load_from_file_) && (0 != buffer_))
+         {
+            delete [] buffer_;
+            buffer_ = 0;
+         }
+         min_column_count_ = 0;
+         max_column_count_ = 0;
+         options_ = options;
+         load_from_file_ = false;
+         buffer_ = buffer;
+         buffer_size_ = buffer_size;
+         state_ = load();
+         if (state_)
+            return true;
+         else
+         {
+            file_name_ = "";
+            if ((load_from_file_) && (0 != buffer_))
+            {
+               delete [] buffer_;
+               buffer_ = 0;
+            }
+            return false;
+         }
+      }
+
    private:
 
       token_grid(const token_grid& tg);
       token_grid& operator=(const token_grid& tg);
+
+      struct is_empty_token
+      {
+         inline bool operator()(const range_t& r) const
+         {
+            return r.first == r.second;
+         }
+      };
+
+      struct insufficient_number_of_columns
+      {
+         insufficient_number_of_columns(const std::size_t& noc)
+         : num_of_cols(noc)
+         {}
+
+         inline bool operator()(const row_type& row) const
+         {
+            return (num_of_cols != row.size());
+         }
+
+         std::size_t num_of_cols;
+      };
+
+      struct insufficient_number_of_minmax_columns
+      {
+         insufficient_number_of_minmax_columns(const std::size_t& min_col, const std::size_t& max_col)
+         : min_column_count(min_col),
+           max_column_count(max_col)
+         {}
+
+         inline bool operator()(const row_type& row) const
+         {
+            return (row.size() < min_column_count) || (max_column_count < row.size());
+         }
+
+         std::size_t min_column_count;
+         std::size_t max_column_count;
+      };
 
       class double_quotes_predicate
       {
@@ -6435,54 +6723,30 @@ namespace strtk
          if (load_from_file_ && !load_buffer_from_file())
             return false;
 
-         token_list_.clear();
-         itr_list_type row_list;
+         dsv_index_.token_list.clear();
+         dsv_index_.row_index.clear();
+
          multiple_char_delimiter_predicate text_newline_predicate(options_.row_delimiters);
-         split(text_newline_predicate,
-               buffer_, buffer_ + buffer_size_,
-               std::back_inserter(row_list),
-               options_.row_split_option);
 
-         multiple_char_delimiter_predicate token_predicate(options_.column_delimiters);
-         double_quotes_predicate token_predicate_dblq(options_.column_delimiters);
-
-         min_column_count_ = std::numeric_limits<std::size_t>::max();
-         max_column_count_ = std::numeric_limits<std::size_t>::min();
-
-         itr_list_type::iterator itr = row_list.begin();
-         itr_list_type::iterator end = row_list.end();
-
-         while (end != itr)
+         if (!options_.support_dquotes)
          {
-            if (0 != std::distance(itr->first,itr->second))
-            {
-               itr_list_type current_token_list;
-               if (!options_.support_dquotes)
-                  split(token_predicate,
-                        itr->first,
-                        itr->second,
-                        std::back_inserter(current_token_list),
-                        options_.column_split_option);
-               else
-               {
-                  split(token_predicate_dblq,
-                        itr->first,
-                        itr->second,
-                        std::back_inserter(current_token_list),
-                        options_.column_split_option);
-                  token_predicate_dblq.reset();
-               }
-
-               if (!current_token_list.empty())
-               {
-                  token_list_.push_back(current_token_list);
-                  min_column_count_ = std::min(min_column_count_,current_token_list.size());
-                  max_column_count_ = std::max(max_column_count_,current_token_list.size());
-               }
-            }
-            ++itr;
+            multiple_char_delimiter_predicate token_predicate(options_.column_delimiters);
+            strtk::split(text_newline_predicate,
+                         buffer_, buffer_ + buffer_size_,
+                         strtk::functional_inserter(
+                            row_processor<multiple_char_delimiter_predicate>(dsv_index_,token_predicate,options_.column_split_option)),
+                         strtk::split_options::compress_delimiters);
          }
-
+         else
+         {
+            double_quotes_predicate token_predicate_dblq(options_.column_delimiters);
+            strtk::split(text_newline_predicate,
+                         buffer_, buffer_ + buffer_size_,
+                         strtk::functional_inserter(
+                            row_processor<double_quotes_predicate>(dsv_index_,token_predicate_dblq,options_.column_split_option)),
+                        strtk::split_options::compress_delimiters);
+         }
+         update_minmax_columns();
          return true;
       }
 
@@ -6503,7 +6767,7 @@ namespace strtk
       }
 
       template <typename OutputIterator>
-      inline void process_column(const itr_list_type::value_type& range, OutputIterator out) const
+      inline void process_token(const range_t& range, OutputIterator out) const
       {
          typedef typename std::iterator_traits<OutputIterator>::value_type output_type;
          (*out) = string_to_type_converter<output_type>(range.first,range.second);
@@ -6511,7 +6775,7 @@ namespace strtk
       }
 
       template <typename OutputIterator>
-      inline void process_column_checked(const itr_list_type::value_type& range, OutputIterator out) const
+      inline void process_token_checked(const range_t& range, OutputIterator out) const
       {
          typedef typename std::iterator_traits<OutputIterator>::value_type output_type;
          output_type value;
@@ -6522,25 +6786,36 @@ namespace strtk
          }
       }
 
-      template <typename Predicate>
-      struct remove_row_if_predicate
+      inline bool row_range_invalid(const row_range_t& row_range) const
       {
-         remove_row_if_predicate(Predicate p)
-         : p_(p)
-         {}
+         if (row_range.first > dsv_index_.row_index.size())
+            return true;
+         else if (row_range.second > dsv_index_.row_index.size())
+            return true;
+         else if (row_range.first > row_range.second)
+            return true;
+         else
+            return false;
+      }
 
-         inline bool operator()(const itr_list_type& itr_list)
+      inline void update_minmax_columns()
+      {
+         min_column_count_ = std::numeric_limits<std::size_t>::max();
+         max_column_count_ = std::numeric_limits<std::size_t>::min();
+         for (std::size_t i = 0; i < dsv_index_.row_index.size(); ++i)
          {
-            return (!itr_list.empty() &&
-                    p_(itr_list.front().first,itr_list.back().second));
+            const row_index_range_t& r = dsv_index_.row_index[i];
+            const std::size_t number_of_tokens = dsv_index_.token_count(r);
+            if (number_of_tokens > max_column_count_)
+               max_column_count_ = number_of_tokens;
+            if (number_of_tokens < min_column_count_)
+               min_column_count_ = number_of_tokens;
          }
-
-         Predicate p_;
-      };
+      }
 
    private:
 
-      itr_list_list_type token_list_;
+      store dsv_index_;
       std::string file_name_;
       unsigned char* buffer_;
       std::size_t buffer_size_;
@@ -6550,6 +6825,9 @@ namespace strtk
       bool load_from_file_;
       bool state_;
    };
+
+   const token_grid::range_t token_grid::store::null_range = token_grid::range_t(reinterpret_cast<const unsigned char*>(0),
+                                                                                 reinterpret_cast<const unsigned char*>(0));
 
    template <typename T>
    inline bool convert_string_range(const std::pair<std::string::const_iterator,std::string::const_iterator> range, T& t)
@@ -6743,6 +7021,12 @@ namespace strtk
          return length == std::distance(begin,end);
       }
 
+      template <typename Iterator>
+      inline bool operator()(const std::pair<Iterator,Iterator>& range) const
+      {
+         return length == std::distance(range.first,range.second);
+      }
+
       template <typename T,
                 typename Allocator,
                 template <typename,typename> class Sequence>
@@ -6780,6 +7064,12 @@ namespace strtk
       inline bool operator()(const Iterator begin, const Iterator end) const
       {
          return std::distance(begin,end) < static_cast<typename std::iterator_traits<Iterator>::difference_type>(length);
+      }
+
+      template <typename Iterator>
+      inline bool operator()(const std::pair<Iterator,Iterator>& range) const
+      {
+         return std::distance(range.first,range.second) < static_cast<typename std::iterator_traits<Iterator>::difference_type>(length);
       }
 
       template <typename T,
@@ -6821,6 +7111,12 @@ namespace strtk
          return std::distance(begin,end) > static_cast<typename std::iterator_traits<Iterator>::difference_type>(length);
       }
 
+      template <typename Iterator>
+      inline bool operator()(const std::pair<Iterator,Iterator>& range) const
+      {
+         return std::distance(range.first,range.second) > static_cast<typename std::iterator_traits<Iterator>::difference_type>(length);
+      }
+
       template <typename T,
                 typename Allocator,
                 template <typename,typename> class Sequence>
@@ -6848,6 +7144,94 @@ namespace strtk
       inline bool operator()(const std::string& str) const
       {
          return str.size() > length;
+      }
+   };
+
+   struct size_is_even
+   {
+      template <typename Iterator>
+      inline bool operator()(const Iterator begin, const Iterator end) const
+      {
+         return 0 == (std::distance(begin,end) % 2);
+      }
+
+      template <typename Iterator>
+      inline bool operator()(const std::pair<Iterator,Iterator>& range) const
+      {
+         return 0 == (std::distance(range.first,range.second) % 2);
+      }
+
+      template <typename T,
+                typename Allocator,
+                template <typename,typename> class Sequence>
+      inline bool operator()(const Sequence<T,Allocator>& sequence) const
+      {
+         return 0 == (sequence.size() % 2);
+      }
+
+      template <typename T,
+                typename Comparator,
+                typename Allocator>
+      inline bool operator()(const std::set<T,Comparator,Allocator>& set) const
+      {
+         return 0 == (set.size() % 2);
+      }
+
+      template <typename T,
+                typename Comparator,
+                typename Allocator>
+      inline bool operator()(const std::multiset<T,Comparator,Allocator>& multiset) const
+      {
+         return 0 == (multiset.size() % 2);
+      }
+
+      inline bool operator()(const std::string& str) const
+      {
+         return 0 == (str.size() % 2);
+      }
+   };
+
+   struct size_is_odd
+   {
+      template <typename Iterator>
+      inline bool operator()(const Iterator begin, const Iterator end) const
+      {
+         return 0 != (std::distance(begin,end) % 2);
+      }
+
+      template <typename Iterator>
+      inline bool operator()(const std::pair<Iterator,Iterator>& range) const
+      {
+         return 0 != (std::distance(range.first,range.second) % 2);
+      }
+
+      template <typename T,
+                typename Allocator,
+                template <typename,typename> class Sequence>
+      inline bool operator()(const Sequence<T,Allocator>& sequence) const
+      {
+         return 0 != (sequence.size() % 2);
+      }
+
+      template <typename T,
+                typename Comparator,
+                typename Allocator>
+      inline bool operator()(const std::set<T,Comparator,Allocator>& set) const
+      {
+         return 0 != (set.size() % 2);
+      }
+
+      template <typename T,
+                typename Comparator,
+                typename Allocator>
+      inline bool operator()(const std::multiset<T,Comparator,Allocator>& multiset) const
+      {
+         return 0 != (multiset.size() % 2);
+      }
+
+      inline bool operator()(const std::string& str) const
+      {
+         return 0 != (str.size() % 2);
       }
    };
 
@@ -7526,7 +7910,7 @@ namespace strtk
 
       template <typename T,
                 typename Allocator,
-                template <typename, typename> class Sequence>
+                template <typename,typename> class Sequence>
       class sequence_adder_impl : public container_adder_base
       {
       public:
@@ -7610,7 +7994,7 @@ namespace strtk
 
       template <typename T,
                 typename Container,
-                template <typename, typename> class SContainer>
+                template <typename,typename> class SContainer>
       class stack_queue_adder_impl : public container_adder_base
       {
       public:
@@ -7730,17 +8114,16 @@ namespace strtk
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
       std::deque<iterator_type> token_list;
-      std::size_t parsed_token_count = 0;
       if (1 == delimiters.size())
-          parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                                     begin,end,
-                                     std::back_inserter(token_list),
-                                     split_options::compress_delimiters);
+         split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       else
-          parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
-                                     begin,end,
-                                     std::back_inserter(token_list),
-                                     split_options::compress_delimiters);
+         split(multiple_char_delimiter_predicate(delimiters),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       if (token_list.size() < 12) return false;
       iterator_type_ptr itr = token_list.begin();
       if (!string_to_type_converter((*itr).first,(*itr).second, t1)) return false; ++itr;
@@ -7771,17 +8154,16 @@ namespace strtk
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
       std::deque<iterator_type> token_list;
-      std::size_t parsed_token_count = 0;
       if (1 == delimiters.size())
-          parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                                     begin,end,
-                                     std::back_inserter(token_list),
-                                     split_options::compress_delimiters);
+         split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       else
-          parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
-                                     begin,end,
-                                     std::back_inserter(token_list),
-                                     split_options::compress_delimiters);
+         split(multiple_char_delimiter_predicate(delimiters),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       if (token_list.size() < 11) return false;
       iterator_type_ptr itr = token_list.begin();
       if (!string_to_type_converter((*itr).first,(*itr).second, t1)) return false; ++itr;
@@ -7810,17 +8192,16 @@ namespace strtk
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
       std::deque<iterator_type> token_list;
-      std::size_t parsed_token_count = 0;
       if (1 == delimiters.size())
-          parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                                     begin,end,
-                                     std::back_inserter(token_list),
-                                     split_options::compress_delimiters);
+         split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       else
-          parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
-                                     begin,end,
-                                     std::back_inserter(token_list),
-                                     split_options::compress_delimiters);
+         split(multiple_char_delimiter_predicate(delimiters),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       if (token_list.size() < 10) return false;
       iterator_type_ptr itr = token_list.begin();
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
@@ -7848,17 +8229,16 @@ namespace strtk
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
       std::deque<iterator_type> token_list;
-      std::size_t parsed_token_count = 0;
       if (1 == delimiters.size())
-         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       else
-         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(multiple_char_delimiter_predicate(delimiters),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       if (token_list.size() < 9) return false;
       iterator_type_ptr itr = token_list.begin();
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
@@ -7870,7 +8250,6 @@ namespace strtk
       if (!string_to_type_converter((*itr).first,(*itr).second,t7)) return false; ++itr;
       if (!string_to_type_converter((*itr).first,(*itr).second,t8)) return false; ++itr;
       return ca(itr,token_list.end());
-
    }
 
    template <typename InputIterator,
@@ -7885,17 +8264,16 @@ namespace strtk
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
       std::deque<iterator_type> token_list;
-      std::size_t parsed_token_count = 0;
       if (1 == delimiters.size())
-         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       else
-         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(multiple_char_delimiter_predicate(delimiters),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       if (token_list.size() < 8) return false;
       iterator_type_ptr itr = token_list.begin();
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
@@ -7906,7 +8284,6 @@ namespace strtk
       if (!string_to_type_converter((*itr).first,(*itr).second,t6)) return false; ++itr;
       if (!string_to_type_converter((*itr).first,(*itr).second,t7)) return false; ++itr;
       return ca(itr,token_list.end());
-
    }
 
    template <typename InputIterator,
@@ -7921,17 +8298,16 @@ namespace strtk
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
       std::deque<iterator_type> token_list;
-      std::size_t parsed_token_count = 0;
       if (1 == delimiters.size())
-         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       else
-         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(multiple_char_delimiter_predicate(delimiters),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       if (token_list.size() < 7) return false;
       iterator_type_ptr itr = token_list.begin();
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
@@ -7941,7 +8317,6 @@ namespace strtk
       if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
       if (!string_to_type_converter((*itr).first,(*itr).second,t6)) return false; ++itr;
       return ca(itr,token_list.end());
-
    }
 
    template <typename InputIterator,
@@ -7956,17 +8331,16 @@ namespace strtk
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
       std::deque<iterator_type> token_list;
-      std::size_t parsed_token_count = 0;
       if (1 == delimiters.size())
-         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       else
-         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(multiple_char_delimiter_predicate(delimiters),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       if (token_list.size() < 6) return false;
       iterator_type_ptr itr = token_list.begin();
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
@@ -7975,7 +8349,6 @@ namespace strtk
       if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
       if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
       return ca(itr,token_list.end());
-
    }
 
    template <typename InputIterator,
@@ -7989,17 +8362,16 @@ namespace strtk
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
       std::deque<iterator_type> token_list;
-      std::size_t parsed_token_count = 0;
       if (1 == delimiters.size())
-         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       else
-         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+        split(multiple_char_delimiter_predicate(delimiters),
+              begin,end,
+              std::back_inserter(token_list),
+              split_options::compress_delimiters);
       if (token_list.size() < 5) return false;
       iterator_type_ptr itr = token_list.begin();
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
@@ -8007,7 +8379,6 @@ namespace strtk
       if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
       if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
       return ca(itr,token_list.end());
-
    }
 
    template <typename InputIterator,
@@ -8021,24 +8392,22 @@ namespace strtk
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
       std::deque<iterator_type> token_list;
-      std::size_t parsed_token_count = 0;
       if (1 == delimiters.size())
-         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       else
-         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(multiple_char_delimiter_predicate(delimiters),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       if (token_list.size() < 4) return false;
       iterator_type_ptr itr = token_list.begin();
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
       if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
       if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
       return ca(itr,token_list.end());
-
    }
 
    template <typename InputIterator,
@@ -8052,23 +8421,21 @@ namespace strtk
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
       std::deque<iterator_type> token_list;
-      std::size_t parsed_token_count = 0;
       if (1 == delimiters.size())
-         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       else
-         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(multiple_char_delimiter_predicate(delimiters),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       if (token_list.size() < 3) return false;
       iterator_type_ptr itr = token_list.begin();
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
       if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
       return ca(itr,token_list.end());
-
    }
 
    template <typename InputIterator, typename T1>
@@ -8081,22 +8448,20 @@ namespace strtk
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
       std::deque<iterator_type> token_list;
-      std::size_t parsed_token_count = 0;
       if (1 == delimiters.size())
-         parsed_token_count = split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       else
-         parsed_token_count = split(multiple_char_delimiter_predicate(delimiters),
-                                    begin,end,
-                                    std::back_inserter(token_list),
-                                    split_options::compress_delimiters);
+         split(multiple_char_delimiter_predicate(delimiters),
+               begin,end,
+               std::back_inserter(token_list),
+               split_options::compress_delimiters);
       if (token_list.size() < 2) return false;
       iterator_type_ptr itr = token_list.begin();
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
       return ca(itr,token_list.end());
-
    }
 
    template <typename InputIterator,
@@ -11127,7 +11492,7 @@ namespace strtk
 
       template <typename T,
                 typename Allocator,
-                template <typename, typename> class Sequence>
+                template <typename,typename> class Sequence>
       explicit inline combination_iterator(const std::size_t& k,
                                            Sequence<T,Allocator>& seq,
                                            const bool sorted = true)
@@ -11172,7 +11537,7 @@ namespace strtk
 
       template <typename T,
                 typename Allocator,
-                template <typename, typename> class Sequence>
+                template <typename,typename> class Sequence>
       explicit inline combination_iterator(Sequence<T,Allocator>& seq)
       : begin_(seq.end()),
         end_(seq.end()),
@@ -11259,7 +11624,7 @@ namespace strtk
             {
                return static_cast<unsigned char>(itr[0] - '0') < 10 &&
                       all_digits_check_impl<Iterator,18>::process(itr + 1);
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11269,7 +11634,7 @@ namespace strtk
             {
                return static_cast<unsigned char>(itr[0] - '0') < 10 &&
                       all_digits_check_impl<Iterator,17>::process(itr + 1);
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11279,7 +11644,7 @@ namespace strtk
             {
                return static_cast<unsigned char>(itr[0] - '0') < 10 &&
                       all_digits_check_impl<Iterator,16>::process(itr + 1);
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11303,7 +11668,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[13] - '0') < 10 &&
                       static_cast<unsigned char>(itr[14] - '0') < 10 &&
                       static_cast<unsigned char>(itr[15] - '0') < 10;
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11326,7 +11691,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[12] - '0') < 10 &&
                       static_cast<unsigned char>(itr[13] - '0') < 10 &&
                       static_cast<unsigned char>(itr[14] - '0') < 10;
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11348,7 +11713,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[11] - '0') < 10 &&
                       static_cast<unsigned char>(itr[12] - '0') < 10 &&
                       static_cast<unsigned char>(itr[13] - '0') < 10;
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11369,7 +11734,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[10] - '0') < 10 &&
                       static_cast<unsigned char>(itr[11] - '0') < 10 &&
                       static_cast<unsigned char>(itr[12] - '0') < 10;
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11389,7 +11754,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[ 9] - '0') < 10 &&
                       static_cast<unsigned char>(itr[10] - '0') < 10 &&
                       static_cast<unsigned char>(itr[11] - '0') < 10;
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11408,7 +11773,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[ 8] - '0') < 10 &&
                       static_cast<unsigned char>(itr[ 9] - '0') < 10 &&
                       static_cast<unsigned char>(itr[10] - '0') < 10;
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11426,7 +11791,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[7] - '0') < 10 &&
                       static_cast<unsigned char>(itr[8] - '0') < 10 &&
                       static_cast<unsigned char>(itr[9] - '0') < 10;
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11443,7 +11808,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[6] - '0') < 10 &&
                       static_cast<unsigned char>(itr[7] - '0') < 10 &&
                       static_cast<unsigned char>(itr[8] - '0') < 10;
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11459,7 +11824,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[5] - '0') < 10 &&
                       static_cast<unsigned char>(itr[6] - '0') < 10 &&
                       static_cast<unsigned char>(itr[7] - '0') < 10;
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11474,7 +11839,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[4] - '0') < 10 &&
                       static_cast<unsigned char>(itr[5] - '0') < 10 &&
                       static_cast<unsigned char>(itr[6] - '0') < 10;
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11488,7 +11853,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[3] - '0') < 10 &&
                       static_cast<unsigned char>(itr[4] - '0') < 10 &&
                       static_cast<unsigned char>(itr[5] - '0') < 10;
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11501,7 +11866,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[2] - '0') < 10 &&
                       static_cast<unsigned char>(itr[3] - '0') < 10 &&
                       static_cast<unsigned char>(itr[4] - '0') < 10;
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11513,7 +11878,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[1] - '0') < 10 &&
                       static_cast<unsigned char>(itr[2] - '0') < 10 &&
                       static_cast<unsigned char>(itr[3] - '0') < 10;
-           }
+            }
          };
 
          template <typename Iterator>
@@ -11544,7 +11909,16 @@ namespace strtk
             static inline bool process(Iterator itr)
             {
                return static_cast<unsigned char>(itr[ 0] - '0') < 10;
-           }
+            }
+         };
+
+         template <typename Iterator>
+         struct all_digits_check_impl<Iterator,0>
+         {
+            static inline bool process(Iterator)
+            {
+               return false;
+            }
          };
 
          template <typename T, typename Iterator, int N>
@@ -12330,7 +12704,7 @@ namespace strtk
 
          template <typename T,
                    typename Allocator,
-                   template <typename, typename> class Sequence>
+                   template <typename,typename> class Sequence>
          inline bool operator()(Sequence<T,Allocator>& seq)
          {
             uint32_t size = 0;
@@ -12731,7 +13105,7 @@ namespace strtk
 
          template <typename T,
                    typename Allocator,
-                   template <typename, typename> class Sequence>
+                   template <typename,typename> class Sequence>
          inline bool operator()(const Sequence<T,Allocator>& seq)
          {
             const uint32_t size = static_cast<uint32_t>(seq.size());
@@ -15887,7 +16261,7 @@ namespace strtk
 
       template <typename DelimiterPredicate,
                 typename Allocator,
-                template <typename, typename> class Sequence>
+                template <typename,typename> class Sequence>
       inline std::size_t split(const DelimiterPredicate& p,
                                Sequence<std::string,Allocator>& seq,
                                const split_options::type split_option = split_options::default_mode) const
@@ -15906,7 +16280,7 @@ namespace strtk
 
       template <typename DelimiterPredicate,
                 typename Allocator,
-                template <typename, typename> class Sequence>
+                template <typename,typename> class Sequence>
       inline std::size_t split_n(const DelimiterPredicate& p,
                                  const std::size_t& n,
                                  Sequence<std::string,Allocator>& seq,
@@ -15917,7 +16291,7 @@ namespace strtk
 
       template <typename T,
                 typename Allocator,
-                template <typename, typename> class Sequence>
+                template <typename,typename> class Sequence>
       inline std::size_t parse(const std::string& delimiters, Sequence<T,Allocator>& seq) const
       {
          return strtk::parse(s_,delimiters,seq);
@@ -15925,7 +16299,7 @@ namespace strtk
 
       template <typename T,
                 typename Allocator,
-                template <typename, typename> class Sequence>
+                template <typename,typename> class Sequence>
       inline std::size_t parse(const char* delimiters, Sequence<T,Allocator>& seq) const
       {
          return parse(std::string(delimiters),seq);
@@ -19115,6 +19489,22 @@ namespace strtk
             else
                ++itr;
          }
+      }
+
+      template <typename T,
+                typename Allocator,
+                template <typename,typename> class Sequence>
+      inline void push_back(Sequence<T,Allocator>& sequence,
+                            const T& v1, const T&  v2, const T&  v3, const T& v4,
+                            const T& v5, const T&  v6, const T&  v7, const T& v8,
+                            const T& v9, const T& v10, const T& v11)
+      {
+         sequence.push_back(v1);  sequence.push_back(v2);
+         sequence.push_back(v3);  sequence.push_back(v4);
+         sequence.push_back(v5);  sequence.push_back(v6);
+         sequence.push_back(v7);  sequence.push_back(v8);
+         sequence.push_back(v9); sequence.push_back(v10);
+         sequence.push_back(v11);
       }
 
       template <typename T,
