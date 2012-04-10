@@ -1239,11 +1239,13 @@ namespace strtk
 
    namespace details
    {
-      #if defined(__MINGW32_VERSION) || (defined(__APPLE__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070))
+      #if (defined(__MINGW32_VERSION)) ||\
+          (defined(__APPLE__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)) ||\
+          (defined(_WIN32) && (_MSC_VER < 1400))
          inline std::size_t strnlength(const char* s, const std::size_t& n)
          {
-            const char *last = memchr(text, '\0', maxlen);
-            return last ? (size_t) (last - text) : maxlen;
+            const char *end = reinterpret_cast<const char*>(memchr(s, '\0', n));
+            return end ? (size_t) (end - s) : n;
          }
       #else
          inline std::size_t strnlength(const char* s, const std::size_t& n)
@@ -4874,7 +4876,7 @@ namespace strtk
                   {
                      ++remove_count;
                   }
-                  r.second -= remove_count;
+                  r.second -= static_cast<unsigned int>(remove_count);
                   token_count = (r.second - r.first + 1);
                   if (token_count > idx.max_column)
                      idx.max_column = token_count;
@@ -5040,7 +5042,7 @@ namespace strtk
 
          inline col_range_t all_columns() const
          {
-            return col_range_t(0,size());
+            return col_range_t(0,static_cast<index_t>(size()));
          }
 
          inline range_t range() const
@@ -5412,7 +5414,7 @@ namespace strtk
             if (std::numeric_limits<std::size_t>::max() != upper_bound)
                return col_range_t(lower_bound,upper_bound);
             else
-              return col_range_t(lower_bound,size());
+              return col_range_t(lower_bound,static_cast<index_t>(size()));
          }
 
          template <typename T,
@@ -5898,7 +5900,7 @@ namespace strtk
 
       inline row_range_t all_rows() const
       {
-         return row_range_t(0,dsv_index_.row_index.size());
+         return row_range_t(0,static_cast<index_t>(dsv_index_.row_index.size()));
       }
 
       template <typename OutputIterator>
@@ -6141,14 +6143,14 @@ namespace strtk
                }
                removed_token_count += row.size();
             }
-            r.first   = temp_r_first;
-            r.second -= removed_token_count;
+            r.first   = static_cast<unsigned int>(temp_r_first);
+            r.second -= static_cast<unsigned int>(removed_token_count);
          }
          for (std::size_t i = row_range.second; i < dsv_index_.row_index.size(); ++i)
          {
             row_index_range_t& r = dsv_index_.row_index[i];
-            r.first  -= removed_token_count;
-            r.second -= removed_token_count;
+            r.first  -= static_cast<unsigned int>(removed_token_count);
+            r.second -= static_cast<unsigned int>(removed_token_count);
          }
          if (!remove_row_list.empty())
          {
@@ -6188,8 +6190,8 @@ namespace strtk
                   ++removed_token_count;
                }
             }
-            r.first   = temp_r_first;
-            r.second -= removed_token_count;
+            r.first   = static_cast<unsigned int>(temp_r_first);
+            r.second -= static_cast<unsigned int>(removed_token_count);
             if (0 == dsv_index_.token_count(r))
             {
                remove_row_list.push_back(i);
@@ -6198,8 +6200,8 @@ namespace strtk
          for (std::size_t i = row_range.second; i < dsv_index_.row_index.size(); ++i)
          {
             row_index_range_t& r = dsv_index_.row_index[i];
-            r.first  -= removed_token_count;
-            r.second -= removed_token_count;
+            r.first  -= static_cast<unsigned int>(removed_token_count);
+            r.second -= static_cast<unsigned int>(removed_token_count);
          }
          if (!remove_row_list.empty())
          {
