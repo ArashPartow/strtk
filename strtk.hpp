@@ -4840,8 +4840,6 @@ namespace strtk
          row_index_t   row_index;
          std::size_t  max_column;
 
-         static const range_t null_range;
-
          inline void clear()
          {
             token_list.clear();
@@ -4856,10 +4854,10 @@ namespace strtk
                if (col < (r.second - r.first + 1))
                   return *(token_list.begin() + (r.first + col));
                else
-                  return null_range;
+                  return null_range();
             }
             else
-               return null_range;
+               return null_range();
          }
 
          inline bool remove_row(const std::size_t& row)
@@ -5000,6 +4998,13 @@ namespace strtk
             rc.column = column;
             rc.process(*this);
             return true;
+         }
+
+         inline static range_t null_range()
+         {
+            static const range_t null_range_ = range_t(reinterpret_cast<const unsigned char*>(0),
+                                                       reinterpret_cast<const unsigned char*>(0));
+            return null_range_;
          }
 
       };
@@ -6935,9 +6940,6 @@ namespace strtk
       bool load_from_file_;
       bool state_;
    };
-
-   const token_grid::range_t token_grid::store::null_range = token_grid::range_t(reinterpret_cast<const unsigned char*>(0),
-                                                                                 reinterpret_cast<const unsigned char*>(0));
 
    template <typename T>
    inline bool convert_string_range(const std::pair<std::string::const_iterator,std::string::const_iterator> range, T& t)
