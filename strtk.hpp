@@ -4486,10 +4486,29 @@ namespace strtk
                            reinterpret_cast<unsigned char*>(end));
    }
 
+   inline void convert_to_lowercase(const char* begin, const char* end)
+   {
+      convert_to_lowercase(const_cast<char*>(begin),const_cast<char*>(end));
+   }
+
    inline void convert_to_lowercase(std::string& str)
    {
       convert_to_lowercase(reinterpret_cast<unsigned char*>(const_cast<char*>(str.data())),
                            reinterpret_cast<unsigned char*>(const_cast<char*>(str.data() + str.size())));
+   }
+
+   inline std::string as_lowercase(const std::string& str)
+   {
+      std::string result = str;
+      convert_to_lowercase(result);
+      return result;
+   }
+
+   inline std::string as_uppercase(const std::string& str)
+   {
+      std::string result = str;
+      convert_to_uppercase(result);
+      return result;
    }
 
    inline bool twoway_bitwise_interleave(const unsigned char* begin1, const unsigned char* end1,
@@ -14185,6 +14204,49 @@ namespace strtk
                return false;
          }
          return true;
+      }
+
+      inline void swap_inplace(std::string& s, const std::size_t& i0, const std::size_t& i1)
+      {
+         if (i0 >= s.size()) return;
+         if (i1 >= s.size()) return;
+         std::swap(s[i0],s[i1]);
+      }
+
+      inline std::string swap(const std::string& s, const std::size_t& i0, const std::size_t& i1)
+      {
+         std::string result = s;
+         swap_inplace(result,i0,i1);
+         return result;
+      }
+
+      inline void remove_inplace(std::string& s, const std::size_t& index)
+      {
+         if (index >= s.size())
+            return;
+         std::memcpy(const_cast<char*>(s.data() + index), const_cast<char*>(s.data() + (index + 1)), s.size() - index);
+         s.resize(s.size() - 1);
+      }
+
+      inline std::string remove(const std::string& s, const std::size_t& index)
+      {
+         std::string result = s;
+         remove_inplace(result,index);
+         return result;
+      }
+
+      inline void insert_inplace(std::string& s, const std::size_t& index, const char c)
+      {
+         s.resize(s.size() + 1);
+         std::memcpy(const_cast<char*>(s.data() + index + 1), const_cast<char*>(s.data() + (index)), s.size() - index);
+         s[index] = c;
+      }
+
+      inline std::string insert(const std::string& s, const std::size_t& index, const char c)
+      {
+         std::string result = s;
+         insert_inplace(result,index,c);
+         return result;
       }
 
    } // namespace text
