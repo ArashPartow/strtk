@@ -943,7 +943,7 @@ void parse_example11()
    {
       static const std::string data = "temperature=+123.456;name=rumpelstilzchen";
 
-      double temperature;
+      double temperature = 0.0;
       std::string name;
 
       bool result = strtk::parse(data,

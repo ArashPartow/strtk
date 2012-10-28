@@ -11691,6 +11691,69 @@ namespace strtk
       }
    }
 
+   template <typename OutputIterator>
+   inline void nth_permutation_sequence(std::size_t n, const std::size_t k, OutputIterator out)
+   {
+      //Note: n in [0,k!)
+      std::vector<std::size_t> factorid (k,0);
+      std::vector<std::size_t> permutate(k,0);
+
+      factorid[0] = 1;
+      for (std::size_t i = 1; i < k; ++i)
+      {
+         factorid[i] = factorid[i - 1] * i;
+      }
+
+      for (std::size_t i = 0; i < k; ++i)
+      {
+         permutate[i] = n / factorid[k - i - 1];
+         n = n % factorid[k - i - 1];
+      }
+
+      for (std::size_t i = k - 1; i > 0; --i)
+      {
+         for (int j = i - 1; j >= 0; --j)
+         {
+            if (permutate[j] <= permutate[i])
+            {
+               ++permutate[i];
+            }
+         }
+      }
+
+      for (std::size_t i = 0; i < k; ++i)
+      {
+         *(out++) = permutate[i];
+      }
+   }
+
+   template <typename InputIterator, typename OutputIterator>
+   inline void nth_permutation_sequence(std::size_t n,
+                                        const InputIterator begin,
+                                        const InputIterator end,
+                                        OutputIterator out)
+   {
+      const std::size_t size = std::distance(begin,end);
+      std::vector<std::size_t> index_list(size,0);
+      for (std::size_t i = 0; i < size; ++i)
+      {
+         *(out++) = (begin + index_list[i]);
+      }
+   }
+
+   inline std::string nth_permutation_sequence(const std::size_t& n, const std::string& s)
+   {
+      std::vector<std::size_t> index_list(s.size(),0);
+      nth_permutation_sequence(n,s.size(),index_list.begin());
+      std::string result;
+      result.reserve(s.size());
+      for (std::size_t i = 0; i < index_list.size(); ++i)
+      {
+         result += s[index_list[i]];
+      }
+      return result;
+   }
+
    template <typename Iterator>
    class combination_iterator : public std::iterator<std::forward_iterator_tag,
                                                      std::pair<Iterator,Iterator>,
