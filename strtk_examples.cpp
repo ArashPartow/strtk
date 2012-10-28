@@ -787,7 +787,8 @@ void parse_example07()
 
 void parse_example08()
 {
-   std::cout << "parse_example08" << std::endl;
+   std::cout << "parse_example08 " << std::endl;
+
    static const std::string data = "+123,ignore0,123.456,ignore1,abcdef,ignore2";
    int i = 0;
    double d = 0.0;
@@ -854,6 +855,178 @@ void parse_example09()
       strtk::parse(data,",",token,date,i,d1,d2,double_list);
       std::cout << "parse_example09(): " << token << " " << date << " " << i << " " << d1 << " " << d2 << " " << strtk::join(" ",double_list) << "\n";
    }
+}
+
+void parse_example10()
+{
+   const std::string data = "1,12,123,1234,12345,123456,1234567,12345678,123456789,1234567890,"
+                            "1,12,123,1234,12345,123456,1234567,12345678,123456789,1234567890";
+
+   std::vector<int> x(5,0);
+
+   {
+      strtk::parse_columns(data,",",strtk::column_list(0,2,4,6,8),x[0],x[1],x[2],x[3],x[4]);
+
+      std::cout << "parse_example10() - even columns: " << strtk::join("\t",x) << std::endl;
+   }
+
+   {
+      strtk::parse_columns(data,",",strtk::column_list(1,3,5,7,9),x[0],x[1],x[2],x[3],x[4]);
+
+      std::cout << "parse_example10() - odd columns: " << strtk::join("\t",x) << std::endl;
+   }
+
+   {
+      const std::string tuple_data = "123|xxx,456.789;xyxy A string";
+
+      int i;
+      double d;
+      std::string s;
+
+      strtk::parse_columns(data,",| ;",strtk::column_list(0,2,4),i,d,s);
+
+      std::cout << "parse_example10() - i = " << i << std::endl;
+      std::cout << "parse_example10() - d = " << d << std::endl;
+      std::cout << "parse_example10() - s = " << s << std::endl;
+   }
+}
+
+void parse_example11()
+{
+   {
+      static const std::string data = "var foo : InTeGeR = 3;";
+
+      std::string variable_name;
+      int initial_value;
+
+      bool result = strtk::parse(data,
+                                 " ;",
+                                 strtk::expect("var").ref(),
+                                 variable_name,
+                                 strtk::expect(":").ref(),
+                                 strtk::iexpect("Integer").ref(),
+                                 strtk::expect("=").ref(),
+                                 initial_value);
+
+      if (!result)
+         std::cout << "parse_example11() - Example 0 failed" << std::endl;
+      else
+         std::cout << "parse_example11() - " << variable_name << " = " << initial_value << std::endl;
+   }
+
+   {
+      static const std::string data = "token0=+123;token1=abc;token2=-456.678;";
+
+      int i;
+      std::string s;
+      double d;
+
+      bool result = strtk::parse(data,
+                                 "=;",
+                                 strtk::like("to*n?").ref(),
+                                 i,
+                                 strtk::like("token?").ref(),
+                                 s,
+                                 strtk::iexpect("tOkEn2").ref(),
+                                 d);
+
+      if (!result)
+         std::cout << "parse_example11() - Example 1 failed" << std::endl;
+      else
+      {
+         std::cout << "parse_example11() - i = " << i << std::endl;
+         std::cout << "parse_example11() - s = " << s << std::endl;
+         std::cout << "parse_example11() - d = " << d << std::endl;
+      }
+   }
+
+   {
+      static const std::string data = "temperature=+123.456;name=rumpelstilzchen";
+
+      double temperature;
+      std::string name;
+
+      bool result = strtk::parse(data,
+                                 "=;",
+                                 //Process temperature section
+                                 strtk::expect("temperature").ref(),
+                                 strtk::inrange(temperature,-432.1,+432.1).ref(),
+                                 //Process name section
+                                 strtk::expect("name").ref(),
+                                 strtk::inrange(name,"aaa","zzz").ref());
+
+      if (!result)
+         std::cout << "parse_example11() - Example 2 failed" << std::endl;
+      else
+      {
+         std::cout << "parse_example11() - temperature = " << temperature << std::endl;
+         std::cout << "parse_example11() - name = " << name << std::endl;
+      }
+   }
+
+   {
+      std::string data = "****abc123****,****abc123****,****abc123****";
+
+      std::string s0;
+      std::string s1;
+      std::string s2;
+
+      bool result = strtk::parse(data,",",
+                                 strtk::trim("*",s0).ref(),
+                                 strtk::trim_leading ("*",s1).ref(),
+                                 strtk::trim_trailing("*",s2).ref());
+
+      if (!result)
+         std::cout << "parse_example11() - Example 3 failed" << std::endl;
+      else
+      {
+         std::cout << "s0 = [" << s0 << "]" << std::endl;
+         std::cout << "s1 = [" << s1 << "]" << std::endl;
+         std::cout << "s2 = [" << s2 << "]" << std::endl;
+      }
+   }
+
+   {
+      std::string data = "*?*?a string*?*?,*?*123456,123.456?*?*?";
+
+      std::string s;
+      int i;
+      double d;
+
+      bool result = strtk::parse(data,",",
+                                 strtk::trim("*?",s).ref(),
+                                 strtk::trim_leading ("?*",i).ref(),
+                                 strtk::trim_trailing("*?",d).ref());
+
+      if (!result)
+         std::cout << "parse_example11() - Example 4 failed" << std::endl;
+      else
+      {
+         std::cout << "s = [" << s << "]" << std::endl;
+         std::cout << "i = [" << i << "]" << std::endl;
+         std::cout << "d = [" << d << "]" << std::endl;
+      }
+   }
+
+   {
+      std::string data = "AbCd,EfGhI";
+
+      std::string s0;
+      std::string s1;
+
+      bool result = strtk::parse(data,",",
+                   strtk::as_lcase(s0).ref(),
+                   strtk::as_ucase(s1).ref());
+
+      if (!result)
+         std::cout << "parse_example11() - Example 5 failed" << std::endl;
+      else
+      {
+         std::cout << "s0 = [" << s0 << "]" << std::endl;
+         std::cout << "s1 = [" << s1 << "]" << std::endl;
+      }
+   }
+
 }
 
 void remove_inplace_example01()
@@ -1824,6 +1997,8 @@ int main()
    parse_example07();
    parse_example08();
    parse_example09();
+   parse_example10();
+   parse_example11();
    remove_inplace_example01();
    remove_consecutives_example01();
    remove_consecutives_example02();
