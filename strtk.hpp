@@ -12619,7 +12619,7 @@ namespace strtk
          if (('-' == (*itr)) || ('+' == (*itr)))
             return all_digits_check(n - 1,(itr + 1));
          else
-            return all_digits_check(n - 1,(itr + 1));
+            return all_digits_check(n,itr);
       }
 
       template <int N>
