@@ -70,6 +70,8 @@ int main()
    char buffer[data_width];
    char hex_buffer[2 * data_width];
 
+   std::cin.sync_with_stdio(false);
+
    for ( ; ; )
    {
       std::cin.read(reinterpret_cast<char*>(buffer),data_width);

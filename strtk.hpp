@@ -11735,6 +11735,7 @@ namespace strtk
    {
       const std::size_t size = std::distance(begin,end);
       std::vector<std::size_t> index_list(size,0);
+      nth_permutation_sequence(n,size,index_list.begin());
       for (std::size_t i = 0; i < size; ++i)
       {
          *(out++) = (begin + index_list[i]);
