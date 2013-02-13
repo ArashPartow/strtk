@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * Parse Test                                                    *
- * Author: Arash Partow (2002-2012)                              *
+ * Author: Arash Partow (2002-2013)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -245,6 +245,44 @@ void parse_test03()
           t.time(),
           (vec_double.size() * rounds) / t.time(),
           (data.size() * rounds) / (1048576.0 * t.time()));
+}
+
+void parse_test04()
+{
+   const std::string data = "1,12,123,1234,12345,123456,1234567,12345678,123456789,1234567890,"
+                            "1,12,123,1234,12345,123456,1234567,12345678,123456789,1234567890";
+
+   static const std::size_t rounds = 1000000;
+
+   std::vector<int> x(64,0);
+
+   {
+      std::cout << strtk::text::left_align(title_length(),' ',"[even columns into " + strtk::type_name(x) + "] ");
+      strtk::util::timer timer;
+      timer.start();
+      for (std::size_t i = 0; i < rounds; ++i)
+      {
+         strtk::parse_columns(data,",",strtk::column_list(0,2,4,6,8),x[0],x[1],x[2],x[3],x[4]);
+      }
+      timer.stop();
+      printf("Time: %8.4f\tRate:%10.3fprs/sec\n",
+             timer.time(),
+             rounds / timer.time());
+   }
+
+   {
+      std::cout << strtk::text::left_align(title_length(),' ',"[ odd columns into " + strtk::type_name(x) + "] ");
+      strtk::util::timer timer;
+      timer.start();
+      for (std::size_t i = 0; i < rounds; ++i)
+      {
+         strtk::parse_columns(data,",",strtk::column_list(1,3,5,7,9),x[0],x[1],x[2],x[3],x[4]);
+      }
+      timer.stop();
+      printf("Time: %8.4f\tRate:%10.3fprs/sec\n",
+             timer.time(),
+             rounds / timer.time());
+   }
 }
 
 static const std::string md_base = "a+bc=def ghij-klmno?pqrstu&vwxyzAB@CDEFGHIJ~KLMNOPQRS#TUVWXYZ012|3456789abcd|efghijklmnopqrsdu!";
@@ -591,6 +629,7 @@ int main()
    parse_test01();
    parse_test02();
    parse_test03();
+   parse_test04();
    raw_tokenizer_sd_speed_test();
    raw_tokenizer_mcd_speed_test();
    raw_tokenizer_md_speed_test();

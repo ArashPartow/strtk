@@ -2,7 +2,7 @@
  *****************************************************************
  *                     String Toolkit Library                    *
  *                                                               *
- * Author: Arash Partow (2002-2012)                              *
+ * Author: Arash Partow (2002-2013)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -22,6 +22,7 @@
 #include <cctype>
 #include <cstring>
 #include <cerrno>
+#include <exception>
 #include <cmath>
 #include <iterator>
 #include <limits>
@@ -38,6 +39,7 @@
 #include <map>
 #include <stack>
 #include <queue>
+
 
 #ifndef strtk_no_tr1_or_boost
    #define strtk_enable_lexical_cast
@@ -243,6 +245,13 @@ namespace strtk
       struct stl_seq_type_tag         {};
       struct attribute_type_tag       {};
       struct semantic_action_type_tag {};
+      struct expect_type_tag          {};
+      struct like_type_tag            {};
+      struct inrange_type_tag         {};
+      struct trim_type_tag            {};
+      struct lcase_type_tag           {};
+      struct ucase_type_tag           {};
+      struct fillchararray_type_tag   {};
 
       template <typename T>
       struct supported_conversion_to_type
@@ -336,7 +345,8 @@ namespace strtk
       if (string_to_type_converter_impl(itr,end,t,type))
          return t;
       else
-         throw;
+         throw std::invalid_argument("string_to_type_converter() - Failed to convert: " +
+                                     std::string(begin,end));
    }
 
    template <typename T, typename Iterator>
@@ -371,7 +381,7 @@ namespace strtk
       if (type_to_string<T>(t,s))
          return s;
       else
-         throw;
+         throw std::invalid_argument("type_to_string() - Failed to convert type to string");
    }
 
    #define strtk_begin_register_string_to_type \
@@ -1341,6 +1351,29 @@ namespace strtk
       }
    }
 
+   inline std::string remove_duplicates(const std::string& str)
+   {
+      std::string::value_type table[0xFF];
+      std::fill_n(table,0xFF,static_cast<char>(0));
+      std::string result;
+      result.reserve(str.size());
+      for (std::size_t i = 0; i < str.size(); ++i)
+      {
+         const char c = str[i];
+         if (0 == table[static_cast<std::size_t>(c)])
+         {
+            table[static_cast<std::size_t>(c)] = 0x01;
+            result += c;
+         }
+      }
+      return result;
+   }
+
+   inline std::string remove_duplicates_inplace(std::string& str)
+   {
+      return remove_duplicates(str);
+   }
+
    template <typename Iterator, typename Predicate>
    inline std::size_t remove_trailing(Predicate predicate,
                                       Iterator begin,
@@ -1559,6 +1592,13 @@ namespace strtk
       }
    }
 
+   inline void replace(const std::string::value_type& c0,
+                       const std::string::value_type& c1,
+                       std::string& s)
+   {
+      replace(c0,c1,const_cast<char*>(s.data()),const_cast<char*>(s.data() + s.size()));
+   }
+
    template <typename T>
    inline void replace(const T& c1, const T& c2, const range::adapter<T>& r)
    {
@@ -1734,6 +1774,11 @@ namespace strtk
       replace_pattern(s,p,r,n);
    }
 
+   inline void sort(std::string& s)
+   {
+      std::sort(s.begin(),s.end());
+   }
+
    template <typename Iterator>
    inline bool match(const Iterator pattern_begin,
                      const Iterator pattern_end,
@@ -1844,7 +1889,7 @@ namespace strtk
       return imatch(r1.begin(),r1.end(),r2.begin(),r2.end());
    }
 
-   inline bool imatch(const std::string& s1, const std::string s2)
+   inline bool imatch(const std::string& s1, const std::string& s2)
    {
       return imatch(s1.data(),
                     s1.data() + s1.size(),
@@ -2021,6 +2066,34 @@ namespace strtk
    }
 
    template <typename InputIterator>
+   inline bool ibegins_with(const InputIterator pattern_begin,
+                            const InputIterator pattern_end,
+                            const InputIterator begin,
+                            const InputIterator end)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      if (std::distance(pattern_begin,pattern_end) <= std::distance(begin,end))
+      {
+         return std::equal(pattern_begin,pattern_end,begin,imatch_char);
+      }
+      else
+         return false;
+   }
+
+   inline bool ibegins_with(const std::string& pattern, const std::string& data)
+   {
+      if (pattern.size() <= data.size())
+      {
+         return ibegins_with(pattern.data(),
+                             pattern.data() + pattern.size(),
+                             data.data(),
+                             data.data() + data.size());
+      }
+      else
+         return false;
+   }
+
+   template <typename InputIterator>
    inline bool ends_with(const InputIterator pattern_begin,
                          const InputIterator pattern_end,
                          const InputIterator begin,
@@ -2031,7 +2104,9 @@ namespace strtk
       const std::size_t data_length = std::distance(begin,end);
       if (pattern_length <= data_length)
       {
-         return std::equal(pattern_begin,pattern_end, begin + (data_length - pattern_length));
+         return std::equal(pattern_begin,
+                           pattern_end,
+                           begin + (data_length - pattern_length));
       }
       else
          return false;
@@ -2050,6 +2125,39 @@ namespace strtk
          return false;
    }
 
+   template <typename InputIterator>
+   inline bool iends_with(const InputIterator pattern_begin,
+                          const InputIterator pattern_end,
+                          const InputIterator begin,
+                          const InputIterator end)
+   {
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      const std::size_t pattern_length = std::distance(pattern_begin,pattern_end);
+      const std::size_t data_length = std::distance(begin,end);
+      if (pattern_length <= data_length)
+      {
+         return std::equal(pattern_begin,
+                           pattern_end,
+                           begin + (data_length - pattern_length),
+                           imatch_char);
+      }
+      else
+         return false;
+   }
+
+   inline bool iends_with(const std::string& pattern, const std::string& data)
+   {
+      if (pattern.size() <= data.size())
+      {
+         return iends_with(pattern.data(),
+                           pattern.data() + pattern.size(),
+                           data.data(),
+                           data.data() + data.size());
+      }
+      else
+         return false;
+   }
+
    inline std::size_t index_of(const std::string& pattern, const std::string& data)
    {
       if (pattern.empty())
@@ -2058,7 +2166,10 @@ namespace strtk
          return std::string::npos;
       else if (pattern.size() > data.size())
          return std::string::npos;
-      const char* itr = std::search(data.data(), data.data() + data.size(),pattern.data(),pattern.data() + pattern.size());
+      const char* itr = std::search(data.data(),
+                                    data.data() + data.size(),
+                                    pattern.data(),
+                                    pattern.data() + pattern.size());
       return ((data.data() + data.size()) == itr) ? std::string::npos : std::distance(data.data(),itr);
    }
 
@@ -4855,6 +4966,10 @@ namespace strtk
 
       struct store
       {
+         store()
+         : max_column(0)
+         {}
+
          token_list_t token_list;
          row_index_t   row_index;
          std::size_t  max_column;
@@ -5149,7 +5264,8 @@ namespace strtk
       public:
 
          row_type()
-         : index_(std::numeric_limits<std::size_t>::max())
+         : index_(std::numeric_limits<std::size_t>::max()),
+           size_(0)
          {}
 
          row_type(const std::size_t& index,
@@ -5169,7 +5285,7 @@ namespace strtk
          template <typename T>
          inline T get(const std::size_t& index) const
          {
-            return row_type::operator[]<T>(index);
+            return operator[]<T>(index);
          }
 
          inline col_range_t all_columns() const
@@ -6343,7 +6459,7 @@ namespace strtk
          {
             remove_inplace(index_remover(remove_token_list),dsv_index_.token_list);
          }
-         if (remove_token_list.size() > 0)
+         if (!remove_token_list.empty())
          {
             update_minmax_columns();
          }
@@ -6693,7 +6809,7 @@ namespace strtk
 
       static inline token_grid::options default_options()
       {
-         return token_grid::options();
+         return options();
       }
 
       template <typename Function>
@@ -6961,7 +7077,7 @@ namespace strtk
    };
 
    template <typename T>
-   inline bool convert_string_range(const std::pair<std::string::const_iterator,std::string::const_iterator> range, T& t)
+   inline bool convert_string_range(const std::pair<std::string::const_iterator,std::string::const_iterator>& range, T& t)
    {
       if (range.first == range.second) return false;
       t = string_to_type_converter<T>(std::string(range.first,range.second));
@@ -7387,7 +7503,7 @@ namespace strtk
                                                      token_count,
                                                      token_list,
                                                      split_options::compress_delimiters);
-      if (token_count != parsed_token_count)
+      if (token_count > parsed_token_count)
          return false;
       iterator_type_ptr itr = token_list;
       if (!string_to_type_converter((*itr).first,(*itr).second, t1)) return false; ++itr;
@@ -7426,7 +7542,7 @@ namespace strtk
                                                      token_count,
                                                      token_list,
                                                      split_options::compress_delimiters);
-      if (token_count != parsed_token_count)
+      if (token_count > parsed_token_count)
          return false;
       iterator_type_ptr itr = token_list;
       if (!string_to_type_converter((*itr).first,(*itr).second, t1)) return false; ++itr;
@@ -7464,7 +7580,7 @@ namespace strtk
                                                      token_count,
                                                      token_list,
                                                      split_options::compress_delimiters);
-      if (token_count != parsed_token_count)
+      if (token_count > parsed_token_count)
          return false;
       iterator_type_ptr itr = token_list;
       if (!string_to_type_converter((*itr).first,(*itr).second, t1)) return false; ++itr;
@@ -7501,7 +7617,7 @@ namespace strtk
                                                      token_count,
                                                      token_list,
                                                      split_options::compress_delimiters);
-      if (token_count != parsed_token_count)
+      if (token_count > parsed_token_count)
          return false;
       iterator_type_ptr itr = token_list;
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
@@ -7535,7 +7651,7 @@ namespace strtk
                                                      token_count,
                                                      token_list,
                                                      split_options::compress_delimiters);
-      if (token_count != parsed_token_count)
+      if (token_count > parsed_token_count)
          return false;
       iterator_type_ptr itr = token_list;
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
@@ -7568,7 +7684,7 @@ namespace strtk
                                                      token_count,
                                                      token_list,
                                                      split_options::compress_delimiters);
-      if (token_count != parsed_token_count)
+      if (token_count > parsed_token_count)
          return false;
       iterator_type_ptr itr = token_list;
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
@@ -7600,7 +7716,7 @@ namespace strtk
                                                      token_count,
                                                      token_list,
                                                      split_options::compress_delimiters);
-      if (token_count != parsed_token_count)
+      if (token_count > parsed_token_count)
          return false;
       iterator_type_ptr itr = token_list;
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
@@ -7631,7 +7747,7 @@ namespace strtk
                                                      token_count,
                                                      token_list,
                                                      split_options::compress_delimiters);
-      if (token_count != parsed_token_count)
+      if (token_count > parsed_token_count)
          return false;
       iterator_type_ptr itr = token_list;
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
@@ -7659,7 +7775,7 @@ namespace strtk
                                                      token_count,
                                                      token_list,
                                                      split_options::compress_delimiters);
-      if (token_count != parsed_token_count)
+      if (token_count > parsed_token_count)
          return false;
       iterator_type_ptr itr = token_list;
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
@@ -7686,7 +7802,7 @@ namespace strtk
                                                      token_count,
                                                      token_list,
                                                      split_options::compress_delimiters);
-      if (token_count != parsed_token_count)
+      if (token_count > parsed_token_count)
          return false;
       iterator_type_ptr itr = token_list;
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
@@ -7711,7 +7827,7 @@ namespace strtk
                                                      token_count,
                                                      token_list,
                                                      split_options::compress_delimiters);
-      if (token_count != parsed_token_count)
+      if (token_count > parsed_token_count)
          return false;
       iterator_type_ptr itr = token_list;
       if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
@@ -7735,7 +7851,7 @@ namespace strtk
                                                      token_count,
                                                      token_list,
                                                      split_options::compress_delimiters);
-      if (token_count != parsed_token_count)
+      if (token_count > parsed_token_count)
          return false;
       iterator_type_ptr itr = token_list;
       return string_to_type_converter((*itr).first,(*itr).second,t);
@@ -8150,69 +8266,69 @@ namespace strtk
 
       public:
 
-      template <typename T, typename Allocator>
-      container_adder(std::vector<T,Allocator>& vec)
-      : container_adder_base_(new(buffer)sequence_adder_impl<T,Allocator,std::vector>(vec))
-      {}
+         template <typename T, typename Allocator>
+         container_adder(std::vector<T,Allocator>& vec)
+         : container_adder_base_(new(buffer)sequence_adder_impl<T,Allocator,std::vector>(vec))
+         {}
 
-      template <typename T, typename Allocator>
-      container_adder(std::deque<T,Allocator>& deq)
-      : container_adder_base_(new(buffer)sequence_adder_impl<T,Allocator,std::deque>(deq))
-      {}
+         template <typename T, typename Allocator>
+         container_adder(std::deque<T,Allocator>& deq)
+         : container_adder_base_(new(buffer)sequence_adder_impl<T,Allocator,std::deque>(deq))
+         {}
 
-      template <typename T, typename Allocator>
-      container_adder(std::list<T,Allocator>& list)
-      : container_adder_base_(new(buffer)sequence_adder_impl<T,Allocator,std::list>(list))
-      {}
+         template <typename T, typename Allocator>
+         container_adder(std::list<T,Allocator>& list)
+         : container_adder_base_(new(buffer)sequence_adder_impl<T,Allocator,std::list>(list))
+         {}
 
-      template <typename T, typename Comparator, typename Allocator>
-      container_adder(std::set<T,Comparator,Allocator>& set)
-      : container_adder_base_(new(buffer)set_adder_impl<T,Comparator,Allocator,std::set>(set))
-      {}
+         template <typename T, typename Comparator, typename Allocator>
+         container_adder(std::set<T,Comparator,Allocator>& set)
+         : container_adder_base_(new(buffer)set_adder_impl<T,Comparator,Allocator,std::set>(set))
+         {}
 
-      template <typename T, typename Comparator, typename Allocator>
-      container_adder(std::multiset<T,Comparator,Allocator>& multiset)
-      : container_adder_base_(new(buffer)set_adder_impl<T,Comparator,Allocator,std::multiset>(multiset))
-      {}
+         template <typename T, typename Comparator, typename Allocator>
+         container_adder(std::multiset<T,Comparator,Allocator>& multiset)
+         : container_adder_base_(new(buffer)set_adder_impl<T,Comparator,Allocator,std::multiset>(multiset))
+         {}
 
-      template <typename T, typename Container, typename Comparator>
-      container_adder(std::priority_queue<T,Container,Comparator>& pq)
-      : container_adder_base_(new(buffer)pq_adder_impl<T,Container,Comparator>(pq))
-      {}
+         template <typename T, typename Container, typename Comparator>
+         container_adder(std::priority_queue<T,Container,Comparator>& pq)
+         : container_adder_base_(new(buffer)pq_adder_impl<T,Container,Comparator>(pq))
+         {}
 
-      template <typename T, typename Container>
-      container_adder(std::queue<T,Container>& queue)
-      : container_adder_base_(new(buffer)stack_queue_adder_impl<T,Container,std::queue>(queue))
-      {}
+         template <typename T, typename Container>
+         container_adder(std::queue<T,Container>& queue)
+         : container_adder_base_(new(buffer)stack_queue_adder_impl<T,Container,std::queue>(queue))
+         {}
 
-      template <typename T, typename Container>
-      container_adder(std::stack<T,Container>& stack)
-      : container_adder_base_(new(buffer)stack_queue_adder_impl<T,Container,std::stack>(stack))
-      {}
+         template <typename T, typename Container>
+         container_adder(std::stack<T,Container>& stack)
+         : container_adder_base_(new(buffer)stack_queue_adder_impl<T,Container,std::stack>(stack))
+         {}
 
-      template <typename InputIterator>
-      inline bool add(InputIterator begin, InputIterator end) const
-      {
-         return container_adder_base_->add(begin,end);
-      }
-
-      template <typename InputIterator>
-      inline bool add(std::pair<InputIterator,InputIterator>& range) const
-      {
-         return add(range.first,range.second);
-      }
-
-      template <typename InputIterator>
-      inline bool operator()(const InputIterator begin, const InputIterator end)
-      {
-         InputIterator itr = begin;
-         while (end != itr)
+         template <typename InputIterator>
+         inline bool add(InputIterator begin, InputIterator end) const
          {
-            if (!add(*itr)) return false;
-            ++itr;
+            return container_adder_base_->add(begin,end);
          }
-         return true;
-      }
+
+         template <typename InputIterator>
+         inline bool add(std::pair<InputIterator,InputIterator>& range) const
+         {
+            return add(range.first,range.second);
+         }
+
+         template <typename InputIterator>
+         inline bool operator()(const InputIterator begin, const InputIterator end)
+         {
+            InputIterator itr = begin;
+            while (end != itr)
+            {
+               if (!add(*itr)) return false;
+               ++itr;
+            }
+            return true;
+         }
 
       private:
 
@@ -10787,7 +10903,7 @@ namespace strtk
       {
          if (itable.size() != otable.size())
          {
-            throw;
+            throw std::runtime_error("translation_table() - Input/Output table size mismatch.");
          }
          strtk::iota(table_, table_ + 256, static_cast<unsigned char>(0));
          for (std::size_t i = 0; i < itable.size(); ++i)
@@ -11306,7 +11422,7 @@ namespace strtk
             Iterator i2 = first2;
             for (D d22 = d2; i2 != last2; ++i2, --d22)
             {
-               if (!combine_discontinuous_conditional(f1p, last1, d1-1, i2, last2, d22, f, d+1))
+               if (!combine_discontinuous_conditional(f1p, last1, d1-1, i2, last2, d22, f, d + 1))
                   return false;
                swap(*first1, *i2);
             }
@@ -11317,7 +11433,7 @@ namespace strtk
          {
             Iterator f2p = first2;
             std::advance(f2p,1);
-            rotate_discontinuous(first1, last1, d1, f2p, last2, d2-1);
+            rotate_discontinuous(first1, last1, d1, f2p, last2, d2 - 1);
          }
          else
             rotate_discontinuous(first1, last1, d1, first2, last2, d2);
@@ -11580,6 +11696,70 @@ namespace strtk
       }
    }
 
+   template <typename OutputIterator>
+   inline void nth_permutation_sequence(std::size_t n, const std::size_t k, OutputIterator out)
+   {
+      //Note: n in [0,k!)
+      std::vector<std::size_t> factorid (k,0);
+      std::vector<std::size_t> permutate(k,0);
+
+      factorid[0] = 1;
+      for (std::size_t i = 1; i < k; ++i)
+      {
+         factorid[i] = factorid[i - 1] * i;
+      }
+
+      for (std::size_t i = 0; i < k; ++i)
+      {
+         permutate[i] = n / factorid[k - i - 1];
+         n = n % factorid[k - i - 1];
+      }
+
+      for (std::size_t i = k - 1; i > 0; --i)
+      {
+         for (int j = static_cast<int>(i - 1); j >= 0; --j)
+         {
+            if (permutate[j] <= permutate[i])
+            {
+               ++permutate[i];
+            }
+         }
+      }
+
+      for (std::size_t i = 0; i < k; ++i)
+      {
+         *(out++) = permutate[i];
+      }
+   }
+
+   template <typename InputIterator, typename OutputIterator>
+   inline void nth_permutation_sequence(std::size_t n,
+                                        const InputIterator begin,
+                                        const InputIterator end,
+                                        OutputIterator out)
+   {
+      const std::size_t size = std::distance(begin,end);
+      std::vector<std::size_t> index_list(size,0);
+      nth_permutation_sequence(n,size,index_list.begin());
+      for (std::size_t i = 0; i < size; ++i)
+      {
+         *(out++) = (begin + index_list[i]);
+      }
+   }
+
+   inline std::string nth_permutation_sequence(const std::size_t& n, const std::string& s)
+   {
+      std::vector<std::size_t> index_list(s.size(),0);
+      nth_permutation_sequence(n,s.size(),index_list.begin());
+      std::string result;
+      result.reserve(s.size());
+      for (std::size_t i = 0; i < index_list.size(); ++i)
+      {
+         result += s[index_list[i]];
+      }
+      return result;
+   }
+
    template <typename Iterator>
    class combination_iterator : public std::iterator<std::forward_iterator_tag,
                                                      std::pair<Iterator,Iterator>,
@@ -11729,7 +11909,7 @@ namespace strtk
          {
             static inline bool process(Iterator)
             {
-               throw "all_digits_check_impl - unsupported value for N.";
+               throw std::runtime_error("all_digits_check_impl - unsupported value for N.");
             }
          };
 
@@ -12041,7 +12221,7 @@ namespace strtk
          struct numeric_convert_impl
          {
             static inline void process(Iterator, T&)
-            { throw "numeric_convert_impl - unsupported value for N."; }
+            { throw std::runtime_error("numeric_convert_impl::process( - unsupported value for N."); }
          };
 
          template <typename T, typename Iterator>
@@ -12445,7 +12625,7 @@ namespace strtk
          if (('-' == (*itr)) || ('+' == (*itr)))
             return all_digits_check(n - 1,(itr + 1));
          else
-            return all_digits_check(n - 1,(itr + 1));
+            return all_digits_check(n,itr);
       }
 
       template <int N>
@@ -12592,34 +12772,45 @@ namespace strtk
 
       namespace details
       {
+         namespace details_endian
+         {
+            #if (defined(__LITTLE_ENDIAN__)) ||\
+                (defined(WIN32)) ||\
+                (defined(__MINGW32_VERSION)) ||\
+                (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__))
+               static const bool __le_result = true;
+               static const bool __be_result = false;
+            #else
+               static const bool __le_result = false;
+               static const bool __be_result = true;
+            #endif
+         }
+
          static inline bool is_little_endian()
          {
             //Is the current architecture/platform little-endian?
-            static const unsigned int n = 1;
-            static const bool result = (static_cast<char>(1) == *(reinterpret_cast<const char*>(&n)));
-            return result;
+            return details_endian::__le_result;
          }
 
          static inline bool is_big_endian()
          {
-            static const bool result = (!is_little_endian());
-            return result;
+            return details_endian::__be_result;
          }
 
-         static inline unsigned short convert(const unsigned short& v)
+         static inline unsigned short convert(const unsigned short v)
          {
             //static_assert(2 == sizeof(v),"");
             return ((v >> 8) & 0x00FF) | ((v << 8) & 0xFFFF);
          }
 
-         static inline unsigned int convert(const unsigned int& v)
+         static inline unsigned int convert(const unsigned int v)
          {
             //static_assert(4 == sizeof(v),"");
             return ((v >> 24) & 0x000000FF) | ((v << 24) & 0x0000FF00) |
                    ((v <<  8) & 0x00FF0000) | ((v >>  8) & 0xFF000000);
          }
 
-         static inline unsigned long long int convert(const unsigned long long int& v)
+         static inline unsigned long long int convert(const unsigned long long int v)
          {
             //static_assert(8 == sizeof(v),"");
             return ((v >> 56) & 0x00000000000000FFLL) | ((v << 56) & 0xFF00000000000000LL) |
@@ -12628,19 +12819,91 @@ namespace strtk
                    ((v >>  8) & 0x00000000FF000000LL) | ((v <<  8) & 0x000000FF00000000LL) ;
          }
 
-         static inline short convert(const short& v)
+         static inline short convert(const short v)
          {
             return static_cast<short>(convert(static_cast<unsigned short>(v)));
          }
 
-         static inline int convert(const int& v)
+         static inline int convert(const int v)
          {
             return static_cast<int>(convert(static_cast<unsigned int>(v)));
          }
 
-         static inline unsigned long long int convert(const long long int& v)
+         static inline unsigned long long int convert(const long long int v)
          {
             return static_cast<long long>(convert(static_cast<unsigned long long int>(v)));
+         }
+
+         static inline unsigned short convert_to_be(const unsigned short v)
+         {
+            if (is_little_endian()) convert(v);
+            return v;
+         }
+
+         static inline unsigned int convert_to_be(const unsigned int v)
+         {
+            if (is_little_endian()) convert(v);
+            return v;
+         }
+
+         static inline unsigned long long int convert_to_be(const unsigned long long int v)
+         {
+            if (is_little_endian()) convert(v);
+            return v;
+         }
+
+         static inline short convert_to_be(const short v)
+         {
+            if (is_little_endian()) convert(v);
+            return v;
+         }
+
+         static inline int convert_to_be(const int v)
+         {
+            if (is_little_endian()) convert(v);
+            return v;
+         }
+
+         static inline unsigned long long int convert_to_be(const long long int v)
+         {
+            if (is_little_endian()) convert(v);
+            return v;
+         }
+
+         static inline unsigned short convert_to_le(const unsigned short v)
+         {
+            if (is_big_endian()) convert(v);
+            return v;
+         }
+
+         static inline unsigned int convert_to_le(const unsigned int v)
+         {
+            if (is_big_endian()) convert(v);
+            return v;
+         }
+
+         static inline unsigned long long int convert_to_le(const unsigned long long int v)
+         {
+            if (is_big_endian()) convert(v);
+            return v;
+         }
+
+         static inline short convert_to_le(const short v)
+         {
+            if (is_big_endian()) convert(v);
+            return v;
+         }
+
+         static inline int convert_to_le(const int v)
+         {
+            if (is_big_endian()) convert(v);
+            return v;
+         }
+
+         static inline unsigned long long int convert_to_le(const long long int v)
+         {
+            if (is_big_endian()) convert(v);
+            return v;
          }
 
          class marker
@@ -14544,11 +14807,12 @@ namespace strtk
       std::size_t match_count = 0;
       while (end != itr_range.first)
       {
-         range_type found_itr = details::find_exactly_n_consecutive_values<iterator_type,
-                                                                           Predicate>(n,
-                                                                                      p,
-                                                                                      itr_range,
-                                                                                      stateful_predicate);
+         range_type found_itr =
+            details::find_exactly_n_consecutive_values<iterator_type,Predicate>(n,
+                                                                                p,
+                                                                                itr_range,
+                                                                                stateful_predicate);
+
          if ((end == found_itr.first) && (found_itr.first == found_itr.second))
          {
             break;
@@ -14865,6 +15129,426 @@ namespace strtk
 
    namespace details
    {
+
+      class expect_impl
+      {
+      public:
+
+         expect_impl(const std::string& s)
+         : s_(s)
+         {}
+
+         template <typename InputIterator>
+         inline bool operator()(InputIterator begin, InputIterator end)
+         {
+            if (static_cast<std::size_t>(std::distance(begin,end)) != s_.size())
+               return false;
+            else
+               return std::equal(s_.data(),s_.data() + s_.size(),begin);
+         }
+
+         inline expect_impl& ref()
+         {
+            return (*this);
+         }
+
+         inline void set_value(const std::string& s)
+         {
+            s_ = s;
+         }
+
+      private:
+
+         std::string s_;
+      };
+
+      class iexpect_impl
+      {
+      public:
+
+         iexpect_impl(const std::string& s)
+         : s_(s)
+         {}
+
+         template <typename InputIterator>
+         inline bool operator()(InputIterator begin, InputIterator end)
+         {
+            if (static_cast<std::size_t>(std::distance(begin,end)) != s_.size())
+               return false;
+            else
+               return std::equal(s_.data(),s_.data() + s_.size(),begin,imatch_char);
+         }
+
+         inline iexpect_impl& ref()
+         {
+            return (*this);
+         }
+
+         inline void set_value(const std::string& s)
+         {
+            s_ = s;
+         }
+
+      private:
+
+         std::string s_;
+      };
+
+      class like_impl
+      {
+      public:
+
+         like_impl(const std::string& s)
+         : s_(s)
+         {}
+
+         template <typename InputIterator>
+         inline bool operator()(InputIterator begin, InputIterator end)
+         {
+            typedef typename std::iterator_traits<InputIterator>::value_type value_type;
+            static const value_type zero_or_more = value_type('*');
+            static const value_type zero_or_one  = value_type('?');
+            return strtk::match(s_.data(),s_.data() + s_.size(),begin,end,zero_or_more,zero_or_one);
+         }
+
+         inline like_impl& ref()
+         {
+            return (*this);
+         }
+
+         inline void set_pattern(const std::string& s)
+         {
+            s_ = s;
+         }
+
+      private:
+
+         std::string s_;
+      };
+
+      template <typename T>
+      class inrange_impl
+      {
+      public:
+
+         inrange_impl(T& t, const T& low, const T& hi)
+         : t_(&t),
+           low_(low),
+           hi_(hi)
+         {}
+
+         template <typename InputIterator>
+         inline bool operator()(InputIterator begin, InputIterator end)
+         {
+            T temp;
+            if (!strtk::string_to_type_converter(begin,end,temp))
+               return false;
+            else if (temp < low_)
+               return false;
+            else if (temp > hi_)
+               return false;
+            (*t_) = temp;
+            return true;
+         }
+
+         inline inrange_impl<T>& ref()
+         {
+            return (*this);
+         }
+
+         inline void set_low_hi(const T& low, const T& hi)
+         {
+            low_ = low;
+            hi_  = hi;
+         }
+
+      private:
+
+         T* t_;
+         T low_;
+         T hi_;
+      };
+
+      namespace trim_details
+      {
+         template <typename Type>
+         struct convert_impl
+         {
+            template <typename InputIterator>
+            static bool execute(InputIterator begin, InputIterator end,
+                                const std::string& rem_chars,
+                                std::size_t mode,
+                                Type& t)
+            {
+               std::string s;
+               if (!strtk::string_to_type_converter(begin,end,s))
+                  return false;
+               switch (mode)
+               {
+                  case 0  : remove_leading_trailing(rem_chars,s); break;
+                  case 1  : remove_leading         (rem_chars,s); break;
+                  case 2  : remove_trailing        (rem_chars,s); break;
+                  default : return false;
+               }
+               return strtk::string_to_type_converter(s,t);
+            }
+         };
+
+         template <>
+         struct convert_impl <std::string>
+         {
+            template <typename InputIterator>
+            static bool execute(InputIterator begin, InputIterator end,
+                                const std::string& rem_chars,
+                                std::size_t mode,
+                                std::string& t)
+            {
+               if (!strtk::string_to_type_converter(begin,end,t))
+                  return false;
+               switch (mode)
+               {
+                  case 0  : remove_leading_trailing(rem_chars,t); break;
+                  case 1  : remove_leading         (rem_chars,t); break;
+                  case 2  : remove_trailing        (rem_chars,t); break;
+                  default : return false;
+               }
+               return true;
+            }
+         };
+      }
+
+      template <typename T>
+      class trim_impl
+      {
+      public:
+
+         trim_impl(const std::size_t mode,
+                   T& t,
+                   const std::string& rem_chars = " ")
+         : mode_(mode),
+           t_(&t),
+           rem_chars_(rem_chars)
+         {}
+
+         template <typename InputIterator>
+         inline bool operator()(InputIterator begin, InputIterator end)
+         {
+            return trim_details::convert_impl<T>::execute(begin,end,rem_chars_,mode_,(*t_));
+         }
+
+         inline trim_impl<T>& ref()
+         {
+            return (*this);
+         }
+
+      private:
+
+         std::size_t  mode_;
+         T* t_;
+         std::string  rem_chars_;
+      };
+
+      class conv_to_lcase_impl
+      {
+      public:
+
+         conv_to_lcase_impl(std::string& s)
+         : s_(&s)
+         {}
+
+         template <typename InputIterator>
+         inline bool operator()(InputIterator begin, InputIterator end)
+         {
+            std::string& s = (*s_);
+            s.assign(begin,end);
+            convert_to_lowercase(s);
+            return true;
+         }
+
+         inline conv_to_lcase_impl& ref()
+         {
+            return (*this);
+         }
+
+      private:
+
+         std::string* s_;
+      };
+
+      class conv_to_ucase_impl
+      {
+      public:
+
+         conv_to_ucase_impl(std::string& s)
+         : s_(&s)
+         {}
+
+         template <typename InputIterator>
+         inline bool operator()(InputIterator begin, InputIterator end)
+         {
+            std::string& s = (*s_);
+            s.assign(begin,end);
+            convert_to_uppercase(s);
+            return true;
+         }
+
+         inline conv_to_ucase_impl& ref()
+         {
+            return (*this);
+         }
+
+      private:
+
+         std::string* s_;
+      };
+
+      class fill_array_impl
+      {
+      public:
+
+         fill_array_impl(unsigned char* data, const std::size_t& size)
+         : data_(data),
+           size_(size)
+         {}
+
+         template <typename InputIterator>
+         inline bool operator()(InputIterator begin, InputIterator end)
+         {
+            const std::size_t range_size = static_cast<std::size_t>(std::distance(begin,end));
+            if (range_size != size_)
+               return false;
+            std::memcpy(data_,begin,range_size);
+            return true;
+         }
+
+         inline fill_array_impl& ref()
+         {
+            return (*this);
+         }
+
+         inline fill_array_impl& set(unsigned char* data, const std::size_t& size)
+         {
+            data_ = data;
+            size_ = size;
+            return (*this);
+         }
+
+         inline fill_array_impl& set(char* data, const std::size_t& size)
+         {
+            data_ = reinterpret_cast<unsigned char*>(data);
+            size_ = size;
+            return (*this);
+         }
+
+         inline fill_array_impl& set_data(unsigned char* data)
+         {
+            data_ = data;
+            return (*this);
+         }
+
+         inline fill_array_impl& set_data(char* data)
+         {
+            data_ = reinterpret_cast<unsigned char*>(data);
+            return (*this);
+         }
+
+         inline fill_array_impl& set_size(const std::size_t& size)
+         {
+            size_ = size;
+            return (*this);
+         }
+
+      private:
+
+         unsigned char* data_;
+         std::size_t size_;
+      };
+
+   }
+
+   inline details::expect_impl expect(const std::string& s)
+   {
+      return details::expect_impl(s);
+   }
+
+   inline details::iexpect_impl iexpect(const std::string& s)
+   {
+      return details::iexpect_impl(s);
+   }
+
+   inline details::like_impl like(const std::string& s)
+   {
+      return details::like_impl(s);
+   }
+
+   template <typename T, typename T0, typename T1>
+   inline details::inrange_impl<T> inrange(T& t, const T0& low, const T1& hi)
+   {
+      return details::inrange_impl<T>(t,T(low),T(hi));
+   }
+
+   template <typename T>
+   inline details::trim_impl<T> trim(const std::string& rem_chars, T& t)
+   {
+      return details::trim_impl<T>(0,t,rem_chars);
+   }
+
+   template <typename T>
+   inline details::trim_impl<T> trim_leading(const std::string& rem_chars, T& t)
+   {
+      return details::trim_impl<T>(1,t,rem_chars);
+   }
+
+   template <typename T>
+   inline details::trim_impl<T> trim_trailing(const std::string& rem_chars, T& t)
+   {
+      return details::trim_impl<T>(2,t,rem_chars);
+   }
+
+   inline details::conv_to_lcase_impl as_lcase(std::string& s)
+   {
+      return details::conv_to_lcase_impl(s);
+   }
+
+   inline details::conv_to_ucase_impl as_ucase(std::string& s)
+   {
+      return details::conv_to_ucase_impl(s);
+   }
+
+   inline details::fill_array_impl fill_array(unsigned char* data, const std::size_t& size)
+   {
+      return details::fill_array_impl(data,size);
+   }
+
+   inline details::fill_array_impl fill_array(char* data, const std::size_t& size)
+   {
+      return details::fill_array_impl(reinterpret_cast<unsigned char*>(data),size);
+   }
+
+   template <std::size_t N>
+   inline details::fill_array_impl fill_array(unsigned char (&data)[N])
+   {
+      return details::fill_array_impl(data,N);
+   }
+
+   template <std::size_t N>
+   inline details::fill_array_impl fill_array(char (&data)[N])
+   {
+      return details::fill_array_impl(reinterpret_cast<unsigned char*>(data),N);
+   }
+
+   inline details::fill_array_impl fill_array(std::string& data, const std::size_t& size)
+   {
+      return fill_array(const_cast<char*>(data.data()),size);
+   }
+
+   inline details::fill_array_impl fill_array(std::string& data)
+   {
+      return fill_array(const_cast<char*>(data.data()),data.size());
+   }
+
+   namespace details
+   {
       static const unsigned char digit_table[] =
                                  {
                                     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // 0xFF - 0x07
@@ -15054,6 +15738,32 @@ namespace strtk
       template<> struct supported_conversion_from_type<strtk::util::value> { typedef value_type_tag type; };
       template<> struct supported_iterator_type<strtk::util::value> { enum { value = true }; };
 
+      template<> struct supported_conversion_to_type<strtk::details::expect_impl> { typedef expect_type_tag type; };
+      template<> struct supported_iterator_type<strtk::details::expect_impl>      { enum { value = true };        };
+
+      template<> struct supported_conversion_to_type<strtk::details::iexpect_impl> { typedef expect_type_tag type; };
+      template<> struct supported_iterator_type<strtk::details::iexpect_impl>      { enum { value = true }; };
+
+      template<> struct supported_conversion_to_type<strtk::details::like_impl> { typedef like_type_tag type; };
+      template<> struct supported_iterator_type<strtk::details::like_impl>      { enum { value = true }; };
+
+      template<> struct supported_conversion_to_type<strtk::details::fill_array_impl> { typedef fillchararray_type_tag type; };
+      template<> struct supported_iterator_type<strtk::details::fill_array_impl>      { enum { value = true }; };
+
+      template<> struct supported_conversion_to_type<strtk::details::conv_to_lcase_impl> { typedef lcase_type_tag type; };
+      template<> struct supported_iterator_type<strtk::details::conv_to_lcase_impl>      { enum { value = true }; };
+
+      template<> struct supported_conversion_to_type<strtk::details::conv_to_ucase_impl> { typedef ucase_type_tag type; };
+      template<> struct supported_iterator_type<strtk::details::conv_to_ucase_impl>      { enum { value = true }; };
+
+      #define strtk_register_inrange_type_tag(T)\
+      template<> struct supported_conversion_to_type<strtk::details::inrange_impl<T> >   { typedef inrange_type_tag type; };\
+      template<> struct supported_iterator_type<strtk::details::inrange_impl<T> >        { enum { value = true }; };\
+
+      #define strtk_register_trim_type_tag(T)\
+      template<> struct supported_conversion_to_type<strtk::details::trim_impl<T> >   { typedef trim_type_tag type; };\
+      template<> struct supported_iterator_type<strtk::details::trim_impl<T> >        { enum { value = true }; };
+
       #define strtk_register_stdstring_range_type_tag(T)\
       template<> struct supported_conversion_to_type< std::pair<T,T> >{ typedef stdstring_range_type_tag type; };
 
@@ -15177,6 +15887,36 @@ namespace strtk
       strtk_register_stl_container_to_string_conv_type_tag(unsigned long long int)
       strtk_register_stl_container_to_string_conv_type_tag(std::string)
 
+      strtk_register_inrange_type_tag(float)
+      strtk_register_inrange_type_tag(double)
+      strtk_register_inrange_type_tag(long double)
+      strtk_register_inrange_type_tag(signed char)
+      strtk_register_inrange_type_tag(char)
+      strtk_register_inrange_type_tag(short)
+      strtk_register_inrange_type_tag(int)
+      strtk_register_inrange_type_tag(long)
+      strtk_register_inrange_type_tag(unsigned char)
+      strtk_register_inrange_type_tag(unsigned short)
+      strtk_register_inrange_type_tag(unsigned int)
+      strtk_register_inrange_type_tag(unsigned long)
+      strtk_register_inrange_type_tag(unsigned long long int)
+      strtk_register_inrange_type_tag(std::string)
+
+      strtk_register_trim_type_tag(float)
+      strtk_register_trim_type_tag(double)
+      strtk_register_trim_type_tag(long double)
+      strtk_register_trim_type_tag(signed char)
+      strtk_register_trim_type_tag(char)
+      strtk_register_trim_type_tag(short)
+      strtk_register_trim_type_tag(int)
+      strtk_register_trim_type_tag(long)
+      strtk_register_trim_type_tag(unsigned char)
+      strtk_register_trim_type_tag(unsigned short)
+      strtk_register_trim_type_tag(unsigned int)
+      strtk_register_trim_type_tag(unsigned long)
+      strtk_register_trim_type_tag(unsigned long long int)
+      strtk_register_trim_type_tag(std::string)
+
       #define strtk_register_userdef_type_sink(T)\
       namespace strtk { namespace details { strtk_register_sink_type_tag(T) }}
 
@@ -15190,6 +15930,8 @@ namespace strtk
       #undef strtk_register_stdstring_range_type_tag
       #undef strtk_register_sequence_iterator_type
       #undef strtk_register_stl_container_to_string_conv_type_tag
+      #undef strtk_register_inrange_type_tag
+      #undef strtk_register_trim_type_tag
 
       template <typename T>
       struct precision
@@ -15247,6 +15989,69 @@ namespace strtk
          return true;
       }
 
+      template <typename Iterator, typename Expect>
+      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, Expect& t, expect_type_tag)
+      {
+         if (!t(itr,end))
+            return false;
+         itr = end;
+         return true;
+      }
+
+      template <typename Iterator, typename Like>
+      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, Like& t, like_type_tag)
+      {
+         if (!t(itr,end))
+            return false;
+         itr = end;
+         return true;
+      }
+
+      template <typename Iterator, typename InRange>
+      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, InRange& t, inrange_type_tag)
+      {
+         if (!t(itr,end))
+            return false;
+         itr = end;
+         return true;
+      }
+
+      template <typename Iterator, typename TrimToken>
+      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, TrimToken& t, trim_type_tag)
+      {
+         if (!t(itr,end))
+            return false;
+         itr = end;
+         return true;
+      }
+
+      template <typename Iterator, typename CaseToken>
+      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, CaseToken& t, lcase_type_tag)
+      {
+         if (!t(itr,end))
+            return false;
+         itr = end;
+         return true;
+      }
+
+      template <typename Iterator, typename CaseToken>
+      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, CaseToken& t, ucase_type_tag)
+      {
+         if (!t(itr,end))
+            return false;
+         itr = end;
+         return true;
+      }
+
+      template <typename Iterator, typename Array>
+      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, Array& t, fillchararray_type_tag)
+      {
+         if (!t(itr,end))
+            return false;
+         itr = end;
+         return true;
+      }
+
       template <typename Iterator, typename T>
       inline bool string_to_type_converter_impl(Iterator& itr_external, const Iterator end, T& result, unsigned_type_tag)
       {
@@ -15278,7 +16083,6 @@ namespace strtk
             T t1 = 0;
             T t2 = 0;
             T t3 = 0;
-            T t4 = 0;
 
             //Needed for incompetent and broken msvc compiler versions
             #ifdef _MSC_VER
@@ -15286,69 +16090,59 @@ namespace strtk
             #pragma warning(disable: 4127)
             #endif
 
-            if (bound_length > 7)
+            while (interim_length > 7)
             {
-               while (interim_length > 7)
+               if (((digit[0] = (itr[0] - '0')) > 9) ||
+                   ((digit[1] = (itr[1] - '0')) > 9) ||
+                   ((digit[2] = (itr[2] - '0')) > 9) ||
+                   ((digit[3] = (itr[3] - '0')) > 9) ||
+                   ((digit[4] = (itr[4] - '0')) > 9) ||
+                   ((digit[5] = (itr[5] - '0')) > 9) ||
+                   ((digit[6] = (itr[6] - '0')) > 9) ||
+                   ((digit[7] = (itr[7] - '0')) > 9))
+                  return false;
+               else
                {
-                  if ( ((digit[0] = (itr[0] - '0')) < 10) &&
-                       ((digit[1] = (itr[1] - '0')) < 10) &&
-                       ((digit[2] = (itr[2] - '0')) < 10) &&
-                       ((digit[3] = (itr[3] - '0')) < 10) &&
-                       ((digit[4] = (itr[4] - '0')) < 10) &&
-                       ((digit[5] = (itr[5] - '0')) < 10) &&
-                       ((digit[6] = (itr[6] - '0')) < 10) &&
-                       ((digit[7] = (itr[7] - '0')) < 10) )
-                  {
-                     t0 = static_cast<T>(digit[0] * 10000000 + digit[1] * 1000000);
-                     t1 = static_cast<T>(digit[2] * 100000   + digit[3] *   10000);
-                     t2 = static_cast<T>(digit[4] * 1000     + digit[5] *     100);
-                     t3 = static_cast<T>(digit[6] * 10       + digit[7]          );
-                     t4 = static_cast<T>(t * 100000000);
-                     t  = t0 + t1 + t2 + t3 + t4;
-                     itr += 8;
-                     interim_length -= 8;
-                  }
-                  else
-                     return false;
+                  t0 = static_cast<T>(digit[0] * 10000000 + digit[1] * 1000000);
+                  t1 = static_cast<T>(digit[2] * 100000   + digit[3] *   10000);
+                  t2 = static_cast<T>(digit[4] * 1000     + digit[5] *     100);
+                  t3 = static_cast<T>(digit[6] * 10       + digit[7]          );
+                  t  = t0 + t1 + t2 + t3 + static_cast<T>(t * 100000000);
+                  itr += 8;
+                  interim_length -= 8;
                }
             }
 
-            if (bound_length > 3)
+            while (interim_length > 3)
             {
-               while (interim_length > 3)
+               if (((digit[0] = (itr[0] - '0')) > 9) ||
+                   ((digit[1] = (itr[1] - '0')) > 9) ||
+                   ((digit[2] = (itr[2] - '0')) > 9) ||
+                   ((digit[3] = (itr[3] - '0')) > 9))
+                  return false;
+               else
                {
-                  if ( ((digit[0] = (itr[0] - '0')) < 10) &&
-                       ((digit[1] = (itr[1] - '0')) < 10) &&
-                       ((digit[2] = (itr[2] - '0')) < 10) &&
-                       ((digit[3] = (itr[3] - '0')) < 10) )
-                  {
-                     t1 = static_cast<T>(digit[0] * 1000 + digit[1] * 100);
-                     t2 = static_cast<T>(digit[2] * 10   + digit[3]      );
-                     t3 = static_cast<T>(t * 10000                       );
-                     t  = t1 + t2 + t3;
-                     itr += 4;
-                     interim_length -= 4;
-                  }
-                  else
-                     return false;
+                  t1 = static_cast<T>(digit[0] * 1000 + digit[1] * 100);
+                  t2 = static_cast<T>(digit[2] * 10   + digit[3]      );
+                  t3 = static_cast<T>(t * 10000                       );
+                  t  = t1 + t2 + t3;
+                  itr += 4;
+                  interim_length -= 4;
                }
             }
 
-            if (bound_length > 1)
+            while (interim_length > 1)
             {
-               while (interim_length > 1)
+               if (((digit[0] = (itr[0] - '0')) > 9) ||
+                   ((digit[1] = (itr[1] - '0')) > 9))
+                  return false;
+               else
                {
-                  if ( ((digit[0] = (itr[0] - '0')) < 10) &&
-                       ((digit[1] = (itr[1] - '0')) < 10) )
-                  {
-                     t1 = static_cast<T>(digit[0] * 10 + digit[1]);
-                     t2 = static_cast<T>(t * 100                 );
-                     t  = t1 + t2;
-                     itr += 2;
-                     interim_length -= 2;
-                  }
-                  else
-                     return false;
+                  t1 = static_cast<T>(digit[0] * 10 + digit[1]);
+                  t2 = static_cast<T>(t * 100                 );
+                  t  = t1 + t2;
+                  itr += 2;
+                  interim_length -= 2;
                }
             }
 
@@ -15436,7 +16230,6 @@ namespace strtk
             T t1 = 0;
             T t2 = 0;
             T t3 = 0;
-            T t4 = 0;
 
             //Needed for incompetent and broken msvc compiler versions
             #ifdef _MSC_VER
@@ -15444,69 +16237,73 @@ namespace strtk
             #pragma warning(disable: 4127)
             #endif
 
-            if (bound_length > 7)
+            while (interim_length > 7)
             {
-               while (interim_length > 7)
+               if (((digit[0] = (itr[0] - '0')) > 9) ||
+                   ((digit[1] = (itr[1] - '0')) > 9) ||
+                   ((digit[2] = (itr[2] - '0')) > 9) ||
+                   ((digit[3] = (itr[3] - '0')) > 9) ||
+                   ((digit[4] = (itr[4] - '0')) > 9) ||
+                   ((digit[5] = (itr[5] - '0')) > 9) ||
+                   ((digit[6] = (itr[6] - '0')) > 9) ||
+                   ((digit[7] = (itr[7] - '0')) > 9) )
+                  return false;
+               else
                {
-                  if ( ((digit[0] = (itr[0] - '0')) < 10) &&
-                       ((digit[1] = (itr[1] - '0')) < 10) &&
-                       ((digit[2] = (itr[2] - '0')) < 10) &&
-                       ((digit[3] = (itr[3] - '0')) < 10) &&
-                       ((digit[4] = (itr[4] - '0')) < 10) &&
-                       ((digit[5] = (itr[5] - '0')) < 10) &&
-                       ((digit[6] = (itr[6] - '0')) < 10) &&
-                       ((digit[7] = (itr[7] - '0')) < 10) )
-                  {
-                     t0 = static_cast<T>(digit[0] * 10000000 + digit[1] * 1000000);
-                     t1 = static_cast<T>(digit[2] * 100000   + digit[3] *   10000);
-                     t2 = static_cast<T>(digit[4] * 1000     + digit[5] *     100);
-                     t3 = static_cast<T>(digit[6] * 10       + digit[7]          );
-                     t4 = static_cast<T>(t * 100000000);
-                     t  = t0 + t1 + t2 + t3 + t4;
-                     itr += 8;
-                     interim_length -= 8;
-                  }
-                  else
-                     return false;
+                  t0 = static_cast<T>(digit[0] * 10000000 + digit[1] * 1000000);
+                  t1 = static_cast<T>(digit[2] * 100000   + digit[3] *   10000);
+                  t2 = static_cast<T>(digit[4] * 1000     + digit[5] *     100);
+                  t3 = static_cast<T>(digit[6] * 10       + digit[7]          );
+                  t  = t0 + t1 + t2 + t3 + static_cast<T>(t * 100000000);
+                  itr += 8;
+                  interim_length -= 8;
                }
             }
 
-            if (bound_length > 3)
+            while (interim_length > 3)
             {
-               while (interim_length > 3)
+               if (((digit[0] = (itr[0] - '0')) > 9) ||
+                   ((digit[1] = (itr[1] - '0')) > 9) ||
+                   ((digit[2] = (itr[2] - '0')) > 9) ||
+                   ((digit[3] = (itr[3] - '0')) > 9) )
+                  return false;
+               else
                {
-                  if ( ((digit[0] = (itr[0] - '0')) < 10) &&
-                       ((digit[1] = (itr[1] - '0')) < 10) &&
-                       ((digit[2] = (itr[2] - '0')) < 10) &&
-                       ((digit[3] = (itr[3] - '0')) < 10) )
-                  {
-                     t1 = static_cast<T>(digit[0] * 1000 + digit[1] * 100);
-                     t2 = static_cast<T>(digit[2] * 10   + digit[3]      );
-                     t3 = static_cast<T>(t * 10000                       );
-                     t  = t1 + t2 + t3;
-                     itr += 4;
-                     interim_length -= 4;
-                  }
-                  else
-                     return false;
+                  t0 = static_cast<T>(digit[0] * 1000 + digit[1] * 100);
+                  t1 = static_cast<T>(digit[2] * 10   + digit[3]      );
+                  t  = t0 + t1 + static_cast<T>(t * 10000);
+                  itr += 4;
+                  interim_length -= 4;
                }
             }
 
-            if (bound_length > 1)
+            while (interim_length > 2)
             {
-               while (interim_length > 1)
+               if (((digit[0] = (itr[0] - '0')) > 9) ||
+                   ((digit[1] = (itr[1] - '0')) > 9) ||
+                   ((digit[2] = (itr[2] - '0')) > 9))
+                  return false;
+               else
                {
-                  if ( ((digit[0] = (itr[0] - '0')) < 10) &&
-                       ((digit[1] = (itr[1] - '0')) < 10) )
-                  {
-                     t1 = static_cast<T>(digit[0] * 10 + digit[1]);
-                     t2 = static_cast<T>(t * 100                 );
-                     t  = t1 + t2;
-                     itr += 2;
-                     interim_length -= 2;
-                  }
-                  else
-                     return false;
+                  t0 = static_cast<T>(digit[0] * 100 + digit[1] * 10);
+                  t1 = static_cast<T>(t * 1000 + digit[2]           );
+                  t  = t0 + t1;
+                  itr += 3;
+                  interim_length -= 3;
+               }
+            }
+
+            while (interim_length > 1)
+            {
+               if (((digit[0] = (itr[0] - '0')) > 9) ||
+                   ((digit[1] = (itr[1] - '0')) > 9))
+                  return false;
+               else
+               {
+                  t0 = static_cast<T>(digit[0] * 10 + digit[1]);
+                  t  = t0 + static_cast<T>(t * 100);
+                  itr += 2;
+                  interim_length -= 2;
                }
             }
 
@@ -16000,24 +16797,28 @@ namespace strtk
          unsigned char buffer[numeric<T>::size];
          unsigned char* itr = buffer + (numeric<T>::size - 1);
          T remainder = 0;
-         std::size_t index = 0;
 
          if (0 != value)
          {
+            std::size_t index = 0;
+            T temp_v = 0;
             while (value >= static_cast<T>(radix_sqr))
             {
-               remainder  = value % radix_cube;
-               value     /= radix_cube;
+               temp_v     = value / radix_cube;
+               remainder  = value - (temp_v * radix_cube);
+               value      = temp_v;
                index = static_cast<std::size_t>(remainder * 3);
-               *(itr--) = details::rev_3digit_lut[index + 0];
-               *(itr--) = details::rev_3digit_lut[index + 1];
-               *(itr--) = details::rev_3digit_lut[index + 2];
+               *(itr    ) = details::rev_3digit_lut[index    ];
+               *(itr - 1) = details::rev_3digit_lut[index + 1];
+               *(itr - 2) = details::rev_3digit_lut[index + 2];
+               itr -= 3;
             }
 
             while (value >= static_cast<T>(radix))
             {
-               remainder  = value % radix_sqr;
-               value     /= radix_sqr;
+               temp_v     = value / radix_sqr;
+               remainder  = value - (temp_v * radix_sqr);
+               value      = temp_v;
                index = static_cast<std::size_t>(remainder << 1);
                *(itr--) = details::rev_2digit_lut[index + 0];
                *(itr--) = details::rev_2digit_lut[index + 1];
@@ -16025,9 +16826,7 @@ namespace strtk
 
             if (0 != value)
             {
-               remainder = value % radix;
-               value    /= radix;
-               *(itr--)  = strtk::details::digitr[remainder];
+               *(itr--)  = strtk::details::digitr[value];
             }
          }
          else
@@ -16049,42 +16848,45 @@ namespace strtk
          bool negative = (value < 0);
          if (negative)
             value = static_cast<T>(-1 * value);
-
          T remainder = 0;
-         std::size_t index = 0;
 
          if (0 != value)
          {
+            std::size_t index = 0;
+            T temp_v = 0;
             while (value >= static_cast<T>(radix_sqr))
             {
-               remainder  = value % radix_cube;
-               value     /= radix_cube;
+               temp_v     = value / radix_cube;
+               remainder  = value - (temp_v * radix_cube);
+               value      = temp_v;
                index    = static_cast<std::size_t>(remainder * 3);
-               *(itr--) = details::rev_3digit_lut[index    ];
-               *(itr--) = details::rev_3digit_lut[index + 1];
-               *(itr--) = details::rev_3digit_lut[index + 2];
+               *(itr    ) = details::rev_3digit_lut[index    ];
+               *(itr - 1) = details::rev_3digit_lut[index + 1];
+               *(itr - 2) = details::rev_3digit_lut[index + 2];
+               itr -= 3;
             }
 
             while (value >= static_cast<T>(radix))
             {
-               remainder  = value % radix_sqr;
-               value     /= radix_sqr;
-               index    = static_cast<std::size_t>(remainder) << 1;
-               *(itr--) = details::rev_2digit_lut[index    ];
-               *(itr--) = details::rev_2digit_lut[index + 1];
+               temp_v     = value / radix_sqr;
+               remainder  = value - (temp_v * radix_sqr);
+               value      = temp_v;
+               index      = static_cast<std::size_t>(remainder) << 1;
+               *(itr    ) = details::rev_2digit_lut[index    ];
+               *(itr - 1) = details::rev_2digit_lut[index + 1];
+               itr -= 2;
             }
 
             if (0 != value)
             {
-               remainder = value % radix;
-               value    /= radix;
-               *(itr--)  = strtk::details::digitr[remainder];
+               *(itr--)  = strtk::details::digitr[value];
             }
          }
          else
             *(itr--) = '0';
 
          if (negative) *(itr--) = '-';
+
          itr++;
          result.assign(reinterpret_cast<char*>(itr), (buffer + numeric<T>::size) - itr);
          return true;
@@ -16112,7 +16914,7 @@ namespace strtk
       }
 
       template <typename Iterator>
-      inline bool type_to_string_converter_impl(const std::pair<Iterator,Iterator> range, std::string& result, stdstring_range_type_tag)
+      inline bool type_to_string_converter_impl(const std::pair<Iterator,Iterator>& range, std::string& result, stdstring_range_type_tag)
       {
          result.assign(range.first,range.second);
          return true;
@@ -17703,7 +18505,7 @@ namespace strtk
         s_end(reinterpret_cast<const unsigned char*>(s.data() + str.size())),
         condition_method_(0)
       {
-         switch(cond_type)
+         switch (cond_type)
          {
             case equal       : condition_method_ = &string_condition::condition_equal;
                                break;
@@ -17771,8 +18573,7 @@ namespace strtk
               value_holder_(false)
             {}
 
-            node(const key_value_t& key_value,
-                 const value_t& v)
+            node(const key_value_t& key_value, const value_t& v)
             : key_value_(key_value),
               value_holder_(true),
               value_(v)
@@ -17867,11 +18668,10 @@ namespace strtk
                return;
 
             key_iterator_t itr = begin;
-            key_value_t key = (*itr);
-            node_ptr parent = 0;
-            node_ptr n = head_;
+            key_value_t key    = (*itr);
+            node_ptr parent    = 0;
             node_ptr next_node = 0;
-            n = head_ = ((0 == head_) ? new node_t(*itr) : head_);
+            node_ptr n = head_ = ((0 == head_) ? new node_t(*itr) : head_);
 
             while (end != itr)
             {
@@ -18114,10 +18914,10 @@ namespace strtk
             if (!(*this))
                return false;
 
-            double min_m = std::numeric_limits<double>::infinity();
-            double min_k = 0.0;
+            double min_m  = std::numeric_limits<double>::infinity();
+            double min_k  = 0.0;
             double curr_m = 0.0;
-            double k = 1.0;
+            double k      = 1.0;
 
             while (k < 1000.0)
             {
@@ -18221,17 +19021,17 @@ namespace strtk
          {
             if (this != &f)
             {
-               salt_count_ = f.salt_count_;
-               table_size_ = f.table_size_;
-               raw_table_size_ = f.raw_table_size_;
+               salt_count_              = f.salt_count_;
+               table_size_              = f.table_size_;
+               raw_table_size_          = f.raw_table_size_;
                projected_element_count_ = f.projected_element_count_;
-               inserted_element_count_ = f.inserted_element_count_;
-               random_seed_ = f.random_seed_;
+               inserted_element_count_  = f.inserted_element_count_;
+               random_seed_             = f.random_seed_;
                desired_false_positive_probability_ = f.desired_false_positive_probability_;
                delete[] bit_table_;
-               bit_table_ = new cell_type[static_cast<std::size_t>(raw_table_size_)];
+               bit_table_               = new cell_type[static_cast<std::size_t>(raw_table_size_)];
                std::copy(f.bit_table_,f.bit_table_ + raw_table_size_,bit_table_);
-               salt_ = f.salt_;
+               salt_                    = f.salt_;
             }
             return *this;
          }
@@ -18629,9 +19429,9 @@ namespace strtk
                itr += sizeof(unsigned short);
             }
             if (remaining_length)
-            {
-               hash += ((*itr) ^ (hash * 0xA5A5A5A5)) + loop;
-            }
+               hash += ((*itr) ^ (hash * 0x5A5A5A5A));
+            else if (loop < 2)
+               hash += ((hash + 1) * 0x5A5A5A5A);
             return hash;
          }
 
@@ -19064,11 +19864,14 @@ namespace strtk
 
          semantic_action_impl()
          : function_holder_(0)
-         {}
+         {
+            std::fill_n(function_holder_buffer_,sizeof(function_holder_buffer_),0x00);
+         }
 
          template <typename Function>
          inline explicit semantic_action_impl(const Function& f)
          {
+            std::fill_n(function_holder_buffer_,sizeof(function_holder_buffer_),0x00);
             assign(f);
          }
 
@@ -19281,11 +20084,14 @@ namespace strtk
 
          value()
          : type_holder_(0)
-         {}
+         {
+            std::fill_n(type_holder_buffer_,sizeof(type_holder_buffer_),0x00);
+         }
 
          template <typename T>
          inline explicit value(T& t)
          {
+            std::fill_n(type_holder_buffer_,sizeof(type_holder_buffer_),0x00);
             assign(t);
          }
 
@@ -20033,6 +20839,1789 @@ namespace strtk
 
    namespace details
    {
+      template <std::size_t N>
+      struct column_list_impl
+      {
+         enum { size = N };
+         std::size_t index_list[N];
+      };
+
+      template <typename Cli, std::size_t N>
+      class column_selector_base
+      {
+      public:
+
+         typedef column_selector_base<Cli,N> csb_t;
+         typedef column_list_impl<N> column_list_t;
+
+         column_selector_base(const column_list_t& column_list)
+         : column_list_(column_list),
+           current_index_(0),
+           target_index_(column_list_.index_list[0]),
+           col_list_index_(0),
+           error_count_(0)
+         {}
+
+         inline csb_t& operator*()
+         {
+            return (*this);
+         }
+
+         inline csb_t& operator++()
+         {
+            return (*this);
+         }
+
+         inline csb_t operator++(int)
+         {
+            return (*this);
+         }
+
+         template <typename Iterator>
+         inline csb_t& operator=(const std::pair<Iterator,Iterator>& r)
+         {
+            process(r);
+            return (*this);
+         }
+
+         void reset()
+         {
+           current_index_  = 0;
+           col_list_index_ = 0;
+           target_index_   = column_list_.index_list[0];
+           error_count_    = 0;
+         }
+
+      protected:
+
+         class colsel_value_list
+         {
+         public:
+
+            typedef std::pair<strtk::util::value,bool> value_t;
+
+            colsel_value_list()
+            : current_index(0)
+            {
+               static const value_t null_value(strtk::util::value(),false);
+               std::fill_n(value_list,N,null_value);
+            }
+
+            template <typename T>
+            inline void register_value(T& t)
+            {
+               if (current_index < N)
+               {
+                  value_list[current_index].first.assign(t);
+                  value_list[current_index].second = false;
+                  ++current_index;
+               }
+            }
+
+            std::size_t current_index;
+            value_t value_list[N];
+         };
+
+         template <typename Iterator>
+         inline void process(const std::pair<Iterator,Iterator>& r)
+         {
+            if (current_index_ >  target_index_)
+               return;
+            else if (current_index_ == target_index_)
+            {
+               typename colsel_value_list::value_t& v = cvl_.value_list[col_list_index_];
+               if (true != (v.second = v.first(r.first,r.second)))
+               {
+                  ++error_count_;
+               }
+               ++col_list_index_;
+               if (col_list_index_ < column_list_t::size)
+                  target_index_ = column_list_.index_list[col_list_index_];
+               else
+                  target_index_ = std::numeric_limits<std::size_t>::max();
+            }
+            ++current_index_;
+         }
+
+         inline colsel_value_list& cvl()
+         {
+            return cvl_;
+         }
+
+         const column_list_t& column_list_;
+         std::size_t current_index_;
+         std::size_t target_index_;
+         std::size_t col_list_index_;
+         std::size_t error_count_;
+         colsel_value_list cvl_;
+
+      private:
+
+         csb_t& operator=(const csb_t& csb);
+      };
+
+      template <typename T0  = void, typename T1  = void, typename T2 = void, typename T3 = void, typename T4 = void,
+                typename T5  = void, typename T6  = void, typename T7 = void, typename T8 = void, typename T9 = void,
+                typename T10 = void, typename T11 = void>
+      class column_selector_impl
+            : public column_selector_base<column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11>,12>
+      {
+      public:
+
+         typedef column_selector_base<column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11>,12> csb_t;
+         typedef column_list_impl<12> column_list_t;
+
+         column_selector_impl(const column_list_t& column_list,
+                              T0& t0, T1& t1, T2& t2, T3& t3, T4& t4,
+                              T5& t5, T6& t6, T7& t7, T8& t8, T9& t9,
+                              T10& t10, T11& t11)
+         : csb_t(column_list)
+         {
+            csb_t::cvl().register_value( t0); csb_t::cvl().register_value( t1);
+            csb_t::cvl().register_value( t2); csb_t::cvl().register_value( t3);
+            csb_t::cvl().register_value( t4); csb_t::cvl().register_value( t5);
+            csb_t::cvl().register_value( t6); csb_t::cvl().register_value( t7);
+            csb_t::cvl().register_value( t8); csb_t::cvl().register_value( t9);
+            csb_t::cvl().register_value(t10); csb_t::cvl().register_value(t11);
+         }
+      };
+
+      template <typename T0, typename T1, typename T2, typename T3, typename T4,
+                typename T5, typename T6, typename T7, typename T8, typename T9,
+                typename T10>
+      class column_selector_impl <T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10>
+            : public column_selector_base<column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10>,11>
+      {
+      public:
+
+         typedef column_selector_base<column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10>,11> csb_t;
+         typedef column_list_impl<11> column_list_t;
+
+         column_selector_impl(const column_list_t& column_list,
+                              T0& t0, T1& t1, T2& t2, T3& t3, T4& t4,
+                              T5& t5, T6& t6, T7& t7, T8& t8, T9& t9,
+                              T10& t10)
+         : csb_t(column_list)
+         {
+            csb_t::cvl().register_value( t0); csb_t::cvl().register_value( t1);
+            csb_t::cvl().register_value( t2); csb_t::cvl().register_value( t3);
+            csb_t::cvl().register_value( t4); csb_t::cvl().register_value( t5);
+            csb_t::cvl().register_value( t6); csb_t::cvl().register_value( t7);
+            csb_t::cvl().register_value( t8); csb_t::cvl().register_value( t9);
+            csb_t::cvl().register_value(t10);
+         }
+      };
+
+      template <typename T0, typename T1, typename T2, typename T3, typename T4,
+                typename T5, typename T6, typename T7, typename T8, typename T9>
+      class column_selector_impl <T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>
+            : public column_selector_base<column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>,10>
+      {
+      public:
+
+         typedef column_selector_base<column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>,10> csb_t;
+         typedef column_list_impl<10> column_list_t;
+
+         column_selector_impl(const column_list_t& column_list,
+                              T1& t0, T1& t1, T2& t2, T3& t3, T4& t4,
+                              T5& t5, T6& t6, T7& t7, T8& t8, T9& t9)
+         : csb_t(column_list)
+         {
+            csb_t::cvl().register_value(t0); csb_t::cvl().register_value(t1);
+            csb_t::cvl().register_value(t2); csb_t::cvl().register_value(t3);
+            csb_t::cvl().register_value(t4); csb_t::cvl().register_value(t5);
+            csb_t::cvl().register_value(t6); csb_t::cvl().register_value(t7);
+            csb_t::cvl().register_value(t8); csb_t::cvl().register_value(t9);
+         }
+      };
+
+      template <typename T0, typename T1, typename T2, typename T3, typename T4,
+                typename T5, typename T6, typename T7, typename T8>
+      class column_selector_impl <T0,T1,T2,T3,T4,T5,T6,T7,T8>
+            : public column_selector_base<column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8>,9>
+      {
+      public:
+
+         typedef column_selector_base<column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8>,9> csb_t;
+         typedef column_list_impl<9> column_list_t;
+
+         column_selector_impl(const column_list_t& column_list,
+                              T1& t0, T1& t1, T2& t2, T3& t3, T4& t4,
+                              T5& t5, T6& t6, T7& t7, T8& t8)
+         : csb_t(column_list)
+         {
+            csb_t::cvl().register_value(t0); csb_t::cvl().register_value(t1);
+            csb_t::cvl().register_value(t2); csb_t::cvl().register_value(t3);
+            csb_t::cvl().register_value(t4); csb_t::cvl().register_value(t5);
+            csb_t::cvl().register_value(t6); csb_t::cvl().register_value(t7);
+            csb_t::cvl().register_value(t8);
+         }
+      };
+
+      template <typename T0, typename T1, typename T2, typename T3,
+                typename T4, typename T5, typename T6, typename T7>
+      class column_selector_impl <T0,T1,T2,T3,T4,T5,T6,T7>
+            : public column_selector_base<column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7>,8>
+      {
+      public:
+
+         typedef column_selector_base<column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7>,8> csb_t;
+         typedef column_list_impl<8> column_list_t;
+
+         column_selector_impl(const column_list_t& column_list,
+                              T1& t0, T1& t1, T2& t2, T3& t3,
+                              T4& t4, T5& t5, T6& t6, T7& t7)
+         : csb_t(column_list)
+         {
+            csb_t::cvl().register_value(t0); csb_t::cvl().register_value(t1);
+            csb_t::cvl().register_value(t2); csb_t::cvl().register_value(t3);
+            csb_t::cvl().register_value(t4); csb_t::cvl().register_value(t5);
+            csb_t::cvl().register_value(t6); csb_t::cvl().register_value(t7);
+         }
+      };
+
+      template <typename T0, typename T1, typename T2, typename T3,
+                typename T4, typename T5, typename T6>
+      class column_selector_impl <T0,T1,T2,T3,T4,T5,T6>
+            : public column_selector_base<column_selector_impl<T0,T1,T2,T3,T4,T5,T6>,7>
+      {
+      public:
+
+         typedef column_selector_base<column_selector_impl<T0,T1,T2,T3,T4,T5,T6>,7> csb_t;
+         typedef column_list_impl<7> column_list_t;
+
+         column_selector_impl(const column_list_t& column_list,
+                              T1& t0, T1& t1, T2& t2, T3& t3,
+                              T4& t4, T5& t5, T6& t6)
+         : csb_t(column_list)
+         {
+            csb_t::cvl().register_value(t0); csb_t::cvl().register_value(t1);
+            csb_t::cvl().register_value(t2); csb_t::cvl().register_value(t3);
+            csb_t::cvl().register_value(t4); csb_t::cvl().register_value(t5);
+            csb_t::cvl().register_value(t6);
+         }
+      };
+
+      template <typename T0, typename T1, typename T2,
+                typename T3, typename T4, typename T5>
+      class column_selector_impl <T0,T1,T2,T3,T4,T5>
+            : public column_selector_base<column_selector_impl<T0,T1,T2,T3,T4,T5>,6>
+      {
+      public:
+
+         typedef column_selector_base<column_selector_impl<T0,T1,T2,T3,T4,T5>,6> csb_t;
+         typedef column_list_impl<6> column_list_t;
+
+         column_selector_impl(const column_list_t& column_list,
+                              T1& t0, T1& t1, T2& t2,
+                              T3& t3, T4& t4, T5& t5)
+         : csb_t(column_list)
+         {
+            csb_t::cvl().register_value(t0); csb_t::cvl().register_value(t1);
+            csb_t::cvl().register_value(t2); csb_t::cvl().register_value(t3);
+            csb_t::cvl().register_value(t4); csb_t::cvl().register_value(t5);
+         }
+      };
+
+      template <typename T0, typename T1, typename T2,
+                typename T3, typename T4>
+      class column_selector_impl <T0,T1,T2,T3,T4>
+            : public column_selector_base<column_selector_impl<T0,T1,T2,T3,T4>,5>
+      {
+      public:
+
+         typedef column_selector_base<column_selector_impl<T0,T1,T2,T3,T4>,5> csb_t;
+         typedef column_list_impl<5> column_list_t;
+
+         column_selector_impl(const column_list_t& column_list,
+                              T1& t0, T1& t1, T2& t2,
+                              T3& t3, T4& t4)
+         : csb_t(column_list)
+         {
+            csb_t::cvl().register_value(t0); csb_t::cvl().register_value(t1);
+            csb_t::cvl().register_value(t2); csb_t::cvl().register_value(t3);
+            csb_t::cvl().register_value(t4);
+         }
+      };
+
+      template <typename T0, typename T1, typename T2, typename T3>
+      class column_selector_impl <T0,T1,T2,T3>
+            : public column_selector_base<column_selector_impl<T0,T1,T2,T3>,4>
+      {
+      public:
+
+         typedef column_selector_base<column_selector_impl<T0,T1,T2,T3>,4> csb_t;
+         typedef column_list_impl<4> column_list_t;
+
+         column_selector_impl(const column_list_t& column_list,
+                              T1& t0, T1& t1, T2& t2, T3& t3)
+         : csb_t(column_list)
+         {
+            csb_t::cvl().register_value(t0); csb_t::cvl().register_value(t1);
+            csb_t::cvl().register_value(t2); csb_t::cvl().register_value(t3);
+         }
+      };
+
+      template <typename T0, typename T1, typename T2>
+      class column_selector_impl <T0,T1,T2>
+            : public column_selector_base<column_selector_impl<T0,T1,T2>,3>
+      {
+      public:
+
+         typedef column_selector_base<column_selector_impl<T0,T1,T2>,3> csb_t;
+         typedef column_list_impl<3> column_list_t;
+
+         column_selector_impl(const column_list_t& column_list,
+                              T1& t0, T1& t1, T2& t2)
+         : csb_t(column_list)
+         {
+            csb_t::cvl().register_value(t0); csb_t::cvl().register_value(t1);
+            csb_t::cvl().register_value(t2);
+         }
+      };
+
+      template <typename T0, typename T1>
+      class column_selector_impl <T0,T1>
+            : public column_selector_base<column_selector_impl<T0,T1>,2>
+      {
+      public:
+
+         typedef column_selector_base<column_selector_impl<T0,T1>,2> csb_t;
+         typedef column_list_impl<2> column_list_t;
+
+         column_selector_impl(const column_list_t& column_list,
+                              T1& t0, T1& t1)
+         : csb_t(column_list)
+         {
+            csb_t::cvl().register_value(t0); csb_t::cvl().register_value(t1);
+         }
+      };
+
+      template <typename T0>
+      class column_selector_impl <T0>
+            : public column_selector_base<column_selector_impl<T0>,1>
+      {
+      public:
+
+         typedef column_selector_base<column_selector_impl<T0>,1> csb_t;
+         typedef column_list_impl<1> column_list_t;
+
+         column_selector_impl(const column_list_t& column_list, T0& t0)
+         : csb_t(column_list)
+         {
+            csb_t::cvl().register_value(t0);
+         }
+      };
+
+   }
+
+   inline details::column_list_impl<12>
+      column_list(const std::size_t&  idx0, const std::size_t&  idx1,
+                  const std::size_t&  idx2, const std::size_t&  idx3,
+                  const std::size_t&  idx4, const std::size_t&  idx5,
+                  const std::size_t&  idx6, const std::size_t&  idx7,
+                  const std::size_t&  idx8, const std::size_t&  idx9,
+                  const std::size_t& idx10, const std::size_t& idx11)
+   {
+      details::column_list_impl<12> cli;
+      cli.index_list[ 0] =  idx0; cli.index_list[ 1] = idx1;
+      cli.index_list[ 2] =  idx2; cli.index_list[ 3] = idx3;
+      cli.index_list[ 4] =  idx4; cli.index_list[ 5] = idx5;
+      cli.index_list[ 6] =  idx6; cli.index_list[ 7] = idx7;
+      cli.index_list[ 8] =  idx8; cli.index_list[ 9] = idx9;
+      cli.index_list[10] = idx10; cli.index_list[11] = idx11;
+      return cli;
+   }
+
+   inline details::column_list_impl<11>
+      column_list(const std::size_t& idx0, const std::size_t& idx1,
+                  const std::size_t& idx2, const std::size_t& idx3,
+                  const std::size_t& idx4, const std::size_t& idx5,
+                  const std::size_t& idx6, const std::size_t& idx7,
+                  const std::size_t& idx8, const std::size_t& idx9,
+                  const std::size_t& idx10)
+   {
+      details::column_list_impl<11> cli;
+      cli.index_list[ 0] =  idx0; cli.index_list[1] = idx1;
+      cli.index_list[ 2] =  idx2; cli.index_list[3] = idx3;
+      cli.index_list[ 4] =  idx4; cli.index_list[5] = idx5;
+      cli.index_list[ 6] =  idx6; cli.index_list[7] = idx7;
+      cli.index_list[ 8] =  idx8; cli.index_list[9] = idx9;
+      cli.index_list[10] = idx10;
+      return cli;
+   }
+
+   inline details::column_list_impl<10>
+      column_list(const std::size_t& idx0, const std::size_t& idx1,
+                  const std::size_t& idx2, const std::size_t& idx3,
+                  const std::size_t& idx4, const std::size_t& idx5,
+                  const std::size_t& idx6, const std::size_t& idx7,
+                  const std::size_t& idx8, const std::size_t& idx9)
+   {
+      details::column_list_impl<10> cli;
+      cli.index_list[0] = idx0; cli.index_list[1] = idx1;
+      cli.index_list[2] = idx2; cli.index_list[3] = idx3;
+      cli.index_list[4] = idx4; cli.index_list[5] = idx5;
+      cli.index_list[6] = idx6; cli.index_list[7] = idx7;
+      cli.index_list[8] = idx8; cli.index_list[9] = idx9;
+      return cli;
+   }
+
+   inline details::column_list_impl<9>
+      column_list(const std::size_t& idx0, const std::size_t& idx1,
+                  const std::size_t& idx2, const std::size_t& idx3,
+                  const std::size_t& idx4, const std::size_t& idx5,
+                  const std::size_t& idx6, const std::size_t& idx7,
+                  const std::size_t& idx8)
+   {
+      details::column_list_impl<9> cli;
+      cli.index_list[0] = idx0; cli.index_list[1] = idx1;
+      cli.index_list[2] = idx2; cli.index_list[3] = idx3;
+      cli.index_list[4] = idx4; cli.index_list[5] = idx5;
+      cli.index_list[6] = idx6; cli.index_list[7] = idx7;
+      cli.index_list[8] = idx8;
+      return cli;
+   }
+
+   inline details::column_list_impl<8>
+      column_list(const std::size_t& idx0, const std::size_t& idx1,
+                  const std::size_t& idx2, const std::size_t& idx3,
+                  const std::size_t& idx4, const std::size_t& idx5,
+                  const std::size_t& idx6, const std::size_t& idx7)
+   {
+      details::column_list_impl<8> cli;
+      cli.index_list[0] = idx0; cli.index_list[1] = idx1;
+      cli.index_list[2] = idx2; cli.index_list[3] = idx3;
+      cli.index_list[4] = idx4; cli.index_list[5] = idx5;
+      cli.index_list[6] = idx6; cli.index_list[7] = idx7;
+      return cli;
+   }
+
+   inline details::column_list_impl<7>
+      column_list(const std::size_t& idx0, const std::size_t& idx1,
+                  const std::size_t& idx2, const std::size_t& idx3,
+                  const std::size_t& idx4, const std::size_t& idx5,
+                  const std::size_t& idx6)
+   {
+      details::column_list_impl<7> cli;
+      cli.index_list[0] = idx0; cli.index_list[1] = idx1;
+      cli.index_list[2] = idx2; cli.index_list[3] = idx3;
+      cli.index_list[4] = idx4; cli.index_list[5] = idx5;
+      cli.index_list[6] = idx6;
+      return cli;
+   }
+
+   inline details::column_list_impl<6>
+      column_list(const std::size_t& idx0, const std::size_t& idx1,
+                  const std::size_t& idx2, const std::size_t& idx3,
+                  const std::size_t& idx4, const std::size_t& idx5)
+   {
+      details::column_list_impl<6> cli;
+      cli.index_list[0] = idx0; cli.index_list[1] = idx1;
+      cli.index_list[2] = idx2; cli.index_list[3] = idx3;
+      cli.index_list[4] = idx4; cli.index_list[5] = idx5;
+      return cli;
+   }
+
+   inline details::column_list_impl<5>
+      column_list(const std::size_t& idx0, const std::size_t& idx1,
+                  const std::size_t& idx2, const std::size_t& idx3,
+                  const std::size_t& idx4)
+   {
+      details::column_list_impl<5> cli;
+      cli.index_list[0] = idx0; cli.index_list[1] = idx1;
+      cli.index_list[2] = idx2; cli.index_list[3] = idx3;
+      cli.index_list[4] = idx4;
+      return cli;
+   }
+
+   inline details::column_list_impl<4>
+      column_list(const std::size_t& idx0, const std::size_t& idx1,
+                  const std::size_t& idx2, const std::size_t& idx3)
+   {
+      details::column_list_impl<4> cli;
+      cli.index_list[0] = idx0; cli.index_list[1] = idx1;
+      cli.index_list[2] = idx2; cli.index_list[3] = idx3;
+      return cli;
+   }
+
+   inline details::column_list_impl<3>
+      column_list(const std::size_t& idx0, const std::size_t& idx1,
+                  const std::size_t& idx2)
+   {
+      details::column_list_impl<3> cli;
+      cli.index_list[0] = idx0; cli.index_list[1] = idx1;
+      cli.index_list[2] = idx2;
+      return cli;
+   }
+
+   inline details::column_list_impl<2>
+      column_list(const std::size_t& idx0, const std::size_t& idx1)
+   {
+      details::column_list_impl<2> cli;
+      cli.index_list[0] = idx0; cli.index_list[1] = idx1;
+      return cli;
+   }
+
+   inline details::column_list_impl<1>
+      column_list(const std::size_t& idx0)
+   {
+      details::column_list_impl<1> cli;
+      cli.index_list[0] = idx0;
+      return cli;
+   }
+
+   inline details::column_list_impl<12> column_list(const std::size_t (&idx)[12])
+   {
+      return column_list(idx[0],idx[1],idx[2],idx[3],idx[4],idx[5],
+                         idx[6],idx[7],idx[8],idx[9],idx[10],idx[11]);
+   }
+
+   inline details::column_list_impl<11> column_list(const std::size_t (&idx)[11])
+   {
+      return column_list(idx[0],idx[1],idx[2],idx[3],idx[4],idx[5],
+                         idx[6],idx[7],idx[8],idx[9],idx[10]);
+   }
+
+   inline details::column_list_impl<10> column_list(const std::size_t (&idx)[10])
+   {
+      return column_list(idx[0],idx[1],idx[2],idx[3],idx[4],idx[5],
+                         idx[6],idx[7],idx[8],idx[9]);
+   }
+
+   inline details::column_list_impl<9> column_list(const std::size_t (&idx)[9])
+   {
+      return column_list(idx[0],idx[1],idx[2],idx[3],idx[4],idx[5],
+                         idx[6],idx[7],idx[8]);
+   }
+
+   inline details::column_list_impl<8> column_list(const std::size_t (&idx)[8])
+   {
+      return column_list(idx[0],idx[1],idx[2],idx[3],idx[4],idx[5],
+                         idx[6],idx[7]);
+   }
+
+   inline details::column_list_impl<7> column_list(const std::size_t (&idx)[7])
+   {
+      return column_list(idx[0],idx[1],idx[2],idx[3],idx[4],idx[5],idx[6]);
+   }
+
+   inline details::column_list_impl<6> column_list(const std::size_t (&idx)[6])
+   {
+      return column_list(idx[0],idx[1],idx[2],idx[3],idx[4],idx[5]);
+   }
+
+   inline details::column_list_impl<5> column_list(const std::size_t (&idx)[5])
+   {
+      return column_list(idx[0],idx[1],idx[2],idx[3],idx[4]);
+   }
+
+   inline details::column_list_impl<4> column_list(const std::size_t (&idx)[4])
+   {
+      return column_list(idx[0],idx[1],idx[2],idx[3]);
+   }
+
+   inline details::column_list_impl<3> column_list(const std::size_t (&idx)[3])
+   {
+      return column_list(idx[0],idx[1],idx[2]);
+   }
+
+   inline details::column_list_impl<2> column_list(const std::size_t (&idx)[2])
+   {
+      return column_list(idx[0],idx[1]);
+   }
+
+   inline details::column_list_impl<1> column_list(const std::size_t (&idx)[1])
+   {
+      return column_list(idx[0]);
+   }
+
+   template <typename T0, typename T1, typename  T2, typename T3,
+             typename T4, typename T5, typename  T6, typename T7,
+             typename T8, typename T9, typename T10, typename T11>
+   inline typename details::column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>
+      column_selector(const details::column_list_impl<11>& col_list,
+                      T0& t0, T1& t1, T2& t2, T3& t3,  T4&  t4,  T5& t5,
+                      T6& t6, T7& t7, T8& t8, T9& t9, T10& t10, T11& t11)
+   {
+      return
+         details::column_selector_impl
+            <T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11>
+               (col_list,t0,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11);
+   }
+
+   template <typename T0, typename T1, typename T2, typename T3,
+             typename T4, typename T5, typename T6, typename T7,
+             typename T8, typename T9, typename T10>
+   inline typename details::column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>
+      column_selector(const details::column_list_impl<11>& col_list,
+                      T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5,
+                      T6& t6, T7& t7, T8& t8, T9& t9, T10& t10)
+   {
+      return
+         details::column_selector_impl
+            <T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10>
+               (col_list,t0,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10);
+   }
+
+   template <typename T0, typename T1, typename T2, typename T3,
+             typename T4, typename T5, typename T6, typename T7,
+             typename T8, typename T9>
+   inline typename details::column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>
+      column_selector(const details::column_list_impl<10>& col_list,
+                      T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5,
+                      T6& t6, T7& t7, T8& t8, T9& t9)
+   {
+      return
+         details::column_selector_impl
+            <T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>
+               (col_list,t0,t1,t2,t3,t4,t5,t6,t7,t8,t9);
+   }
+
+   template <typename T0, typename T1, typename T2, typename T3,
+             typename T4, typename T5, typename T6, typename T7,
+             typename T8>
+   inline typename details::column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8>
+      column_selector(const details::column_list_impl<9>& col_list,
+                      T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5,
+                      T6& t6, T7& t7, T8& t8)
+   {
+      return
+         details::column_selector_impl
+            <T0,T1,T2,T3,T4,T5,T6,T7,T8>
+               (col_list,t0,t1,t2,t3,t4,t5,t6,t7,t8);
+   }
+
+   template <typename T0, typename T1, typename T2, typename T3,
+             typename T4, typename T5, typename T6, typename T7>
+   inline typename details::column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7>
+      column_selector(const details::column_list_impl<8>& col_list,
+                      T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5,
+                      T6& t6, T7& t7)
+   {
+      return
+         details::column_selector_impl
+            <T0,T1,T2,T3,T4,T5,T6,T7>
+               (col_list,t0,t1,t2,t3,t4,t5,t6,t7);
+   }
+
+   template <typename T0, typename T1, typename T2, typename T3,
+             typename T4, typename T5, typename T6>
+   inline typename details::column_selector_impl<T0,T1,T2,T3,T4,T5,T6>
+      column_selector(const details::column_list_impl<7>& col_list,
+                      T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6)
+   {
+      return
+         details::column_selector_impl
+            <T0,T1,T2,T3,T4,T5,T6>
+               (col_list,t0,t1,t2,t3,t4,t5,t6);
+   }
+
+   template <typename T0, typename T1, typename T2, typename T3,
+             typename T4, typename T5>
+   inline typename details::column_selector_impl<T0,T1,T2,T3,T4,T5>
+      column_selector(const details::column_list_impl<6>& col_list,
+                      T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5)
+   {
+      return
+         details::column_selector_impl
+            <T0,T1,T2,T3,T4,T5>
+               (col_list,t0,t1,t2,t3,t4,t5);
+   }
+
+   template <typename T0, typename T1, typename T2,
+             typename T3, typename T4>
+   inline typename details::column_selector_impl<T0,T1,T2,T3,T4>
+      column_selector(const details::column_list_impl<5>& col_list,
+                      T0& t0, T1& t1, T2& t2, T3& t3, T4& t4)
+   {
+      return
+         details::column_selector_impl
+            <T0,T1,T2,T3,T4>
+               (col_list,t0,t1,t2,t3,t4);
+   }
+
+   template <typename T0, typename T1, typename T2, typename T3>
+   inline typename details::column_selector_impl<T0,T1,T2,T3>
+      column_selector(const details::column_list_impl<4>& col_list,
+                      T0& t0, T1& t1, T2& t2, T3& t3)
+   {
+      return
+         details::column_selector_impl
+            <T0,T1,T2,T3>
+               (col_list,t0,t1,t2,t3);
+   }
+
+   template <typename T0, typename T1, typename T2>
+   inline typename details::column_selector_impl<T0,T1,T2>
+      column_selector(const details::column_list_impl<3>& col_list,
+                      T0& t0, T1& t1, T2& t2)
+   {
+      return
+         details::column_selector_impl
+            <T0,T1,T2>
+               (col_list,t0,t1,t2);
+   }
+
+   template <typename T0, typename T1>
+   inline typename details::column_selector_impl<T0,T1>
+      column_selector(const details::column_list_impl<2>& col_list,
+                      T0& t0, T1& t1)
+   {
+      return
+         details::column_selector_impl
+            <T0,T1>
+               (col_list,t0,t1);
+   }
+
+   template <typename T0>
+   inline typename details::column_selector_impl<T0>
+      column_selector(const details::column_list_impl<1>& col_list, T0& t0)
+   {
+      return
+         details::column_selector_impl
+            <T0>
+               (col_list,t0);
+   }
+
+   namespace details
+   {
+      template <typename Iterator>
+      inline Iterator inc(Iterator itr, const std::size_t& n)
+      {
+         std::advance(itr,n);
+         return itr;
+      }
+
+      //Single type column selectors
+      template <typename T, std::size_t N>
+      struct compose_st_selector_impl
+      {};
+
+      template <typename T>
+      struct compose_st_selector_impl <T,1>
+      {
+         typedef column_selector_impl<T> type;
+         typedef column_list_impl<1> column_list_t;
+
+         template <typename Allocator,
+                   template <typename,typename> class Sequence>
+         static inline type create(const column_list_t& col_list, Sequence<T,Allocator>& seq)
+         {
+            return type(col_list,seq[0]);
+         }
+
+         template <typename Allocator>
+         static inline type create(const column_list_t& col_list, std::list<T,Allocator>& list)
+         {
+            typename std::list<T,Allocator>::iterator b = list.begin();
+            return type(col_list,*(b));
+         }
+      };
+
+      template <typename T>
+      struct compose_st_selector_impl <T,2>
+      {
+         typedef column_selector_impl<T,T> type;
+         typedef column_list_impl<2> column_list_t;
+
+         template <typename Allocator,
+                   template <typename,typename> class Sequence>
+         static inline type create(const column_list_t& col_list, Sequence<T,Allocator>& seq)
+         {
+            return type(col_list,seq[0],seq[1]);
+         }
+
+         template <typename Allocator>
+         static inline type create(const column_list_t& col_list, std::list<T,Allocator>& list)
+         {
+            typename std::list<T,Allocator>::iterator b = list.begin();
+            return type(col_list,*(b),*inc(b,1));
+         }
+      };
+
+      template <typename T>
+      struct compose_st_selector_impl <T,3>
+      {
+         typedef column_selector_impl<T,T,T> type;
+         typedef column_list_impl<3> column_list_t;
+
+         template <typename Allocator,
+                   template <typename,typename> class Sequence>
+         static inline type create(const column_list_t& col_list, Sequence<T,Allocator>& seq)
+         {
+            return type(col_list,seq[0],seq[1],seq[2]);
+         }
+
+         template <typename Allocator>
+         static inline type create(const column_list_t& col_list, std::list<T,Allocator>& list)
+         {
+            typename std::list<T,Allocator>::iterator b = list.begin();
+            return type(col_list,*(b),*inc(b,1),*inc(b,2));
+         }
+      };
+
+      template <typename T>
+      struct compose_st_selector_impl <T,4>
+      {
+         typedef column_selector_impl<T,T,T,T> type;
+         typedef column_list_impl<4> column_list_t;
+
+         template <typename Allocator,
+                   template <typename,typename> class Sequence>
+         static inline type create(const column_list_t& col_list, Sequence<T,Allocator>& seq)
+         {
+            return type(col_list,seq[0],seq[1],seq[2],seq[3]);
+         }
+
+         template <typename Allocator>
+         static inline type create(const column_list_t& col_list, std::list<T,Allocator>& list)
+         {
+            typename std::list<T,Allocator>::iterator b = list.begin();
+            return type(col_list,*(b),*inc(b,1),*inc(b,2),*inc(b,3));
+         }
+      };
+
+      template <typename T>
+      struct compose_st_selector_impl <T,5>
+      {
+         typedef column_selector_impl<T,T,T,T,T> type;
+         typedef column_list_impl<5> column_list_t;
+
+         template <typename Allocator,
+                   template <typename,typename> class Sequence>
+         static inline type create(const column_list_t& col_list, Sequence<T,Allocator>& seq)
+         {
+            return type(col_list,seq[0],seq[1],seq[2],seq[3],seq[4]);
+         }
+
+         template <typename Allocator>
+         static inline type create(const column_list_t& col_list, std::list<T,Allocator>& list)
+         {
+            typename std::list<T,Allocator>::iterator b = list.begin();
+            return type(col_list,*(b),*inc(b,1),*inc(b,2),*inc(b,3),*inc(b,4));
+         }
+      };
+
+      template <typename T>
+      struct compose_st_selector_impl <T,6>
+      {
+         typedef column_selector_impl<T,T,T,T,T,T> type;
+         typedef column_list_impl<6> column_list_t;
+
+         template <typename Allocator,
+                   template <typename,typename> class Sequence>
+         static inline type create(const column_list_t& col_list, Sequence<T,Allocator>& seq)
+         {
+            return type(col_list,seq[0],seq[1],seq[2],seq[3],seq[4],seq[5]);
+         }
+
+         template <typename Allocator>
+         static inline type create(const column_list_t& col_list, std::list<T,Allocator>& list)
+         {
+            typename std::list<T,Allocator>::iterator b = list.begin();
+            return type(col_list,*(b),*inc(b,1),*inc(b,2),*inc(b,3),*inc(b,4),*inc(b,5));
+         }
+      };
+
+      template <typename T>
+      struct compose_st_selector_impl <T,7>
+      {
+         typedef column_selector_impl<T,T,T,T,T,T,T> type;
+         typedef column_list_impl<7> column_list_t;
+
+         template <typename Allocator,
+                   template <typename,typename> class Sequence>
+         static inline type create(const column_list_t& col_list, Sequence<T,Allocator>& seq)
+         {
+            return type(col_list,seq[0],seq[1],seq[2],seq[3],seq[4],seq[5],seq[6]);
+         }
+
+         template <typename Allocator>
+         static inline type create(const column_list_t& col_list, std::list<T,Allocator>& list)
+         {
+            typename std::list<T,Allocator>::iterator b = list.begin();
+            return type(col_list,*(b),*inc(b,1),*inc(b,2),*inc(b,3),*inc(b,4),*inc(b,5),*inc(b,6));
+         }
+      };
+
+      template <typename T>
+      struct compose_st_selector_impl <T,8>
+      {
+         typedef column_selector_impl<T,T,T,T,T,T,T,T> type;
+         typedef column_list_impl<8> column_list_t;
+
+         template <typename Allocator,
+                   template <typename,typename> class Sequence>
+         static inline type create(const column_list_t& col_list, Sequence<T,Allocator>& seq)
+         {
+            return type(col_list,seq[0],seq[1],seq[2],seq[3],seq[4],seq[5],seq[6],seq[7]);
+         }
+
+         template <typename Allocator>
+         static inline type create(const column_list_t& col_list, std::list<T,Allocator>& list)
+         {
+            typename std::list<T,Allocator>::iterator b = list.begin();
+            return type(col_list,*(b),*inc(b,1),*inc(b,2),*inc(b,3),*inc(b,4),*inc(b,5),*inc(b,6),*inc(b,7));
+         }
+      };
+
+      template <typename T>
+      struct compose_st_selector_impl <T,9>
+      {
+         typedef column_selector_impl<T,T,T,T,T,T,T,T,T> type;
+         typedef column_list_impl<9> column_list_t;
+
+         template <typename Allocator,
+                   template <typename,typename> class Sequence>
+         static inline type create(const column_list_t& col_list, Sequence<T,Allocator>& seq)
+         {
+            return type(col_list,seq[0],seq[1],seq[2],seq[3],seq[4],seq[5],seq[6],seq[7],seq[8]);
+         }
+
+         template <typename Allocator>
+         static inline type create(const column_list_t& col_list, std::list<T,Allocator>& list)
+         {
+            typename std::list<T,Allocator>::iterator b = list.begin();
+            return type(col_list,*(b),*inc(b,1),*inc(b,2),*inc(b,3),*inc(b,4),*inc(b,5),*inc(b,6),*inc(b,7),*inc(b,8));
+         }
+      };
+
+      template <typename T>
+      struct compose_st_selector_impl <T,10>
+      {
+         typedef column_selector_impl<T,T,T,T,T,T,T,T,T,T> type;
+         typedef column_list_impl<10> column_list_t;
+
+         template <typename Allocator,
+                   template <typename,typename> class Sequence>
+         static inline type create(const column_list_t& col_list, Sequence<T,Allocator>& seq)
+         {
+            return type(col_list,seq[0],seq[1],seq[2],seq[3],seq[4],seq[5],seq[6],seq[7],seq[8],seq[9]);
+         }
+
+         template <typename Allocator>
+         static inline type create(const column_list_t& col_list, std::list<T,Allocator>& list)
+         {
+            typename std::list<T,Allocator>::iterator b = list.begin();
+            return type(col_list,*(b),*inc(b,1),*inc(b,2),*inc(b,3),*inc(b,4),*inc(b,5),*inc(b,6),*inc(b,7),*inc(b,8),*inc(b,9));
+         }
+      };
+
+   }
+
+   template <std::size_t N,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline typename details::compose_st_selector_impl<T,N>::type
+      column_selector(const details::column_list_impl<N>& col_list, Sequence<T,Allocator>& seq)
+   {
+      if (seq.size() >= N)
+      {
+         typedef typename details::compose_st_selector_impl<T,N> composer_t;
+         return composer_t::create(col_list,seq);
+      }
+      else
+         throw std::invalid_argument("column_selector(sequence/list) - size < N!");
+   }
+
+   namespace details
+   {
+
+      template <typename InputIterator, std::size_t N>
+      class column_selector_iterator_impl
+      {
+      public:
+
+         typedef column_selector_iterator_impl<InputIterator,N> csii_t;
+         typedef details::column_list_impl<N> column_list_t;
+         typedef std::pair<InputIterator,InputIterator> iterator_type;
+         typedef iterator_type* iterator_type_ptr;
+
+         column_selector_iterator_impl(const details::column_list_impl<N>& column_list,iterator_type (&token_list)[N])
+         : column_list_(column_list),
+           token_list_(token_list),
+           current_index_(0),
+           target_index_(column_list_.index_list[0]),
+           col_list_index_(0)
+         {}
+
+         inline csii_t& operator*()
+         {
+            return (*this);
+         }
+
+         inline csii_t& operator++()
+         {
+            return (*this);
+         }
+
+         inline csii_t operator++(int)
+         {
+            return (*this);
+         }
+
+         template <typename Iterator>
+         inline csii_t& operator=(const std::pair<Iterator,Iterator>& r)
+         {
+            if (current_index_ == target_index_)
+            {
+               token_list_[col_list_index_] = r;
+               ++col_list_index_;
+               if (col_list_index_ < column_list_t::size)
+                  target_index_ = column_list_.index_list[col_list_index_];
+               else
+                  target_index_ = std::numeric_limits<std::size_t>::max();
+            }
+            ++current_index_;
+            return (*this);
+         }
+
+      private:
+
+         csii_t& operator=(const csii_t& csb);
+
+         const column_list_t& column_list_;
+         iterator_type_ptr token_list_;
+         std::size_t current_index_;
+         std::size_t target_index_;
+         std::size_t col_list_index_;
+      };
+
+   }
+
+   #define strtk_parse_col_token(Index)\
+      if (!string_to_type_converter(token_list[Index].first,token_list[Index].second,t##Index)) return false;
+
+   #define strtk_parse_col_token_seq(Index)\
+      if (!string_to_type_converter(token_list[Index].first,token_list[Index].second,seq[Index])) return false;
+
+   #define strtk_parse_columns_impl(NN)\
+      static const std::size_t N = NN;\
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;\
+      typedef std::pair<InputIterator,InputIterator> iterator_type;\
+      typedef details::column_selector_iterator_impl<InputIterator,N> csii_t;\
+      const std::size_t token_count = (column_list.index_list[N - 1] + 1);\
+      iterator_type token_list[N];\
+      csii_t csii(column_list,token_list);\
+      const std::size_t parsed_token_count = split_n<InputIterator,csii_t&>\
+      (delimiters,begin,end,token_count,csii,split_options::compress_delimiters);\
+      if (token_count > parsed_token_count) return false;\
+
+   #define strk_parse_col_seq\
+      return parse_columns(data.data(),data.data() + data.size(),delimiters,column_list,seq);
+
+   template <typename InputIterator,
+             typename  T0, typename T1, typename T2, typename T3, typename T4,
+             typename  T5, typename T6, typename T7, typename T8, typename T9,
+             typename T10, typename T11>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<12>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5,
+                             T6& t6, T7& t7, T8& t8, T9& t9, T10& t10, T11& t11)
+   {
+      strtk_parse_columns_impl(12)
+      strtk_parse_col_token( 0) strtk_parse_col_token( 1)
+      strtk_parse_col_token( 2) strtk_parse_col_token( 3)
+      strtk_parse_col_token( 4) strtk_parse_col_token( 5)
+      strtk_parse_col_token( 6) strtk_parse_col_token( 7)
+      strtk_parse_col_token( 8) strtk_parse_col_token( 9)
+      strtk_parse_col_token(10) strtk_parse_col_token(11)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T0, typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6, typename T7, typename T8, typename T9,
+             typename T10>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<11>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5,
+                             T6& t6, T7& t7, T8& t8, T9& t9, T10& t10)
+   {
+      strtk_parse_columns_impl(11)
+      strtk_parse_col_token( 0) strtk_parse_col_token(1)
+      strtk_parse_col_token( 2) strtk_parse_col_token(3)
+      strtk_parse_col_token( 4) strtk_parse_col_token(5)
+      strtk_parse_col_token( 6) strtk_parse_col_token(7)
+      strtk_parse_col_token( 8) strtk_parse_col_token(9)
+      strtk_parse_col_token(10)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T0, typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6, typename T7, typename T8, typename T9>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<10>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5,
+                             T6& t6, T7& t7, T8& t8, T9& t9)
+   {
+      strtk_parse_columns_impl(10)
+      strtk_parse_col_token(0) strtk_parse_col_token(1)
+      strtk_parse_col_token(2) strtk_parse_col_token(3)
+      strtk_parse_col_token(4) strtk_parse_col_token(5)
+      strtk_parse_col_token(6) strtk_parse_col_token(7)
+      strtk_parse_col_token(8) strtk_parse_col_token(9)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T0, typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6, typename T7, typename T8>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<9>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6,
+                             T7& t7, T8& t8)
+   {
+      strtk_parse_columns_impl(9)
+      strtk_parse_col_token(0) strtk_parse_col_token(1)
+      strtk_parse_col_token(2) strtk_parse_col_token(3)
+      strtk_parse_col_token(4) strtk_parse_col_token(5)
+      strtk_parse_col_token(6) strtk_parse_col_token(7)
+      strtk_parse_col_token(8)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T0, typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6, typename T7>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<8>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6, T7& t7)
+   {
+      strtk_parse_columns_impl(8)
+      strtk_parse_col_token(0) strtk_parse_col_token(1)
+      strtk_parse_col_token(2) strtk_parse_col_token(3)
+      strtk_parse_col_token(4) strtk_parse_col_token(5)
+      strtk_parse_col_token(6) strtk_parse_col_token(7)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T0, typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<7>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6)
+   {
+      strtk_parse_columns_impl(7)
+      strtk_parse_col_token(0) strtk_parse_col_token(1)
+      strtk_parse_col_token(2) strtk_parse_col_token(3)
+      strtk_parse_col_token(4) strtk_parse_col_token(5)
+      strtk_parse_col_token(6)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T0, typename T1, typename T2, typename T3, typename T4,
+             typename T5>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<6>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5)
+   {
+      strtk_parse_columns_impl(6)
+      strtk_parse_col_token(0) strtk_parse_col_token(1)
+      strtk_parse_col_token(2) strtk_parse_col_token(3)
+      strtk_parse_col_token(4) strtk_parse_col_token(5)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T0, typename T1, typename T2, typename T3, typename T4>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<5>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4)
+   {
+      strtk_parse_columns_impl(5)
+      strtk_parse_col_token(0) strtk_parse_col_token(1)
+      strtk_parse_col_token(2) strtk_parse_col_token(3)
+      strtk_parse_col_token(4)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T0, typename T1, typename T2, typename T3>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<4>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3)
+   {
+      strtk_parse_columns_impl(4)
+      strtk_parse_col_token(0) strtk_parse_col_token(1)
+      strtk_parse_col_token(2) strtk_parse_col_token(3)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T0, typename T1, typename T2>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<3>& column_list,
+                             T0& t0, T1& t1, T2& t2)
+   {
+      strtk_parse_columns_impl(3)
+      strtk_parse_col_token(0) strtk_parse_col_token(1)
+      strtk_parse_col_token(2)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T0, typename T1>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<2>& column_list,
+                             T0& t0, T1& t1)
+   {
+      strtk_parse_columns_impl(2)
+      strtk_parse_col_token(0) strtk_parse_col_token(1)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T0>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<1>& column_list,
+                             T0& t0)
+   {
+      strtk_parse_columns_impl(1)
+      strtk_parse_col_token(0)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<12>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strtk_parse_columns_impl(12)
+      strtk_parse_col_token_seq( 0) strtk_parse_col_token_seq( 1)
+      strtk_parse_col_token_seq( 2) strtk_parse_col_token_seq( 3)
+      strtk_parse_col_token_seq( 4) strtk_parse_col_token_seq( 5)
+      strtk_parse_col_token_seq( 6) strtk_parse_col_token_seq( 7)
+      strtk_parse_col_token_seq( 8) strtk_parse_col_token_seq( 9)
+      strtk_parse_col_token_seq(10) strtk_parse_col_token_seq(11)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<11>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strtk_parse_columns_impl(11)
+      strtk_parse_col_token_seq( 0) strtk_parse_col_token_seq(1)
+      strtk_parse_col_token_seq( 2) strtk_parse_col_token_seq(3)
+      strtk_parse_col_token_seq( 4) strtk_parse_col_token_seq(5)
+      strtk_parse_col_token_seq( 6) strtk_parse_col_token_seq(7)
+      strtk_parse_col_token_seq( 8) strtk_parse_col_token_seq(9)
+      strtk_parse_col_token_seq(10)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<10>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strtk_parse_columns_impl(10)
+      strtk_parse_col_token_seq(0) strtk_parse_col_token_seq(1)
+      strtk_parse_col_token_seq(2) strtk_parse_col_token_seq(3)
+      strtk_parse_col_token_seq(4) strtk_parse_col_token_seq(5)
+      strtk_parse_col_token_seq(6) strtk_parse_col_token_seq(7)
+      strtk_parse_col_token_seq(8) strtk_parse_col_token_seq(9)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<9>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strtk_parse_columns_impl(9)
+      strtk_parse_col_token_seq(0) strtk_parse_col_token_seq(1)
+      strtk_parse_col_token_seq(2) strtk_parse_col_token_seq(3)
+      strtk_parse_col_token_seq(4) strtk_parse_col_token_seq(5)
+      strtk_parse_col_token_seq(6) strtk_parse_col_token_seq(7)
+      strtk_parse_col_token_seq(8)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<8>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strtk_parse_columns_impl(8)
+      strtk_parse_col_token_seq(0) strtk_parse_col_token_seq(1)
+      strtk_parse_col_token_seq(2) strtk_parse_col_token_seq(3)
+      strtk_parse_col_token_seq(4) strtk_parse_col_token_seq(5)
+      strtk_parse_col_token_seq(6) strtk_parse_col_token_seq(7)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<7>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strtk_parse_columns_impl(7)
+      strtk_parse_col_token_seq(0) strtk_parse_col_token_seq(1)
+      strtk_parse_col_token_seq(2) strtk_parse_col_token_seq(3)
+      strtk_parse_col_token_seq(4) strtk_parse_col_token_seq(5)
+      strtk_parse_col_token_seq(6)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<6>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strtk_parse_columns_impl(6)
+      strtk_parse_col_token_seq(0) strtk_parse_col_token_seq(1)
+      strtk_parse_col_token_seq(2) strtk_parse_col_token_seq(3)
+      strtk_parse_col_token_seq(4) strtk_parse_col_token_seq(5)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<5>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strtk_parse_columns_impl(5)
+      strtk_parse_col_token_seq(0) strtk_parse_col_token_seq(1)
+      strtk_parse_col_token_seq(2) strtk_parse_col_token_seq(3)
+      strtk_parse_col_token_seq(4)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<4>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strtk_parse_columns_impl(4)
+      strtk_parse_col_token_seq(0) strtk_parse_col_token_seq(1)
+      strtk_parse_col_token_seq(2) strtk_parse_col_token_seq(3)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<3>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strtk_parse_columns_impl(3)
+      strtk_parse_col_token_seq(0) strtk_parse_col_token_seq(1)
+      strtk_parse_col_token_seq(2)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<2>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strtk_parse_columns_impl(2)
+      strtk_parse_col_token_seq(0) strtk_parse_col_token_seq(1)
+      return true;
+   }
+
+   template <typename InputIterator,
+             typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const InputIterator begin,
+                             const InputIterator end,
+                             const std::string& delimiters,
+                             const details::column_list_impl<1>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strtk_parse_columns_impl(1)
+      strtk_parse_col_token_seq(0)
+      return true;
+   }
+
+   #undef strtk_parse_col_token
+   #undef strtk_parse_col_token_seq
+   #undef strtk_parse_columns_impl
+
+   #define strtk_parse_col_begin()\
+      return parse_columns(data.data(),\
+                           data.data() + data.size(),delimiters,\
+                           column_list,
+
+   #define strtk_parse_col_end() );
+
+   template <typename  T0, typename  T1, typename T2, typename T3, typename T4,
+             typename  T5, typename  T6, typename T7, typename T8, typename T9,
+             typename T10, typename T11>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<12>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4,
+                             T5& t5, T6& t6, T7& t7, T8& t8, T9& t9,
+                             T10& t10, T11& t11)
+   {
+      strtk_parse_col_begin()
+         t0,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11
+      strtk_parse_col_end()
+   }
+
+   template <typename  T0, typename T1, typename T2, typename T3, typename T4,
+             typename  T5, typename T6, typename T7, typename T8, typename T9,
+             typename T10>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<11>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4,
+                             T5& t5, T6& t6, T7& t7, T8& t8, T9& t9,
+                             T10& t10)
+   {
+      strtk_parse_col_begin()
+         t0,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10
+      strtk_parse_col_end()
+   }
+
+   template <typename T0, typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6, typename T7, typename T8, typename T9>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<10>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4,
+                             T5& t5, T6& t6, T7& t7, T8& t8,
+                             T9& t9)
+   {
+      strtk_parse_col_begin()
+         t0,t1,t2,t3,t4,t5,t6,t7,t8,t9
+      strtk_parse_col_end()
+   }
+
+   template <typename T0, typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6, typename T7, typename T8>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<9>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4,
+                             T5& t5, T6& t6, T7& t7, T8& t8)
+   {
+      strtk_parse_col_begin()
+         t0,t1,t2,t3,t4,t5,t6,t7,t8
+      strtk_parse_col_end()
+   }
+
+   template <typename T0, typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6, typename T7>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<8>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4,
+                             T5& t5, T6& t6, T7& t7)
+   {
+      strtk_parse_col_begin()
+         t0,t1,t2,t3,t4,t5,t6,t7
+      strtk_parse_col_end()
+   }
+
+   template <typename T0, typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<7>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4,
+                             T5& t5, T6& t6)
+   {
+      strtk_parse_col_begin()
+         t0,t1,t2,t3,t4,t5,t6
+      strtk_parse_col_end()
+   }
+
+   template <typename T0, typename T1, typename T2, typename T3, typename T4,
+             typename T5>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<6>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4,
+                             T5& t5)
+   {
+      strtk_parse_col_begin()
+         t0,t1,t2,t3,t4,t5
+      strtk_parse_col_end()
+   }
+
+   template <typename T0, typename T1, typename T2, typename T3, typename T4>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<5>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3, T4& t4)
+   {
+      strtk_parse_col_begin()
+         t0,t1,t2,t3,t4
+      strtk_parse_col_end()
+   }
+
+   template <typename T0, typename T1, typename T2, typename T3>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<4>& column_list,
+                             T0& t0, T1& t1, T2& t2, T3& t3)
+   {
+      strtk_parse_col_begin()
+         t0,t1,t2,t3
+      strtk_parse_col_end();
+   }
+
+   template <typename T0, typename T1, typename T2>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<3>& column_list,
+                             T0& t0, T1& t1, T2& t2)
+   {
+      strtk_parse_col_begin()
+         t0,t1,t2
+      strtk_parse_col_end()
+   }
+
+   template <typename T0, typename T1>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<2>& column_list,
+                             T0& t0, T1& t1)
+   {
+      strtk_parse_col_begin()
+         t0,t1
+      strtk_parse_col_end()
+   }
+
+   template <typename T>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<1>& column_list,
+                             T& t)
+   {
+      strtk_parse_col_begin()
+         t
+      strtk_parse_col_end()
+   }
+
+   #undef strtk_parse_col_begin
+   #undef strtk_parse_col_end
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<12>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strk_parse_col_seq
+   }
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<11>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strk_parse_col_seq
+   }
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<10>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strk_parse_col_seq
+   }
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<9>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strk_parse_col_seq
+   }
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<8>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strk_parse_col_seq
+   }
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<7>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strk_parse_col_seq
+   }
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<6>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strk_parse_col_seq
+   }
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<5>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strk_parse_col_seq
+   }
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<4>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strk_parse_col_seq
+   }
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<3>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strk_parse_col_seq
+   }
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<2>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strk_parse_col_seq
+   }
+
+   template <typename T,
+             typename Allocator,
+             template <typename,typename> class Sequence>
+   inline bool parse_columns(const std::string& data,
+                             const std::string& delimiters,
+                             const details::column_list_impl<1>& column_list,
+                             Sequence<T,Allocator>& seq)
+   {
+      strk_parse_col_seq
+   }
+
+   #undef strk_parse_col_seq
+
+   namespace details
+   {
       typedef const unsigned char* ptr;
 
       template <typename T>
@@ -20135,7 +22724,7 @@ namespace strtk
    }
 
    template <typename Iterator>
-   inline std::pair<Iterator,Iterator> make_pair(const std::pair<const char*, const char*> p)
+   inline std::pair<Iterator,Iterator> make_pair(const std::pair<const char*, const char*>& p)
    {
       return make_pair<Iterator,Iterator>(p);
    }
@@ -20760,8 +23349,8 @@ namespace strtk
    namespace information
    {
       static const char* library = "String Toolkit";
-      static const char* version = "2.71828182845904523536028747135266249775724709";
-      static const char* date    = "20111111";
+      static const char* version = "2.71828182845904523536028747135266249775724709369";
+      static const char* date    = "20130126";
 
       static inline std::string data()
       {

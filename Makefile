@@ -2,7 +2,7 @@
 # *****************************************************************
 # *                     String Toolkit Library                    *
 # *                                                               *
-# * Author: Arash Partow (2002-2011)                              *
+# * Author: Arash Partow (2002-2013)                              *
 # * URL: http://www.partow.net/programming/strtk/index.html       *
 # *                                                               *
 # * Copyright notice:                                             *

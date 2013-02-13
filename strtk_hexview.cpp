@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * Hex-Viewer                                                    *
- * Author: Arash Partow (2002-2012)                              *
+ * Author: Arash Partow (2002-2013)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -69,6 +69,8 @@ int main()
 
    char buffer[data_width];
    char hex_buffer[2 * data_width];
+
+   std::cin.sync_with_stdio(false);
 
    for ( ; ; )
    {
