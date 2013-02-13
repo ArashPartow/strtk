@@ -18505,7 +18505,7 @@ namespace strtk
         s_end(reinterpret_cast<const unsigned char*>(s.data() + str.size())),
         condition_method_(0)
       {
-         switch (cond_type)
+         switch (cond_type_)
          {
             case equal       : condition_method_ = &string_condition::condition_equal;
                                break;
