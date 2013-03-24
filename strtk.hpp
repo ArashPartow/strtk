@@ -18,27 +18,28 @@
 #define INCLUDE_STRTK_HPP
 
 
-#include <cstddef>
+#include <algorithm>
 #include <cctype>
-#include <cstring>
 #include <cerrno>
-#include <exception>
 #include <cmath>
+#include <cstddef>
+#include <cstring>
+#include <deque>
+#include <exception>
+#include <fstream>
+#include <iostream>
 #include <iterator>
 #include <limits>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <utility>
-#include <algorithm>
-#include <string>
-#include <vector>
-#include <deque>
 #include <list>
-#include <set>
 #include <map>
-#include <stack>
 #include <queue>
+#include <set>
+#include <sstream>
+#include <stack>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 
 #ifndef strtk_no_tr1_or_boost
