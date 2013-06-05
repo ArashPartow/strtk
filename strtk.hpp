@@ -6778,7 +6778,7 @@ namespace strtk
          if (row_range_invalid(row_range))
             return false;
          row_range_t r(row_range.first,row_range.first);
-         for (std::size_t i = row_range.first; i < row_range.second; ++i)
+         for (row_range_t::first_type i = row_range.first; i < row_range.second; ++i)
          {
             if (p(row_type(i,dsv_index_)))
             {
@@ -11501,7 +11501,7 @@ namespace strtk
       if (static_cast<typename std::iterator_traits<Iterator>::difference_type>(size) > std::distance(begin,end))
          return;
       Iterator mid = begin + size;
-      details::bound_range<Function&, Iterator> func(function,begin,mid);
+      details::bound_range<Function&,Iterator> func(function,begin,mid);
       details::combine_discontinuous(begin, mid,
                                      std::distance(begin,mid),
                                      mid, end,
@@ -11517,7 +11517,7 @@ namespace strtk
       if (static_cast<typename std::iterator_traits<Iterator>::difference_type>(size) > std::distance(begin,end))
          return;
       Iterator mid = begin + size;
-      details::bound_range_conditional<Function&, Iterator> func(function,begin,mid);
+      details::bound_range_conditional<Function&,Iterator> func(function,begin,mid);
       details::combine_discontinuous_conditional(begin, mid,
                                                  std::distance(begin,mid),
                                                  mid, end,
@@ -12837,74 +12837,62 @@ namespace strtk
 
          static inline unsigned short convert_to_be(const unsigned short v)
          {
-            if (is_little_endian()) convert(v);
-            return v;
+            return (is_little_endian()) ? convert(v) : v;
          }
 
          static inline unsigned int convert_to_be(const unsigned int v)
          {
-            if (is_little_endian()) convert(v);
-            return v;
+            return (is_little_endian()) ? convert(v) : v;
          }
 
          static inline unsigned long long int convert_to_be(const unsigned long long int v)
          {
-            if (is_little_endian()) convert(v);
-            return v;
+            return (is_little_endian()) ? convert(v) : v;
          }
 
          static inline short convert_to_be(const short v)
          {
-            if (is_little_endian()) convert(v);
-            return v;
+            return (is_little_endian()) ? convert(v) : v;
          }
 
          static inline int convert_to_be(const int v)
          {
-            if (is_little_endian()) convert(v);
-            return v;
+            return (is_little_endian()) ? convert(v) : v;
          }
 
          static inline unsigned long long int convert_to_be(const long long int v)
          {
-            if (is_little_endian()) convert(v);
-            return v;
+            return (is_little_endian()) ? convert(v) : v;
          }
 
          static inline unsigned short convert_to_le(const unsigned short v)
          {
-            if (is_big_endian()) convert(v);
-            return v;
+            return (is_big_endian()) ? convert(v) : v;
          }
 
          static inline unsigned int convert_to_le(const unsigned int v)
          {
-            if (is_big_endian()) convert(v);
-            return v;
+            return (is_big_endian()) ? convert(v) : v;
          }
 
          static inline unsigned long long int convert_to_le(const unsigned long long int v)
          {
-            if (is_big_endian()) convert(v);
-            return v;
+            return (is_big_endian()) ? convert(v) : v;
          }
 
          static inline short convert_to_le(const short v)
          {
-            if (is_big_endian()) convert(v);
-            return v;
+            return (is_big_endian()) ? convert(v) : v;
          }
 
          static inline int convert_to_le(const int v)
          {
-            if (is_big_endian()) convert(v);
-            return v;
+            return (is_big_endian()) ? convert(v) : v;
          }
 
          static inline unsigned long long int convert_to_le(const long long int v)
          {
-            if (is_big_endian()) convert(v);
-            return v;
+            return (is_big_endian()) ? convert(v) : v;
          }
 
          class marker
@@ -19407,32 +19395,35 @@ namespace strtk
                     (~((hash << 11) + (i2 ^ (hash >> 5))));
                remaining_length -= 8;
             }
-            while (remaining_length >= 4)
-            {
-               const unsigned int& i = *(reinterpret_cast<const unsigned int*>(itr));
-               if (loop & 0x01)
-                  hash ^=    (hash <<  7) ^  i * (hash >> 3);
-               else
-                  hash ^= (~((hash << 11) + (i ^ (hash >> 5))));
-               ++loop;
-               remaining_length -= 4;
-               itr += sizeof(unsigned int);
-            }
-            while (remaining_length >= 2)
-            {
-               const unsigned short& i = *(reinterpret_cast<const unsigned short*>(itr));
-               if (loop & 0x01)
-                  hash ^=    (hash <<  7) ^  i * (hash >> 3);
-               else
-                  hash ^= (~((hash << 11) + (i ^ (hash >> 5))));
-               ++loop;
-               remaining_length -= 2;
-               itr += sizeof(unsigned short);
-            }
             if (remaining_length)
-               hash += ((*itr) ^ (hash * 0x5A5A5A5A));
-            else if (loop < 2)
-               hash += ((hash + 1) * 0x5A5A5A5A);
+            {
+               if (remaining_length >= 4)
+               {
+                  const unsigned int& i = *(reinterpret_cast<const unsigned int*>(itr));
+                  if (loop & 0x01)
+                     hash ^=    (hash <<  7) ^  i * (hash >> 3);
+                  else
+                     hash ^= (~((hash << 11) + (i ^ (hash >> 5))));
+                  ++loop;
+                  remaining_length -= 4;
+                  itr += sizeof(unsigned int);
+               }
+               if (remaining_length >= 2)
+               {
+                  const unsigned short& i = *(reinterpret_cast<const unsigned short*>(itr));
+                  if (loop & 0x01)
+                     hash ^=    (hash <<  7) ^  i * (hash >> 3);
+                  else
+                     hash ^= (~((hash << 11) + (i ^ (hash >> 5))));
+                  ++loop;
+                  remaining_length -= 2;
+                  itr += sizeof(unsigned short);
+               }
+               if (remaining_length)
+               {
+                  hash += ((*itr) ^ (hash * 0xA5A5A5A5)) + loop;
+               }
+            }
             return hash;
          }
 
