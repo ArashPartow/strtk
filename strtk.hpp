@@ -14,6 +14,7 @@
  *****************************************************************
 */
 
+
 #ifndef INCLUDE_STRTK_HPP
 #define INCLUDE_STRTK_HPP
 
@@ -253,6 +254,7 @@ namespace strtk
       struct lcase_type_tag           {};
       struct ucase_type_tag           {};
       struct fillchararray_type_tag   {};
+      struct truncint_type_tag        {};
 
       template <typename T>
       struct supported_conversion_to_type
@@ -14082,6 +14084,62 @@ namespace strtk
       std::string& s_;
    };
 
+   template <typename T>
+   class truncated_int
+   {
+   public:
+
+      truncated_int()
+      : t_(0),
+        fractional_size_(std::numeric_limits<std::size_t>::max())
+      {}
+
+      truncated_int& fractional_size(const std::size_t& size)
+      {
+         fractional_size_ = size;
+         return *this;
+      }
+
+      truncated_int& fractional_unknown_size()
+      {
+         fractional_size_ = std::numeric_limits<std::size_t>::max();
+         return *this;
+      }
+
+      truncated_int& operator()(T& t)
+      {
+         t_ = &t;
+         return *this;
+      }
+
+      template <typename InputIterator>
+      inline bool operator()(InputIterator begin, InputIterator end)
+      {
+         if (0 == t_)
+            return false;
+
+         const std::size_t size = std::distance(begin,end);
+
+         if (std::numeric_limits<std::size_t>::max() != fractional_size_)
+         {
+            if (size < (fractional_size_ + 1))
+               return false;
+            else
+               return strtk::string_to_type_converter(begin, begin + (size - (fractional_size_ + 1)),(*t_));
+         }
+
+         typedef typename std::iterator_traits<InputIterator>::value_type value_type;
+         const value_type fullstop = value_type('.');
+         InputIterator new_end = std::find(begin,end,fullstop);
+         return strtk::string_to_type_converter(begin,new_end,(*t_));
+      }
+
+   private:
+
+      T* t_;
+      std::size_t fractional_size_;
+   };
+
    namespace details
    {
 
@@ -15745,9 +15803,13 @@ namespace strtk
       template<> struct supported_conversion_to_type<strtk::details::conv_to_ucase_impl> { typedef ucase_type_tag type; };
       template<> struct supported_iterator_type<strtk::details::conv_to_ucase_impl>      { enum { value = true }; };
 
+      #define strtk_register_fractint_type_tag(T)\
+      template<> struct supported_conversion_to_type<strtk::truncated_int<T> > { typedef truncint_type_tag type; };\
+      template<> struct supported_iterator_type<strtk::truncated_int<T> >      { enum { value = true }; };
+
       #define strtk_register_inrange_type_tag(T)\
       template<> struct supported_conversion_to_type<strtk::details::inrange_impl<T> >   { typedef inrange_type_tag type; };\
-      template<> struct supported_iterator_type<strtk::details::inrange_impl<T> >        { enum { value = true }; };\
+      template<> struct supported_iterator_type<strtk::details::inrange_impl<T> >        { enum { value = true }; };
 
       #define strtk_register_trim_type_tag(T)\
       template<> struct supported_conversion_to_type<strtk::details::trim_impl<T> >   { typedef trim_type_tag type; };\
@@ -15813,6 +15875,7 @@ namespace strtk
       strtk_register_hex_number_type_tag(hex_to_number_sink<short>)
       strtk_register_hex_number_type_tag(hex_to_number_sink<int>)
       strtk_register_hex_number_type_tag(hex_to_number_sink<long>)
+      strtk_register_hex_number_type_tag(hex_to_number_sink<long long>)
       strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned short>)
       strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned int>)
       strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned long>)
@@ -15821,6 +15884,7 @@ namespace strtk
       strtk_register_base64_type_tag(base64_to_number_sink<short>)
       strtk_register_base64_type_tag(base64_to_number_sink<int>)
       strtk_register_base64_type_tag(base64_to_number_sink<long>)
+      strtk_register_base64_type_tag(base64_to_number_sink<long long>)
       strtk_register_base64_type_tag(base64_to_number_sink<unsigned short>)
       strtk_register_base64_type_tag(base64_to_number_sink<unsigned int>)
       strtk_register_base64_type_tag(base64_to_number_sink<unsigned long>)
@@ -15854,6 +15918,7 @@ namespace strtk
       strtk_register_sink_type_tag(short)
       strtk_register_sink_type_tag(int)
       strtk_register_sink_type_tag(long)
+      strtk_register_sink_type_tag(long long)
       strtk_register_sink_type_tag(unsigned char)
       strtk_register_sink_type_tag(unsigned short)
       strtk_register_sink_type_tag(unsigned int)
@@ -15869,6 +15934,7 @@ namespace strtk
       strtk_register_stl_container_to_string_conv_type_tag(short)
       strtk_register_stl_container_to_string_conv_type_tag(int)
       strtk_register_stl_container_to_string_conv_type_tag(long)
+      strtk_register_stl_container_to_string_conv_type_tag(long long)
       strtk_register_stl_container_to_string_conv_type_tag(unsigned char)
       strtk_register_stl_container_to_string_conv_type_tag(unsigned short)
       strtk_register_stl_container_to_string_conv_type_tag(unsigned int)
@@ -15884,6 +15950,7 @@ namespace strtk
       strtk_register_inrange_type_tag(short)
       strtk_register_inrange_type_tag(int)
       strtk_register_inrange_type_tag(long)
+      strtk_register_inrange_type_tag(long long)
       strtk_register_inrange_type_tag(unsigned char)
       strtk_register_inrange_type_tag(unsigned short)
       strtk_register_inrange_type_tag(unsigned int)
@@ -15899,12 +15966,22 @@ namespace strtk
       strtk_register_trim_type_tag(short)
       strtk_register_trim_type_tag(int)
       strtk_register_trim_type_tag(long)
+      strtk_register_trim_type_tag(long long)
       strtk_register_trim_type_tag(unsigned char)
       strtk_register_trim_type_tag(unsigned short)
       strtk_register_trim_type_tag(unsigned int)
       strtk_register_trim_type_tag(unsigned long)
       strtk_register_trim_type_tag(unsigned long long int)
       strtk_register_trim_type_tag(std::string)
+
+      strtk_register_fractint_type_tag(short)
+      strtk_register_fractint_type_tag(int)
+      strtk_register_fractint_type_tag(long)
+      strtk_register_fractint_type_tag(long long)
+      strtk_register_fractint_type_tag(unsigned short)
+      strtk_register_fractint_type_tag(unsigned int)
+      strtk_register_fractint_type_tag(unsigned long)
+      strtk_register_fractint_type_tag(unsigned long long int)
 
       #define strtk_register_userdef_type_sink(T)\
       namespace strtk { namespace details { strtk_register_sink_type_tag(T) }}
@@ -15921,6 +15998,7 @@ namespace strtk
       #undef strtk_register_stl_container_to_string_conv_type_tag
       #undef strtk_register_inrange_type_tag
       #undef strtk_register_trim_type_tag
+      #undef strtk_register_fractint_type_tag
 
       template <typename T>
       struct precision
@@ -16034,6 +16112,15 @@ namespace strtk
 
       template <typename Iterator, typename Array>
       inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, Array& t, fillchararray_type_tag)
+      {
+         if (!t(itr,end))
+            return false;
+         itr = end;
+         return true;
+      }
+
+      template <typename Iterator, typename TruncatedInt>
+      inline bool string_to_type_converter_impl(Iterator& itr, const Iterator end, TruncatedInt& t, truncint_type_tag)
       {
          if (!t(itr,end))
             return false;
@@ -23341,8 +23428,8 @@ namespace strtk
    namespace information
    {
       static const char* library = "String Toolkit";
-      static const char* version = "2.71828182845904523536028747135266249775724709369";
-      static const char* date    = "20130126";
+      static const char* version = "2.718281828459045235360287471352662497757247093699959";
+      static const char* date    = "20130630";
 
       static inline std::string data()
       {

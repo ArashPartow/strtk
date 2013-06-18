@@ -1935,6 +1935,8 @@ void split_on_consecutive_example()
 
 void index_of_example()
 {
+   std::cout << "index_of_example" << std::endl;
+
    std::string data = "0123456789ABC";
    std::string pattern[] = {
                               "0123456789ABC",
@@ -1954,6 +1956,62 @@ void index_of_example()
       std::cout << "Index of pattern[" << pattern[i] <<"]: " << strtk::index_of(pattern[i],data) << std::endl;
    }
    std::cout << "Index of pattern[xyz]: " << strtk::index_of("xyz",data) << std::endl;
+}
+
+void truncatedint_example()
+{
+   std::cout << "truncatedint_example" << std::endl;
+
+   {
+      int i = 0;
+      std::string data = "-1234.0000";
+      strtk::truncated_int<int> ti;
+      if (!strtk::string_to_type_converter(data,ti(i)))
+      {
+         std::cout << "Failed truncated int conversion!\n";
+      }
+      else
+         std::cout << "i = " << i << std::endl;
+   }
+
+   {
+      int i = 0;
+      unsigned int u = 0;
+      std::string data = "-1234.0000|+1234.0000";
+      strtk::truncated_int<int> ti;
+      strtk::truncated_int<unsigned int> tu;
+
+      if (!strtk::parse(data,"|",ti(i),tu(u)))
+      {
+         std::cout << "Failed parse!\n";
+      }
+      else
+      {
+         std::cout << "i = " << i << std::endl;
+         std::cout << "u = " << u << std::endl;
+      }
+   }
+
+   {
+      int i = 0;
+      unsigned int u = 0;
+      std::string data = "-1234.0000|+1234.0000";
+      strtk::truncated_int<int> ti;
+      strtk::truncated_int<unsigned int> tu;
+
+      if (!strtk::parse(data,"|",
+                        ti(i).fractional_size(4),
+                        tu(u).fractional_size(4))
+         )
+      {
+         std::cout << "Failed parse!\n";
+      }
+      else
+      {
+         std::cout << "i = " << i << std::endl;
+         std::cout << "u = " << u << std::endl;
+      }
+   }
 }
 
 int main()
@@ -2033,5 +2091,6 @@ int main()
    find_n_consecutive_example();
    split_on_consecutive_example();
    index_of_example();
+   truncatedint_example();
    return 0;
 }
