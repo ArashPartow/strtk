@@ -12560,14 +12560,14 @@ namespace strtk
 
       } // namespace details
 
-      template <int N, typename Iterator>
+      template <std::size_t N, typename Iterator>
       inline bool all_digits_check(Iterator itr)
       {
          typedef typename strtk::details::is_valid_iterator<Iterator>::type itr_type;
          return details::all_digits_check_impl<Iterator,N>::process(itr);
       }
 
-      template <int N, typename Iterator>
+      template <std::size_t N>
       inline bool all_digits_check(const std::string& s)
       {
          return all_digits_check<N,const char*>(s.data());
@@ -12613,7 +12613,7 @@ namespace strtk
          return all_digits_check(s.size(),s.data());
       }
 
-      template <int N, typename Iterator>
+      template <std::size_t N, typename Iterator>
       inline bool signed_all_digits_check(Iterator itr)
       {
          if (('-' == (*itr)) || ('+' == (*itr)))
@@ -12631,7 +12631,7 @@ namespace strtk
             return all_digits_check(n,itr);
       }
 
-      template <int N>
+      template <std::size_t N>
       inline bool signed_all_digits_check(const std::string& s)
       {
          return signed_all_digits_check<N,const char*>(s.data());
@@ -12648,7 +12648,7 @@ namespace strtk
          return signed_all_digits_check(s.size(),s.data());
       }
 
-      template <int N, typename T, typename Iterator>
+      template <std::size_t N, typename T, typename Iterator>
       inline void numeric_convert(Iterator itr, T& t, const bool digit_check = false)
       {
          typedef typename strtk::details::is_valid_iterator<Iterator>::type itr_type;
@@ -12664,7 +12664,7 @@ namespace strtk
          details::numeric_convert_impl<T,Iterator,N>::process(itr,t);
       }
 
-      template <int N, typename T>
+      template <std::size_t N, typename T>
       inline void numeric_convert(const std::string& s, T& t, const bool digit_check = false)
       {
          numeric_convert<N,T,const char*>(s.data(),t,digit_check);
@@ -12715,7 +12715,7 @@ namespace strtk
          numeric_convert(s.size(),s.data(),t,digit_check);
       }
 
-      template <int N, typename T, typename Iterator>
+      template <std::size_t N, typename T, typename Iterator>
       inline void signed_numeric_convert(Iterator itr, T& t, const bool digit_check = false)
       {
          if ('-' == (*itr))
@@ -12752,7 +12752,7 @@ namespace strtk
             return numeric_convert(n,itr,t,digit_check);
       }
 
-      template <int N, typename T>
+      template <std::size_t N, typename T>
       inline void signed_numeric_convert(const std::string& s,
                                          T& t,
                                          const bool digit_check = false)
@@ -14584,7 +14584,6 @@ namespace strtk
 
    namespace details
    {
-
       template <typename Iterator>
       struct range_type
       {
@@ -15510,7 +15509,6 @@ namespace strtk
          unsigned char* data_;
          std::size_t size_;
       };
-
    }
 
    inline details::expect_impl expect(const std::string& s)
@@ -15803,7 +15801,7 @@ namespace strtk
       template<> struct supported_conversion_to_type<strtk::details::conv_to_ucase_impl> { typedef ucase_type_tag type; };
       template<> struct supported_iterator_type<strtk::details::conv_to_ucase_impl>      { enum { value = true }; };
 
-      #define strtk_register_fractint_type_tag(T)\
+      #define strtk_register_truncint_type_tag(T)\
       template<> struct supported_conversion_to_type<strtk::truncated_int<T> > { typedef truncint_type_tag type; };\
       template<> struct supported_iterator_type<strtk::truncated_int<T> >      { enum { value = true }; };
 
@@ -15974,14 +15972,23 @@ namespace strtk
       strtk_register_trim_type_tag(unsigned long long int)
       strtk_register_trim_type_tag(std::string)
 
-      strtk_register_fractint_type_tag(short)
-      strtk_register_fractint_type_tag(int)
-      strtk_register_fractint_type_tag(long)
-      strtk_register_fractint_type_tag(long long)
-      strtk_register_fractint_type_tag(unsigned short)
-      strtk_register_fractint_type_tag(unsigned int)
-      strtk_register_fractint_type_tag(unsigned long)
-      strtk_register_fractint_type_tag(unsigned long long int)
+      strtk_register_trim_type_tag(truncated_int<short>)
+      strtk_register_trim_type_tag(truncated_int<int>)
+      strtk_register_trim_type_tag(truncated_int<long>)
+      strtk_register_trim_type_tag(truncated_int<long long>)
+      strtk_register_trim_type_tag(truncated_int<unsigned char>)
+      strtk_register_trim_type_tag(truncated_int<unsigned short>)
+      strtk_register_trim_type_tag(truncated_int<unsigned int>)
+      strtk_register_trim_type_tag(truncated_int<unsigned long long int>)
+
+      strtk_register_truncint_type_tag(short)
+      strtk_register_truncint_type_tag(int)
+      strtk_register_truncint_type_tag(long)
+      strtk_register_truncint_type_tag(long long)
+      strtk_register_truncint_type_tag(unsigned short)
+      strtk_register_truncint_type_tag(unsigned int)
+      strtk_register_truncint_type_tag(unsigned long)
+      strtk_register_truncint_type_tag(unsigned long long int)
 
       #define strtk_register_userdef_type_sink(T)\
       namespace strtk { namespace details { strtk_register_sink_type_tag(T) }}
@@ -15998,7 +16005,7 @@ namespace strtk
       #undef strtk_register_stl_container_to_string_conv_type_tag
       #undef strtk_register_inrange_type_tag
       #undef strtk_register_trim_type_tag
-      #undef strtk_register_fractint_type_tag
+      #undef strtk_register_truncint_type_tag
 
       template <typename T>
       struct precision
@@ -18601,12 +18608,12 @@ namespace strtk
       }
 
       template <typename Iterator>
-      bool operator()(const Iterator begin, const Iterator end)
+      inline bool operator()(const Iterator begin, const Iterator end)
       {
          return ((*this).*condition_method_)(begin,end);
       }
 
-      bool operator()(const std::string& str)
+      inline bool operator()(const std::string& str)
       {
          return operator()(reinterpret_cast<const unsigned char*>(str.data()),
                            reinterpret_cast<const unsigned char*>(str.data() + str.size()));
@@ -20878,8 +20885,8 @@ namespace strtk
                 typename Allocator>
       inline void clear(std::set<T,Comparator,Allocator>& set)
       {
-          std::set<T> null_set;
-          std::swap(set,null_set);
+         std::set<T> null_set;
+         std::swap(set,null_set);
       }
 
       template <typename T,
@@ -20887,22 +20894,22 @@ namespace strtk
                 typename Allocator>
       inline void clear(std::multiset<T,Comparator,Allocator>& multiset)
       {
-          std::multiset<T> null_set;
-          std::swap(multiset,null_set);
+         std::multiset<T> null_set;
+         std::swap(multiset,null_set);
       }
 
       template <typename T, typename Container>
       inline void clear(std::queue<T,Container>& queue)
       {
-          std::queue<T> null_que;
-          std::swap(queue,null_que);
+         std::queue<T> null_que;
+         std::swap(queue,null_que);
       }
 
       template <typename T, typename Container>
       inline void clear(std::stack<T,Container>& stack)
       {
-          std::stack<T> null_stack;
-          std::swap(stack,null_stack);
+         std::stack<T> null_stack;
+         std::swap(stack,null_stack);
       }
 
       template <typename T,
@@ -20910,8 +20917,8 @@ namespace strtk
                 typename Comparator>
       inline void clear(std::priority_queue<T,Container,Comparator>& priority_queue)
       {
-          std::priority_queue<T> null_pqueue;
-          std::swap(priority_queue,null_pqueue);
+         std::priority_queue<T> null_pqueue;
+         std::swap(priority_queue,null_pqueue);
       }
 
    } // namespace util
@@ -20965,10 +20972,10 @@ namespace strtk
 
          void reset()
          {
-           current_index_  = 0;
-           col_list_index_ = 0;
-           target_index_   = column_list_.index_list[0];
-           error_count_    = 0;
+            current_index_  = 0;
+            col_list_index_ = 0;
+            target_index_   = column_list_.index_list[0];
+            error_count_    = 0;
          }
 
       protected:
