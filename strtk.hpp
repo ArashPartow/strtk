@@ -22982,7 +22982,8 @@ namespace strtk
            pair_block_sdp_(options_.pair_block_delimiter),
            pair_delimiter_sdp_(options_.pair_delimiter)
          {
-            pair_list_.reserve(strtk::one_kilobyte);
+            const std::size_t pair_list_default_size = 32;
+            pair_list_.reserve(pair_list_default_size);
          }
 
          template <typename T>
@@ -22995,10 +22996,12 @@ namespace strtk
          {
             if (!ignore_failures)
             {
+               pair_list_.clear();
                const std::size_t pair_count = split(pair_block_sdp_,
                                                     data.first,
                                                     data.second,
-                                                    pair_list_.begin());
+                                                    std::back_inserter(pair_list_));
+
                if (0 == pair_count)
                   return false;
 
