@@ -2505,7 +2505,7 @@ namespace strtk
       template <typename Iterator>
       inline range_to_type_back_inserter_iterator& operator=(const std::pair<Iterator,Iterator>& r)
       {
-         value_type t = value_type();
+         value_type t;
          if (string_to_type_converter(r.first,r.second,t))
             sequence_.push_back(t);
          return (*this);
@@ -2513,7 +2513,7 @@ namespace strtk
 
       inline range_to_type_back_inserter_iterator& operator=(const std::string& s)
       {
-         value_type t = value_type();
+         value_type t;
          if (string_to_type_converter(s.data(),s.data() + s.size(),t))
             sequence_.push_back(t);
          return (*this);
@@ -15743,9 +15743,21 @@ namespace strtk
       template<> struct numeric<long long>              { enum { length = 19, size = 24, bound_length = 18}; };
       template<> struct numeric<unsigned long long int> { enum { length = 20, size = 24, bound_length = 19}; };
 
-      template<> struct numeric<float>                  { enum { min_exp =  -38, max_exp =  +38, precision = 10}; };
-      template<> struct numeric<double>                 { enum { min_exp = -308, max_exp = +308, precision = 15}; };
-      template<> struct numeric<long double>            { enum { min_exp = -308, max_exp = +308, precision = 15}; };
+      template<> struct numeric<float>                  { enum { min_exp =  -37, max_exp =  +38, precision = 10}; };
+      template<> struct numeric<double>                 { enum { min_exp = -307, max_exp = +308, precision = 15}; };
+
+      template <typename ld, std::size_t size> struct ldt {};
+      template <> struct ldt <long double,     sizeof(double)> { enum { i =  -308, a =  +308, p = 15}; }; //64-bit
+      template <> struct ldt <long double,                 10> { enum { i = -4931, a = +4931, p = 18}; }; //80-bit
+      template <> struct ldt <long double,                 12> { enum { i = -4931, a = +4931, p = 22}; }; //96-bit
+      template <> struct ldt <long double, 2 * sizeof(double)> { enum { i = -4931, a = +4931, p = 34}; }; //128-bit
+
+      template<>
+      struct numeric<long double>
+      {
+         typedef ldt<long double, sizeof(long double)> ld;
+         enum { min_exp = ld::i, max_exp = ld::a, precision = ld::p};
+      };
 
       #define strtk_register_unsigned_type_tag(T)\
       template<> struct supported_conversion_to_type<T> { typedef unsigned_type_tag type; };\
@@ -16562,12 +16574,18 @@ namespace strtk
          return true;
       }
 
+      template <typename RealType> struct real_type {};
+      template <> struct real_type<float>       { typedef double type;      };
+      template <> struct real_type<double>      { typedef double type;      };
+      template <> struct real_type<long double> { typedef long double type; };
+
       template <typename Iterator, typename T>
       inline bool string_to_type_converter_impl(Iterator& itr_external, const Iterator end, T& t, real_type_tag)
       {
+         typedef typename real_type<T>::type real_t;
          if (end == itr_external) return false;
          Iterator itr = itr_external;
-         double d = 0.0;
+         real_t d = real_t(0);
          bool negative = false;
          if ('+' == (*itr))
             ++itr;
@@ -16605,10 +16623,10 @@ namespace strtk
             unsigned char digit = 0;
 
             #define parse_digit_1 \
-            if ((digit = static_cast<unsigned char>((*itr) - '0')) < 10) { d *= 10.0; d += digit; } else break; if (end == ++itr) break; \
+            if ((digit = static_cast<unsigned char>((*itr) - '0')) < 10) { d *= real_t(10); d += digit; } else break; if (end == ++itr) break; \
 
             #define parse_digit_2 \
-            if ((digit = static_cast<unsigned char>((*itr) - '0')) < 10) { d *= 10.0; d += digit; } else break; ++itr;\
+            if ((digit = static_cast<unsigned char>((*itr) - '0')) < 10) { d *= real_t(10); d += digit; } else break; ++itr;\
 
             while (end != itr)
             {
@@ -16638,10 +16656,10 @@ namespace strtk
                unsigned char digit = 0;
 
                #define parse_digit_1 \
-               if ((digit = static_cast<unsigned char>((*itr) - '0')) < 10) { d *= 10.0; d += digit; } else break; if (end == ++itr) break; \
+               if ((digit = static_cast<unsigned char>((*itr) - '0')) < 10) { d *= real_t(10); d += digit; } else break; if (end == ++itr) break; \
 
                #define parse_digit_2 \
-               if ((digit = static_cast<unsigned char>((*itr) - '0')) < 10) { d *= 10.0; d += digit; } else break; ++itr;\
+               if ((digit = static_cast<unsigned char>((*itr) - '0')) < 10) { d *= real_t(10); d += digit; } else break; ++itr;\
 
                while (end != itr)
                {
@@ -16759,7 +16777,7 @@ namespace strtk
 
             static const std::size_t fract10_size = sizeof(fract10) / sizeof(double);
 
-            if (d != 0.0)
+            if (d != real_t(0))
             {
                if (static_cast<std::size_t>(e) < fract10_size)
                {
@@ -16769,7 +16787,7 @@ namespace strtk
                      d /= fract10[e];
                }
                else
-                  d *= std::pow(10.0, 1.0 * exponent);
+                  d *= std::pow(real_t(10), real_t(10) * exponent);
             }
          }
 
@@ -23063,11 +23081,10 @@ namespace strtk
                               key_range,
                               value_range))
                {
-                  if (!parser_.kv_map_(key_range,value_range))
-                     ++parser_.parse_failures_;
+                  if (parser_.kv_map_(key_range,value_range))
+                     return;
                }
-               else
-                  ++parser_.parse_failures_;
+               ++parser_.parse_failures_;
             }
 
          private:
