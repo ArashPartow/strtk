@@ -16946,7 +16946,12 @@ namespace strtk
          static const std::size_t radix_cube = radix * radix * radix;
          unsigned char buffer[strtk::details::numeric<T>::size];
          unsigned char* itr = buffer + (strtk::details::numeric<T>::size - 1);
-         bool negative = (value < 0);
+         const bool inc_final_digit = (value == std::numeric_limits<T>::min());
+         if (inc_final_digit)
+         {
+            value += 1;
+         }
+         const bool negative = (value < 0);
          if (negative)
             value = static_cast<T>(-1 * value);
          T remainder = 0;
@@ -16980,7 +16985,12 @@ namespace strtk
 
             if (0 != value)
             {
-               *(itr--)  = strtk::details::digitr[value];
+               *(itr--) = strtk::details::digitr[value];
+            }
+
+            if (inc_final_digit)
+            {
+               buffer[strtk::details::numeric<T>::size - 1] += 1;
             }
          }
          else
@@ -16989,7 +16999,7 @@ namespace strtk
          if (negative) *(itr--) = '-';
 
          itr++;
-         result.assign(reinterpret_cast<char*>(itr), (buffer + numeric<T>::size) - itr);
+         result.assign(reinterpret_cast<char*>(itr),(buffer + numeric<T>::size) - itr);
          return true;
       }
 
@@ -23455,7 +23465,7 @@ namespace strtk
    namespace information
    {
       static const char* library = "String Toolkit";
-      static const char* version = "2.718281828459045235360287471352662497757247093699959";
+      static const char* version = "2.718281828459045235360287471352662497757247093699959574";
       static const char* date    = "20130630";
 
       static inline std::string data()

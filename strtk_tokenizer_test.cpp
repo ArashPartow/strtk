@@ -1388,6 +1388,62 @@ bool test_int_uint_convert()
    }
 
    {
+      const short int min_shrtint = std::numeric_limits<short int>::min();
+      const int       min_int     = std::numeric_limits<int      >::min();
+      const long long min_lnglng  = std::numeric_limits<long long>::min();
+
+      const std::string min_shrtint_str = "-32768";
+      const std::string min_int_str     = "-2147483648";
+      const std::string min_lnglng_str  = "-9223372036854775808";
+
+      if (min_shrtint_str != strtk::type_to_string(min_shrtint))
+      {
+         std::cout << "test_int_uint_convert() - Failed min short int to string conversion!  result:" << strtk::type_to_string(min_shrtint) << std::endl;
+         return false;
+      }
+
+      if (min_int_str != strtk::type_to_string(min_int))
+      {
+         std::cout << "test_int_uint_convert() - Failed min int to string conversion!  result:" << strtk::type_to_string(min_int) << std::endl;
+         return false;
+      }
+
+      if (min_lnglng_str != strtk::type_to_string(min_lnglng))
+      {
+         std::cout << "test_int_uint_convert() - Failed min long long to string conversion!  result:" << strtk::type_to_string(min_lnglng) << std::endl;
+         return false;
+      }
+   }
+
+   {
+      const short int max_shrtint = std::numeric_limits<short int>::max();
+      const int       max_int     = std::numeric_limits<int      >::max();
+      const long long max_lnglng  = std::numeric_limits<long long>::max();
+
+      const std::string max_shrtint_str = "32767";
+      const std::string max_int_str     = "2147483647";
+      const std::string max_lnglng_str  = "9223372036854775807";
+
+      if (max_shrtint_str != strtk::type_to_string(max_shrtint))
+      {
+         std::cout << "test_int_uint_convert() - Failed max short int to string conversion! [1]  result:" << strtk::type_to_string(max_shrtint) << std::endl;
+         return false;
+      }
+
+      if (max_int_str != strtk::type_to_string(max_int))
+      {
+         std::cout << "test_int_uint_convert() - Failed max int to string conversion! [1]  result:" << strtk::type_to_string(max_int) << std::endl;
+         return false;
+      }
+
+      if (max_lnglng_str != strtk::type_to_string(max_lnglng))
+      {
+         std::cout << "test_int_uint_convert() - Failed max long long to string conversion! [1]  result:" << strtk::type_to_string(max_lnglng) << std::endl;
+         return false;
+      }
+   }
+
+   {
       std::string s1 =  "65536";
       std::string s2 = "+65536";
       std::string s3 =  "99999";
