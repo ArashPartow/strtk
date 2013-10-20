@@ -20,28 +20,31 @@
    Description: This example demonstrates parsing of a sequence of key-value
                 pairs.
 
-                In the first example, a data object named "data_store" is used
-                which contains 22 members of varying type that require populating.
-                Each member is mapped via a key to a value which is registered
-                with the key-value parser. The examples below demonstrate parsing
-                of keys as both unsigned int and of std::string types.
+                In the first  example, a data  object named "data_store"  is
+                used which contains 22 members of varying type that  require
+                populating. Each member is mapped via a key to a value which
+                is registered with the key-value parser. The examples  below
+                demonstrate  parsing of  keys as  both unsigned  int and  of
+                std::string types.
 
-                The process consists of an array of 5 sequences of key-value pairs,
-                in which the pairs have been permuted randomly, are passed to the
-                specified key-value parser. The parser processes each sequence,
-                splitting them up into pairs and subsequently processing each pair,
-                mapping parsed values to the appropriate registered member. The whole
-                process is timed, and details such as total time and rate of pairs
-                parsed per second is displayed. Note a running total is maintained
-                so as to overcome the effects of overzealous optimizers.
+                The process consists of an array of 5 sequences of key-value
+                pairs, in which the  pairs have been permuted  randomly, are
+                passed  to  the  specified  key-value  parser.  The   parser
+                processes each  sequence, splitting  them up  into pairs and
+                subsequently processing each pair, mapping parsed values  to
+                the  appropriate  registered member.  The  whole process  is
+                timed, and  details such  as total  time and  rate of  pairs
+                parsed  per second  is displayed.  Note a  running total  is
+                maintained  so as  to overcome  the effects  of overzealous
+                optimizers.
 
-                In the second example a data object named complex_data is used that
-                is comprised of six unique. Three of which are STL value sequences.
-                Twelve sequences of key-value pairs representing POD data and sequences
-                of values. Parsing of the sequences are carried out, upon a successful
-                parse operation the members of the complex_data instance are printed
-                to stdout.
-
+                In the second  example a data  object named complex_data  is
+                used that is comprised of  six unique types. Three of  which
+                are STL value sequences. Twelve sequences of key-value pairs
+                representing POD  data and  sequences of  values. Parsing of
+                the  sequences  are  carried out,  upon  a  successful parse
+                operation  the  members  of  the  complex_data  instance are
+                printed to stdout.
 */
 
 

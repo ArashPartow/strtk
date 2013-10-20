@@ -17,12 +17,11 @@
 
 
 /*
-   Description: This example demonstrates a simple hex-viewer
-                application using the String Toolkit Library's
-                bin to hex conversion functionality. The viewer
-                takes input from the stdin, processes the input
-                and outputs it to stdout. An example of the
-                output:
+   Description: This example  demonstrates a  simple hex-viewer  application
+                using the  String Toolkit  Library's bin  to hex  conversion
+                functionality.  The  viewer  takes  input  from  the  stdin,
+                processes the input and outputs it to stdout. An example  of
+                the output:
 
    0000000AD0 73203D20303B0A0A202020756E736967 s.=.0;.....unsig
    0000000AE0 6E65642063686172206275666665725B ned.char.buffer[

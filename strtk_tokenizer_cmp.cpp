@@ -17,16 +17,18 @@
 
 
 /*
-   Description: This comparison aims to determine the running time difference between
-                the Boost string tokenizer and the String Toolkit Library's string tokenizer.
-                The comparison involves each tokenizer accepting a set of possible delimiters
-                and a string to be tokenized. The provided string is tokenized and the tokens
-                are subsequently concatenated to each other.
-                Running time is measured around the tokenization loop, and printed out along
-                with a measure indicating the average number of tokens parsed per second.
-                Furthermore, the tests include a simple comparison of integer, double to string
-                and vice-versa conversion routines between the standard library, BOOST and
-                String Toolkit.
+   Description: This comparison  aims to  determine the  running time  difference
+                between  the  Boost  string  tokenizer  and  the  String  Toolkit
+                Library's  string   tokenizer.  The   comparison  involves   each
+                tokenizer accepting a set of possible delimiters and a string  to
+                be tokenized. The provided string is tokenized and the tokens are
+                subsequently concatenated to each other.
+
+                Running  time  is  measured  around  the  tokenization  loop, and
+                printed out along with a measure indicating the average number of
+                tokens parsed per second. Furthermore, the tests include a simple
+                comparison of integer, double to string and vice-versa conversion
+                routines between the standard library, BOOST and String Toolkit.
 
                 Definitions:
                 tks/sec  : Tokens per second
