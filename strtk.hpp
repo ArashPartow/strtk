@@ -321,6 +321,9 @@ namespace strtk
       #undef register_stl_container1
       #undef register_stl_container2
 
+      template <typename T>
+      void convert_type_assert(){}
+
    } // namespace details
 
    template <typename Iterator, typename T>
@@ -328,6 +331,7 @@ namespace strtk
    {
       typedef typename details::is_valid_iterator<Iterator>::type itr_type;
       typename details::supported_conversion_to_type<T>::type type;
+      details::convert_type_assert<itr_type>();
       Iterator itr = begin;
       return string_to_type_converter_impl(itr,end,t,type);
    }
@@ -343,6 +347,7 @@ namespace strtk
    {
       typedef typename details::is_valid_iterator<Iterator>::type itr_type;
       typename details::supported_conversion_to_type<T>::type type;
+      details::convert_type_assert<itr_type>();
       T t;
       Iterator itr = begin;
       if (string_to_type_converter_impl(itr,end,t,type))
@@ -388,18 +393,18 @@ namespace strtk
    }
 
    #define strtk_begin_register_string_to_type \
-   namespace strtk { namespace details {
+   namespace strtk { namespace details {       \
 
    #define strtk_end_register_string_to_type \
-   }}
+   }}                                        \
 
-   #define strtk_string_to_type_begin(Type) \
-   namespace strtk { namespace details { template <typename Iterator> \
-   inline bool string_to_type_converter_impl(const Iterator& begin, const Iterator& end, \
-                                             Type& t, details::not_supported_type_tag&) {
+   #define strtk_string_to_type_begin(Type)                                               \
+   namespace strtk { namespace details { template <typename Iterator>                     \
+   inline bool string_to_type_converter_impl(const Iterator& begin, const Iterator& end,  \
+                                             Type& t, details::not_supported_type_tag&) { \
 
-   #define strtk_string_to_type_end()\
-   }}}
+   #define strtk_string_to_type_end() \
+   }}}                                \
 
    template <typename T,
              typename Allocator,
@@ -1672,8 +1677,6 @@ namespace strtk
                                       const InputIterator r_begin, const InputIterator r_end, // replacement
                                       OutputIterator out)
    {
-      typedef typename std::iterator_traits<InputIterator>::value_type T;
-
       InputIterator s_itr  = s_begin;
       InputIterator r_itr  = r_begin;
       InputIterator p_itr  = p_begin;
@@ -1864,6 +1867,7 @@ namespace strtk
                       const InputIterator begin2, const InputIterator end2)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (std::distance(begin1,end1) != std::distance(begin2,end2))
       {
          return false;
@@ -2047,6 +2051,7 @@ namespace strtk
                            const InputIterator end)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (std::distance(pattern_begin,pattern_end) <= std::distance(begin,end))
       {
          return std::equal(pattern_begin,pattern_end,begin);
@@ -2075,6 +2080,7 @@ namespace strtk
                             const InputIterator end)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (std::distance(pattern_begin,pattern_end) <= std::distance(begin,end))
       {
          return std::equal(pattern_begin,pattern_end,begin,imatch_char);
@@ -2103,6 +2109,7 @@ namespace strtk
                          const InputIterator end)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       const std::size_t pattern_length = std::distance(pattern_begin,pattern_end);
       const std::size_t data_length = std::distance(begin,end);
       if (pattern_length <= data_length)
@@ -2135,6 +2142,7 @@ namespace strtk
                           const InputIterator end)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       const std::size_t pattern_length = std::distance(pattern_begin,pattern_end);
       const std::size_t data_length = std::distance(begin,end);
       if (pattern_length <= data_length)
@@ -3460,6 +3468,7 @@ namespace strtk
                               const split_options::type& split_option = split_options::default_mode)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          return split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                         begin,end,
@@ -5165,7 +5174,7 @@ namespace strtk
          {
             if (0 == std::distance(range.first,range.second))
                return;
-            row_start_index_ = idx_.token_list.size();
+            row_start_index_ = static_cast<index_t>(idx_.token_list.size());
             std::size_t token_count = split(token_predicate_,
                                             range.first,range.second,
                                             std::back_inserter(idx_.token_list),
@@ -5179,8 +5188,8 @@ namespace strtk
          row_processor<DelimiterPredicate> operator=(const row_processor<DelimiterPredicate>&);
 
          store& idx_;
-         std::size_t row_start_index_;
-         std::size_t row_end_index_;
+         index_t row_start_index_;
+         index_t row_end_index_;
          DelimiterPredicate& token_predicate_;
          split_options::type split_mode_;
       };
@@ -7497,6 +7506,7 @@ namespace strtk
                      T9& t9, T10& t10, T11& t11, T12& t12)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       static const std::size_t token_count = 12;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef iterator_type* iterator_type_ptr;
@@ -7536,6 +7546,7 @@ namespace strtk
                      T9& t9, T10& t10, T11& t11)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       static const std::size_t token_count = 11;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef iterator_type* iterator_type_ptr;
@@ -7574,6 +7585,7 @@ namespace strtk
                      T9& t9, T10& t10)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       static const std::size_t token_count = 10;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef iterator_type* iterator_type_ptr;
@@ -7611,6 +7623,7 @@ namespace strtk
                      T9& t9)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       static const std::size_t token_count = 9;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef iterator_type* iterator_type_ptr;
@@ -7645,6 +7658,7 @@ namespace strtk
                      T5& t5, T6& t6, T7& t7, T8& t8)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       static const std::size_t token_count = 8;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef iterator_type* iterator_type_ptr;
@@ -7678,6 +7692,7 @@ namespace strtk
                      T5& t5, T6& t6, T7& t7)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       static const std::size_t token_count = 7;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef iterator_type* iterator_type_ptr;
@@ -7710,6 +7725,7 @@ namespace strtk
                      T5& t5, T6& t6)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       static const std::size_t token_count = 6;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef iterator_type* iterator_type_ptr;
@@ -7741,6 +7757,7 @@ namespace strtk
                      T5& t5)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       static const std::size_t token_count = 5;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef iterator_type* iterator_type_ptr;
@@ -7769,6 +7786,7 @@ namespace strtk
                      T1& t1, T2& t2, T3& t3, T4& t4)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       static const std::size_t token_count = 4;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef iterator_type* iterator_type_ptr;
@@ -7796,6 +7814,7 @@ namespace strtk
                      T1& t1, T2& t2, T3& t3)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       static const std::size_t token_count = 3;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef iterator_type* iterator_type_ptr;
@@ -7821,6 +7840,7 @@ namespace strtk
                      T1& t1, T2& t2)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       static const std::size_t token_count = 2;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef iterator_type* iterator_type_ptr;
@@ -7845,6 +7865,7 @@ namespace strtk
                      T& t)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       static const std::size_t token_count = 1;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef iterator_type* iterator_type_ptr;
@@ -7871,6 +7892,7 @@ namespace strtk
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       begin,end,
@@ -7894,6 +7916,7 @@ namespace strtk
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       begin,end,
@@ -7917,6 +7940,7 @@ namespace strtk
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       begin,end,
@@ -7939,6 +7963,7 @@ namespace strtk
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       begin,end,
@@ -7961,6 +7986,7 @@ namespace strtk
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       begin,end,
@@ -7984,6 +8010,7 @@ namespace strtk
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       begin,end,
@@ -8006,6 +8033,7 @@ namespace strtk
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       range.first,range.second,
@@ -8028,6 +8056,7 @@ namespace strtk
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       range.first,range.second,
@@ -8050,6 +8079,7 @@ namespace strtk
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       range.first,range.second,
@@ -8071,6 +8101,7 @@ namespace strtk
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       range.first,range.second,
@@ -8092,6 +8123,7 @@ namespace strtk
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       range.first,range.second,
@@ -8114,6 +8146,7 @@ namespace strtk
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                       range.first,range.second,
@@ -8361,6 +8394,7 @@ namespace strtk
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      details::convert_type_assert<itr_type>();
       std::deque<iterator_type> token_list;
       if (1 == delimiters.size())
          split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
@@ -8401,6 +8435,7 @@ namespace strtk
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      details::convert_type_assert<itr_type>();
       std::deque<iterator_type> token_list;
       if (1 == delimiters.size())
          split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
@@ -8439,6 +8474,7 @@ namespace strtk
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      details::convert_type_assert<itr_type>();
       std::deque<iterator_type> token_list;
       if (1 == delimiters.size())
          split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
@@ -8476,6 +8512,7 @@ namespace strtk
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      details::convert_type_assert<itr_type>();
       std::deque<iterator_type> token_list;
       if (1 == delimiters.size())
          split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
@@ -8511,6 +8548,7 @@ namespace strtk
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      details::convert_type_assert<itr_type>();
       std::deque<iterator_type> token_list;
       if (1 == delimiters.size())
          split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
@@ -8545,6 +8583,7 @@ namespace strtk
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      details::convert_type_assert<itr_type>();
       std::deque<iterator_type> token_list;
       if (1 == delimiters.size())
          split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
@@ -8578,6 +8617,7 @@ namespace strtk
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      details::convert_type_assert<itr_type>();
       std::deque<iterator_type> token_list;
       if (1 == delimiters.size())
          split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
@@ -8609,6 +8649,7 @@ namespace strtk
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      details::convert_type_assert<itr_type>();
       std::deque<iterator_type> token_list;
       if (1 == delimiters.size())
          split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
@@ -8639,6 +8680,7 @@ namespace strtk
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      details::convert_type_assert<itr_type>();
       std::deque<iterator_type> token_list;
       if (1 == delimiters.size())
          split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
@@ -8668,6 +8710,7 @@ namespace strtk
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      details::convert_type_assert<itr_type>();
       std::deque<iterator_type> token_list;
       if (1 == delimiters.size())
          split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
@@ -8695,6 +8738,7 @@ namespace strtk
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       typedef std::pair<InputIterator,InputIterator> iterator_type;
       typedef typename std::deque<iterator_type>::iterator iterator_type_ptr;
+      details::convert_type_assert<itr_type>();
       std::deque<iterator_type> token_list;
       if (1 == delimiters.size())
          split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
@@ -8725,6 +8769,7 @@ namespace strtk
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       const std::size_t original_size = sequence.size();
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                  begin,end,
@@ -8753,6 +8798,7 @@ namespace strtk
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       const std::size_t original_size = set.size();
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                  begin,end,
@@ -8781,6 +8827,7 @@ namespace strtk
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       const std::size_t original_size = multiset.size();
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                  begin,end,
@@ -8808,6 +8855,7 @@ namespace strtk
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       const std::size_t original_size = queue.size();
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                  begin,end,
@@ -8835,6 +8883,7 @@ namespace strtk
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       const std::size_t original_size = stack.size();
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                  begin,end,
@@ -8863,6 +8912,7 @@ namespace strtk
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       const std::size_t original_size = priority_queue.size();
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                  begin,end,
@@ -8888,6 +8938,7 @@ namespace strtk
    {
       typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
       std::size_t insert_count = 0;
+      details::convert_type_assert<itr_type>();
       if (1 == delimiters.size())
          split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
                  begin,end,
@@ -9396,22 +9447,22 @@ namespace strtk
       return result;
    }
 
-   #define strtk_parse_begin(Type)\
-   namespace strtk {\
+   #define strtk_parse_begin(Type)                                            \
+   namespace strtk {                                                          \
    bool parse(const std::string& data, const std::string& delimiters, Type& t)\
-   { return parse(data,delimiters
+   { return parse(data,delimiters                                             \
 
-   #define strtk_parse_type(T)\
-   ,t.T
+   #define strtk_parse_type(T) \
+   ,t.T                        \
 
-   #define strtk_parse_hex_type(T)\
-   ,t.T
+   #define strtk_parse_hex_type(T) \
+   ,t.T                            \
 
-   #define strtk_parse_ignore_token()\
-   ,ignore_token()
+   #define strtk_parse_ignore_token() \
+   ,ignore_token()                    \
 
-   #define strtk_parse_end()\
-   );}}
+   #define strtk_parse_end() \
+   );}}                      \
 
    template <typename T,
              typename Allocator,
@@ -10538,12 +10589,13 @@ namespace strtk
          return (*this);
       }
 
-      inline operator std::string () const
+      inline build_string& operator << (const std::string& s)
       {
-         return data_;
+         data_ += s;
+         return (*this);
       }
 
-      inline std::string as_string() const
+      inline std::string to_str() const
       {
          return data_;
       }
@@ -10982,10 +11034,10 @@ namespace strtk
 
       template <typename T> struct supported_random_type {};
 
-      #define strtk_register_rand_int_type_tag(T)\
+      #define strtk_register_rand_int_type_tag(T) \
       template<> struct supported_random_type<T> { typedef rand_int_type_tag type;  enum { value = true }; };
 
-      #define strtk_register_rand_real_type_tag(T)\
+      #define strtk_register_rand_real_type_tag(T) \
       template<> struct supported_random_type<T> { typedef rand_real_type_tag type;  enum { value = true }; };
 
       strtk_register_rand_int_type_tag(char)
@@ -12564,6 +12616,7 @@ namespace strtk
       inline bool all_digits_check(Iterator itr)
       {
          typedef typename strtk::details::is_valid_iterator<Iterator>::type itr_type;
+         strtk::details::convert_type_assert<itr_type>();
          return details::all_digits_check_impl<Iterator,N>::process(itr);
       }
 
@@ -12652,6 +12705,7 @@ namespace strtk
       inline void numeric_convert(Iterator itr, T& t, const bool digit_check = false)
       {
          typedef typename strtk::details::is_valid_iterator<Iterator>::type itr_type;
+         strtk::details::convert_type_assert<itr_type>();
          if (digit_check)
          {
              if (!all_digits_check<N,Iterator>(itr))
@@ -13727,25 +13781,25 @@ namespace strtk
          details::marker marker_;
       };
 
-      #define strtk_binary_reader_begin()\
+      #define strtk_binary_reader_begin()           \
       bool operator()(strtk::binary::reader& reader)\
-      { return true\
+      { return true                                 \
 
-      #define strtk_binary_reader(T)\
-      && reader(T)\
+      #define strtk_binary_reader(T) \
+      && reader(T)                   \
 
-      #define strtk_binary_reader_end()\
-      ;}\
+      #define strtk_binary_reader_end() \
+      ;}                                \
 
-      #define strtk_binary_writer_begin()\
+      #define strtk_binary_writer_begin()                 \
       bool operator()(strtk::binary::writer& writer) const\
-      { return true\
+      { return true                                       \
 
-      #define strtk_binary_writer(T)\
-      && writer(T)\
+      #define strtk_binary_writer(T) \
+      && writer(T)                   \
 
-      #define strtk_binary_writer_end()\
-      ;}\
+      #define strtk_binary_writer_end() \
+      ;}                                \
 
       namespace details
       {
@@ -15653,61 +15707,63 @@ namespace strtk
 
       static const unsigned char rev_3digit_lut[] =
                                  {
-                                    "000100200300400500600700800900010110210310410510610710810910020120220320420"
-                                    "520620720820920030130230330430530630730830930040140240340440540640740840940"
-                                    "050150250350450550650750850950060160260360460560660760860960070170270370470"
-                                    "570670770870970080180280380480580680780880980090190290390490590690790890990"
-                                    "001101201301401501601701801901011111211311411511611711811911021121221321421"
-                                    "521621721821921031131231331431531631731831931041141241341441541641741841941"
-                                    "051151251351451551651751851951061161261361461561661761861961071171271371471"
-                                    "571671771871971081181281381481581681781881981091191291391491591691791891991"
-                                    "002102202302402502602702802902012112212312412512612712812912022122222322422"
-                                    "522622722822922032132232332432532632732832932042142242342442542642742842942"
-                                    "052152252352452552652752852952062162262362462562662762862962072172272372472"
-                                    "572672772872972082182282382482582682782882982092192292392492592692792892992"
-                                    "003103203303403503603703803903013113213313413513613713813913023123223323423"
-                                    "523623723823923033133233333433533633733833933043143243343443543643743843943"
-                                    "053153253353453553653753853953063163263363463563663763863963073173273373473"
-                                    "573673773873973083183283383483583683783883983093193293393493593693793893993"
-                                    "004104204304404504604704804904014114214314414514614714814914024124224324424"
-                                    "524624724824924034134234334434534634734834934044144244344444544644744844944"
-                                    "054154254354454554654754854954064164264364464564664764864964074174274374474"
-                                    "574674774874974084184284384484584684784884984094194294394494594694794894994"
-                                    "005105205305405505605705805905015115215315415515615715815915025125225325425"
-                                    "525625725825925035135235335435535635735835935045145245345445545645745845945"
-                                    "055155255355455555655755855955065165265365465565665765865965075175275375475"
-                                    "575675775875975085185285385485585685785885985095195295395495595695795895995"
-                                    "006106206306406506606706806906016116216316416516616716816916026126226326426"
-                                    "526626726826926036136236336436536636736836936046146246346446546646746846946"
-                                    "056156256356456556656756856956066166266366466566666766866966076176276376476"
-                                    "576676776876976086186286386486586686786886986096196296396496596696796896996"
-                                    "007107207307407507607707807907017117217317417517617717817917027127227327427"
-                                    "527627727827927037137237337437537637737837937047147247347447547647747847947"
-                                    "057157257357457557657757857957067167267367467567667767867967077177277377477"
-                                    "577677777877977087187287387487587687787887987097197297397497597697797897997"
-                                    "008108208308408508608708808908018118218318418518618718818918028128228328428"
-                                    "528628728828928038138238338438538638738838938048148248348448548648748848948"
-                                    "058158258358458558658758858958068168268368468568668768868968078178278378478"
-                                    "578678778878978088188288388488588688788888988098198298398498598698798898998"
-                                    "009109209309409509609709809909019119219319419519619719819919029129229329429"
-                                    "529629729829929039139239339439539639739839939049149249349449549649749849949"
-                                    "059159259359459559659759859959069169269369469569669769869969079179279379479"
-                                    "579679779879979089189289389489589689789889989099199299399499599699799899999"
+                                    "000001002003004005006007008009010011012013014015016017018019020021022023024"
+                                    "025026027028029030031032033034035036037038039040041042043044045046047048049"
+                                    "050051052053054055056057058059060061062063064065066067068069070071072073074"
+                                    "075076077078079080081082083084085086087088089090091092093094095096097098099"
+                                    "100101102103104105106107108109110111112113114115116117118119120121122123124"
+                                    "125126127128129130131132133134135136137138139140141142143144145146147148149"
+                                    "150151152153154155156157158159160161162163164165166167168169170171172173174"
+                                    "175176177178179180181182183184185186187188189190191192193194195196197198199"
+                                    "200201202203204205206207208209210211212213214215216217218219220221222223224"
+                                    "225226227228229230231232233234235236237238239240241242243244245246247248249"
+                                    "250251252253254255256257258259260261262263264265266267268269270271272273274"
+                                    "275276277278279280281282283284285286287288289290291292293294295296297298299"
+                                    "300301302303304305306307308309310311312313314315316317318319320321322323324"
+                                    "325326327328329330331332333334335336337338339340341342343344345346347348349"
+                                    "350351352353354355356357358359360361362363364365366367368369370371372373374"
+                                    "375376377378379380381382383384385386387388389390391392393394395396397398399"
+                                    "400401402403404405406407408409410411412413414415416417418419420421422423424"
+                                    "425426427428429430431432433434435436437438439440441442443444445446447448449"
+                                    "450451452453454455456457458459460461462463464465466467468469470471472473474"
+                                    "475476477478479480481482483484485486487488489490491492493494495496497498499"
+                                    "500501502503504505506507508509510511512513514515516517518519520521522523524"
+                                    "525526527528529530531532533534535536537538539540541542543544545546547548549"
+                                    "550551552553554555556557558559560561562563564565566567568569570571572573574"
+                                    "575576577578579580581582583584585586587588589590591592593594595596597598599"
+                                    "600601602603604605606607608609610611612613614615616617618619620621622623624"
+                                    "625626627628629630631632633634635636637638639640641642643644645646647648649"
+                                    "650651652653654655656657658659660661662663664665666667668669670671672673674"
+                                    "675676677678679680681682683684685686687688689690691692693694695696697698699"
+                                    "700701702703704705706707708709710711712713714715716717718719720721722723724"
+                                    "725726727728729730731732733734735736737738739740741742743744745746747748749"
+                                    "750751752753754755756757758759760761762763764765766767768769770771772773774"
+                                    "775776777778779780781782783784785786787788789790791792793794795796797798799"
+                                    "800801802803804805806807808809810811812813814815816817818819820821822823824"
+                                    "825826827828829830831832833834835836837838839840841842843844845846847848849"
+                                    "850851852853854855856857858859860861862863864865866867868869870871872873874"
+                                    "875876877878879880881882883884885886887888889890891892893894895896897898899"
+                                    "900901902903904905906907908909910911912913914915916917918919920921922923924"
+                                    "925926927928929930931932933934935936937938939940941942943944945946947948949"
+                                    "950951952953954955956957958959960961962963964965966967968969970971972973974"
+                                    "975976977978979980981982983984985986987988989990991992993994995996997998999"
+                                    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
                                  };
 
       static const unsigned char rev_2digit_lut[] =
                                  {
-                                    "0010203040506070809001112131415161718191"
-                                    "0212223242526272829203132333435363738393"
-                                    "0414243444546474849405152535455565758595"
-                                    "0616263646566676869607172737475767778797"
-                                    "0818283848586878889809192939495969798999"
+                                    "0001020304050607080910111213141516171819"
+                                    "2021222324252627282930313233343536373839"
+                                    "4041424344454647484950515253545556575859"
+                                    "6061626364656667686970717273747576777879"
+                                    "8081828384858687888990919293949596979899"
+                                    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
                                  };
 
-      #define strtk_register_pod_type(T)\
-      template<> struct is_pod<T>{ typedef yes_t result_t; enum {result = true }; };\
-      template<> struct is_pod<const T>{ typedef yes_t result_t; enum {result = true }; };\
-      template<> struct is_pod<volatile T>{ typedef yes_t result_t; enum {result = true }; };\
+      #define strtk_register_pod_type(T)                                                           \
+      template<> struct is_pod<T>{ typedef yes_t result_t; enum {result = true }; };               \
+      template<> struct is_pod<const T>{ typedef yes_t result_t; enum {result = true }; };         \
+      template<> struct is_pod<volatile T>{ typedef yes_t result_t; enum {result = true }; };      \
       template<> struct is_pod<const volatile T>{ typedef yes_t result_t; enum {result = true }; };\
 
       strtk_register_pod_type(bool)
@@ -15759,30 +15815,30 @@ namespace strtk
          enum { min_exp = ld::i, max_exp = ld::a, precision = ld::p};
       };
 
-      #define strtk_register_unsigned_type_tag(T)\
-      template<> struct supported_conversion_to_type<T> { typedef unsigned_type_tag type; };\
-      template<> struct supported_conversion_from_type<T> { typedef unsigned_type_tag type; };
+      #define strtk_register_unsigned_type_tag(T)                                             \
+      template<> struct supported_conversion_to_type<T> { typedef unsigned_type_tag type; };  \
+      template<> struct supported_conversion_from_type<T> { typedef unsigned_type_tag type; };\
 
-      #define strtk_register_signed_type_tag(T)\
-      template<> struct supported_conversion_to_type<T>{ typedef signed_type_tag type; };\
-      template<> struct supported_conversion_from_type<T> { typedef signed_type_tag type; };
+      #define strtk_register_signed_type_tag(T)                                               \
+      template<> struct supported_conversion_to_type<T>{ typedef signed_type_tag type; };     \
+      template<> struct supported_conversion_from_type<T> { typedef signed_type_tag type; };  \
 
-      #define strtk_register_real_type_tag(T)\
+      #define strtk_register_real_type_tag(T) \
       template<> struct supported_conversion_to_type<T>{ typedef real_type_tag type; };
 
-      #define strtk_register_byte_type_tag(T)\
-      template<> struct supported_conversion_to_type<T>{ typedef byte_type_tag type; };\
-      template<> struct supported_conversion_from_type<T> { typedef byte_type_tag type; };
+      #define strtk_register_byte_type_tag(T)                                             \
+      template<> struct supported_conversion_to_type<T>{ typedef byte_type_tag type; };   \
+      template<> struct supported_conversion_from_type<T> { typedef byte_type_tag type; };\
 
-      #define strtk_register_hex_number_type_tag(T)\
+      #define strtk_register_hex_number_type_tag(T) \
       template<> struct supported_conversion_to_type<T >{ typedef hex_number_type_tag type; };
 
       template<> struct supported_conversion_to_type<hex_to_string_sink>{ typedef hex_string_type_tag type; };
 
-      #define strtk_register_base64_type_tag(T)\
+      #define strtk_register_base64_type_tag(T) \
       template<> struct supported_conversion_to_type<T >{ typedef base64_type_tag type; };
 
-      #define strtk_register_supported_iterator_type(T)\
+      #define strtk_register_supported_iterator_type(T) \
       template<> struct supported_iterator_type<T> { enum { value = true }; };
 
       template<> struct supported_conversion_to_type<bool> { typedef bool_type_tag type; };
@@ -15813,56 +15869,56 @@ namespace strtk
       template<> struct supported_conversion_to_type<strtk::details::conv_to_ucase_impl> { typedef ucase_type_tag type; };
       template<> struct supported_iterator_type<strtk::details::conv_to_ucase_impl>      { enum { value = true }; };
 
-      #define strtk_register_truncint_type_tag(T)\
+      #define strtk_register_truncint_type_tag(T) \
       template<> struct supported_conversion_to_type<strtk::truncated_int<T> > { typedef truncint_type_tag type; };\
       template<> struct supported_iterator_type<strtk::truncated_int<T> >      { enum { value = true }; };
 
-      #define strtk_register_inrange_type_tag(T)\
+      #define strtk_register_inrange_type_tag(T) \
       template<> struct supported_conversion_to_type<strtk::details::inrange_impl<T> >   { typedef inrange_type_tag type; };\
       template<> struct supported_iterator_type<strtk::details::inrange_impl<T> >        { enum { value = true }; };
 
-      #define strtk_register_trim_type_tag(T)\
+      #define strtk_register_trim_type_tag(T) \
       template<> struct supported_conversion_to_type<strtk::details::trim_impl<T> >   { typedef trim_type_tag type; };\
       template<> struct supported_iterator_type<strtk::details::trim_impl<T> >        { enum { value = true }; };
 
-      #define strtk_register_stdstring_range_type_tag(T)\
+      #define strtk_register_stdstring_range_type_tag(T) \
       template<> struct supported_conversion_to_type< std::pair<T,T> >{ typedef stdstring_range_type_tag type; };
 
-      #define strtk_register_sink_type_tag(T)\
-      template<> struct supported_conversion_to_type<sink_type<std::vector<T> > > { typedef sink_type_tag type; };\
-      template<> struct supported_conversion_to_type<sink_type<std::deque<T> > > { typedef sink_type_tag type; };\
-      template<> struct supported_conversion_to_type<sink_type<std::list<T> > > { typedef sink_type_tag type; };\
-      template<> struct supported_conversion_to_type<sink_type<std::set<T> > > { typedef sink_type_tag type; };\
-      template<> struct supported_conversion_to_type<sink_type<std::multiset<T> > > { typedef sink_type_tag type; };\
-      template<> struct supported_conversion_to_type<sink_type<std::queue<T> > > { typedef sink_type_tag type; };\
-      template<> struct supported_conversion_to_type<sink_type<std::stack<T> > > { typedef sink_type_tag type; };\
-      template<> struct supported_conversion_to_type<sink_type<std::priority_queue<T> > > { typedef sink_type_tag type; };\
-      template<> struct supported_conversion_from_type<sink_type<std::vector<T> > > { typedef sink_type_tag type; };\
-      template<> struct supported_conversion_from_type<sink_type<std::deque<T> > > { typedef sink_type_tag type; };\
-      template<> struct supported_conversion_from_type<sink_type<std::list<T> > > { typedef sink_type_tag type; };\
-      template<> struct supported_conversion_from_type<sink_type<std::set<T> > > { typedef sink_type_tag type; };\
-      template<> struct supported_conversion_from_type<sink_type<std::multiset<T> > > { typedef sink_type_tag type; };\
-      template<> struct supported_conversion_from_type<sink_type<std::queue<T> > > { typedef sink_type_tag type; };\
-      template<> struct supported_conversion_from_type<sink_type<std::stack<T> > > { typedef sink_type_tag type; };\
+      #define strtk_register_sink_type_tag(T)                                                                               \
+      template<> struct supported_conversion_to_type<sink_type<std::vector<T> > > { typedef sink_type_tag type; };          \
+      template<> struct supported_conversion_to_type<sink_type<std::deque<T> > > { typedef sink_type_tag type; };           \
+      template<> struct supported_conversion_to_type<sink_type<std::list<T> > > { typedef sink_type_tag type; };            \
+      template<> struct supported_conversion_to_type<sink_type<std::set<T> > > { typedef sink_type_tag type; };             \
+      template<> struct supported_conversion_to_type<sink_type<std::multiset<T> > > { typedef sink_type_tag type; };        \
+      template<> struct supported_conversion_to_type<sink_type<std::queue<T> > > { typedef sink_type_tag type; };           \
+      template<> struct supported_conversion_to_type<sink_type<std::stack<T> > > { typedef sink_type_tag type; };           \
+      template<> struct supported_conversion_to_type<sink_type<std::priority_queue<T> > > { typedef sink_type_tag type; };  \
+      template<> struct supported_conversion_from_type<sink_type<std::vector<T> > > { typedef sink_type_tag type; };        \
+      template<> struct supported_conversion_from_type<sink_type<std::deque<T> > > { typedef sink_type_tag type; };         \
+      template<> struct supported_conversion_from_type<sink_type<std::list<T> > > { typedef sink_type_tag type; };          \
+      template<> struct supported_conversion_from_type<sink_type<std::set<T> > > { typedef sink_type_tag type; };           \
+      template<> struct supported_conversion_from_type<sink_type<std::multiset<T> > > { typedef sink_type_tag type; };      \
+      template<> struct supported_conversion_from_type<sink_type<std::queue<T> > > { typedef sink_type_tag type; };         \
+      template<> struct supported_conversion_from_type<sink_type<std::stack<T> > > { typedef sink_type_tag type; };         \
       template<> struct supported_conversion_from_type<sink_type<std::priority_queue<T> > > { typedef sink_type_tag type; };\
 
-      #define strtk_register_stl_container_to_string_conv_type_tag(T)\
-      template<> struct supported_conversion_from_type<std::vector<T> > { typedef stl_seq_type_tag type; };\
-      template<> struct supported_conversion_from_type<std::deque<T> > { typedef stl_seq_type_tag type; };\
-      template<> struct supported_conversion_from_type<std::list<T> > { typedef stl_seq_type_tag type; };\
-      template<> struct supported_conversion_from_type<std::set<T> > { typedef stl_seq_type_tag type; };\
-      template<> struct supported_conversion_from_type<std::multiset<T> > { typedef stl_seq_type_tag type; };\
-      template<> struct supported_conversion_from_type<std::queue<T> > { typedef stl_seq_type_tag type; };\
-      template<> struct supported_conversion_from_type<std::stack<T> > { typedef stl_seq_type_tag type; };\
+      #define strtk_register_stl_container_to_string_conv_type_tag(T)                                              \
+      template<> struct supported_conversion_from_type<std::vector<T> > { typedef stl_seq_type_tag type; };        \
+      template<> struct supported_conversion_from_type<std::deque<T> > { typedef stl_seq_type_tag type; };         \
+      template<> struct supported_conversion_from_type<std::list<T> > { typedef stl_seq_type_tag type; };          \
+      template<> struct supported_conversion_from_type<std::set<T> > { typedef stl_seq_type_tag type; };           \
+      template<> struct supported_conversion_from_type<std::multiset<T> > { typedef stl_seq_type_tag type; };      \
+      template<> struct supported_conversion_from_type<std::queue<T> > { typedef stl_seq_type_tag type; };         \
+      template<> struct supported_conversion_from_type<std::stack<T> > { typedef stl_seq_type_tag type; };         \
       template<> struct supported_conversion_from_type<std::priority_queue<T> > { typedef stl_seq_type_tag type; };\
 
       template<> struct supported_conversion_to_type<ignore_token>{ typedef ignore_token_type_tag type; };
 
-      #define strtk_register_sequence_iterator_type(sequence)\
-      strtk_register_supported_iterator_type(sequence<char>::iterator)\
-      strtk_register_supported_iterator_type(sequence<char>::const_iterator)\
-      strtk_register_supported_iterator_type(sequence<unsigned char>::iterator)\
-      strtk_register_supported_iterator_type(sequence<unsigned char>::const_iterator)
+      #define strtk_register_sequence_iterator_type(sequence)                        \
+      strtk_register_supported_iterator_type(sequence<char>::iterator)               \
+      strtk_register_supported_iterator_type(sequence<char>::const_iterator)         \
+      strtk_register_supported_iterator_type(sequence<unsigned char>::iterator)      \
+      strtk_register_supported_iterator_type(sequence<unsigned char>::const_iterator)\
 
       strtk_register_unsigned_type_tag(unsigned short)
       strtk_register_unsigned_type_tag(unsigned int)
@@ -16002,7 +16058,7 @@ namespace strtk
       strtk_register_truncint_type_tag(unsigned long)
       strtk_register_truncint_type_tag(unsigned long long int)
 
-      #define strtk_register_userdef_type_sink(T)\
+      #define strtk_register_userdef_type_sink(T) \
       namespace strtk { namespace details { strtk_register_sink_type_tag(T) }}
 
       #undef strtk_register_unsigned_type_tag
@@ -16023,7 +16079,7 @@ namespace strtk
       struct precision
       {  static void set(std::iostream&) {}  };
 
-      #define strtk_register_iostream_precision(T)\
+      #define strtk_register_iostream_precision(T) \
       template<> struct precision<T> { static void set(std::iostream& s, const std::streamsize& p = 10) { s.precision(p);} };
 
       strtk_register_iostream_precision(float)
@@ -16892,48 +16948,39 @@ namespace strtk
       template <typename T>
       inline bool type_to_string_converter_impl(T value, std::string& result, unsigned_type_tag)
       {
-         static const std::size_t radix = 10;
-         static const std::size_t radix_sqr = radix * radix;
-         static const std::size_t radix_cube = radix * radix * radix;
-         unsigned char buffer[numeric<T>::size];
-         unsigned char* itr = buffer + (numeric<T>::size - 1);
-         T remainder = 0;
+         const std::size_t radix = 10;
+         const std::size_t radix_sqr = radix * radix;
+         const std::size_t radix_cube = radix * radix * radix;
+         unsigned char buffer[numeric<T>::size + 16];
+         unsigned char* itr = buffer + numeric<T>::size;
 
          if (0 != value)
          {
-            std::size_t index = 0;
             T temp_v = 0;
             while (value >= static_cast<T>(radix_sqr))
             {
-               temp_v     = value / radix_cube;
-               remainder  = value - (temp_v * radix_cube);
-               value      = temp_v;
-               index = static_cast<std::size_t>(remainder * 3);
-               *(itr    ) = details::rev_3digit_lut[index    ];
-               *(itr - 1) = details::rev_3digit_lut[index + 1];
-               *(itr - 2) = details::rev_3digit_lut[index + 2];
                itr -= 3;
+               temp_v = value / radix_cube;
+               memcpy(itr,&details::rev_3digit_lut[3 * (value - (temp_v * radix_cube))],3);
+               value = temp_v;
             }
 
             while (value >= static_cast<T>(radix))
             {
-               temp_v     = value / radix_sqr;
-               remainder  = value - (temp_v * radix_sqr);
-               value      = temp_v;
-               index = static_cast<std::size_t>(remainder << 1);
-               *(itr--) = details::rev_2digit_lut[index + 0];
-               *(itr--) = details::rev_2digit_lut[index + 1];
+               itr -= 2;
+               temp_v = value / radix_sqr;
+               memcpy(itr,&details::rev_2digit_lut[2 * (value - (temp_v * radix_sqr))],2);
+               value = temp_v;
             }
 
             if (0 != value)
             {
-               *(itr--)  = strtk::details::digitr[value];
+               *(--itr) = static_cast<unsigned char>('0' + value);
             }
          }
          else
-            *(itr--) = '0';
+            *(--itr) = '0';
 
-         itr++;
          result.assign(reinterpret_cast<char*>(itr), (buffer + numeric<T>::size) - itr);
          return true;
       }
@@ -16941,11 +16988,11 @@ namespace strtk
       template <typename T>
       inline bool type_to_string_converter_impl(T value, std::string& result, strtk::details::signed_type_tag)
       {
-         static const std::size_t radix = 10;
-         static const std::size_t radix_sqr = radix * radix;
-         static const std::size_t radix_cube = radix * radix * radix;
-         unsigned char buffer[strtk::details::numeric<T>::size];
-         unsigned char* itr = buffer + (strtk::details::numeric<T>::size - 1);
+         const std::size_t radix = 10;
+         const std::size_t radix_sqr = radix * radix;
+         const std::size_t radix_cube = radix * radix * radix;
+         unsigned char buffer[strtk::details::numeric<T>::size + 16];
+         unsigned char* itr = buffer + strtk::details::numeric<T>::size;
          const bool inc_final_digit = (value == std::numeric_limits<T>::min());
          if (inc_final_digit)
          {
@@ -16953,39 +17000,30 @@ namespace strtk
          }
          const bool negative = (value < 0);
          if (negative)
-            value = static_cast<T>(-1 * value);
-         T remainder = 0;
+            value = static_cast<T>(-value);
 
          if (0 != value)
          {
-            std::size_t index = 0;
             T temp_v = 0;
             while (value >= static_cast<T>(radix_sqr))
             {
-               temp_v     = value / radix_cube;
-               remainder  = value - (temp_v * radix_cube);
-               value      = temp_v;
-               index    = static_cast<std::size_t>(remainder * 3);
-               *(itr    ) = details::rev_3digit_lut[index    ];
-               *(itr - 1) = details::rev_3digit_lut[index + 1];
-               *(itr - 2) = details::rev_3digit_lut[index + 2];
                itr -= 3;
+               temp_v = value / radix_cube;
+               memcpy(itr,&details::rev_3digit_lut[3 * (value - (temp_v * radix_cube))],3);
+               value = temp_v;
             }
 
             while (value >= static_cast<T>(radix))
             {
-               temp_v     = value / radix_sqr;
-               remainder  = value - (temp_v * radix_sqr);
-               value      = temp_v;
-               index      = static_cast<std::size_t>(remainder) << 1;
-               *(itr    ) = details::rev_2digit_lut[index    ];
-               *(itr - 1) = details::rev_2digit_lut[index + 1];
                itr -= 2;
+               temp_v = value / radix_sqr;
+               memcpy(itr,&details::rev_2digit_lut[2 * (value - (temp_v * radix_sqr))],2);
+               value = temp_v;
             }
 
             if (0 != value)
             {
-               *(itr--) = strtk::details::digitr[value];
+               *(--itr) = static_cast<unsigned char>('0' + value);
             }
 
             if (inc_final_digit)
@@ -16994,11 +17032,10 @@ namespace strtk
             }
          }
          else
-            *(itr--) = '0';
+            *(--itr) = '0';
 
-         if (negative) *(itr--) = '-';
+         if (negative) *(--itr) = '-';
 
-         itr++;
          result.assign(reinterpret_cast<char*>(itr),(buffer + numeric<T>::size) - itr);
          return true;
       }
@@ -17052,7 +17089,7 @@ namespace strtk
          return s;
       }
 
-      #define strtk_register_type_name(Type)\
+      #define strtk_register_type_name(Type) \
       template <> inline std::string type_name<Type>() { static const std::string s(#Type); return s; }
 
       strtk_register_type_name(signed char)
@@ -17141,21 +17178,21 @@ namespace strtk
       return s;
    }
 
-   #define strtk_register_sequence_type_name(Type)\
-   template <typename T, typename Allocator>\
-   inline std::string type_name(const Type<T,Allocator>&)\
-   {\
+   #define strtk_register_sequence_type_name(Type)                                                       \
+   template <typename T, typename Allocator>                                                             \
+   inline std::string type_name(const Type<T,Allocator>&)                                                \
+   {                                                                                                     \
       static const std::string s = std::string(#Type) + std::string("<" + details::type_name<T>() + ">");\
-      return s;\
-   }
+      return s;                                                                                          \
+   }                                                                                                     \
 
-   #define strtk_register_set_type_name(Type)\
-   template <typename T, typename Comparator, typename Allocator>\
-   inline std::string type_name(const Type<T,Comparator,Allocator>&)\
-   {\
+   #define strtk_register_set_type_name(Type)                                                            \
+   template <typename T, typename Comparator, typename Allocator>                                        \
+   inline std::string type_name(const Type<T,Comparator,Allocator>&)                                     \
+   {                                                                                                     \
       static const std::string s = std::string(#Type) + std::string("<" + details::type_name<T>() + ">");\
-      return s;\
-   }
+      return s;                                                                                          \
+   }                                                                                                     \
 
    strtk_register_sequence_type_name(std::vector)
    strtk_register_sequence_type_name(std::deque)
@@ -18866,7 +18903,7 @@ namespace strtk
                          const char* key,
                          const Value& value = Value(0))
       {
-         insert_into_trie(trie,std::string(key),value);
+         trie.insert(std::string(key),value);
       }
 
       template <typename Value>
@@ -18882,7 +18919,7 @@ namespace strtk
                        const char* key,
                        Value& v)
       {
-         return find_prefix(trie,std::string(key),v);
+         return trie.find_prefix(trie,std::string(key),v);
       }
 
       template <typename Value>
@@ -18896,7 +18933,7 @@ namespace strtk
       inline bool find_prefix(prefix<std::string::const_iterator,Value>& trie,
                               const char* key)
       {
-         return find_prefix(trie,std::string(key));
+         return trie.find_prefix(trie,std::string(key));
       }
 
    } // namespace trie
@@ -20072,9 +20109,9 @@ namespace strtk
 
    namespace details
    {
-      #define strtk_register_attribute_type_tag(T)\
-      template<> struct supported_conversion_to_type< strtk::util::attribute<T> >{ typedef attribute_type_tag type; };\
-      template<> struct supported_conversion_from_type< strtk::util::attribute<T> > { typedef attribute_type_tag type; };
+      #define strtk_register_attribute_type_tag(T)                                                                       \
+      template<> struct supported_conversion_to_type< strtk::util::attribute<T> >{ typedef attribute_type_tag type; };   \
+      template<> struct supported_conversion_from_type< strtk::util::attribute<T> > { typedef attribute_type_tag type; };\
 
       strtk_register_attribute_type_tag(unsigned short)
       strtk_register_attribute_type_tag(unsigned int)
@@ -22005,25 +22042,26 @@ namespace strtk
 
    }
 
-   #define strtk_parse_col_token(Index)\
+   #define strtk_parse_col_token(Index) \
       if (!string_to_type_converter(token_list[Index].first,token_list[Index].second,t##Index)) return false;
 
-   #define strtk_parse_col_token_seq(Index)\
+   #define strtk_parse_col_token_seq(Index) \
       if (!string_to_type_converter(token_list[Index].first,token_list[Index].second,seq[Index])) return false;
 
-   #define strtk_parse_columns_impl(NN)\
-      static const std::size_t N = NN;\
-      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;\
-      typedef std::pair<InputIterator,InputIterator> iterator_type;\
-      typedef details::column_selector_iterator_impl<InputIterator,N> csii_t;\
-      const std::size_t token_count = (column_list.index_list[N - 1] + 1);\
-      iterator_type token_list[N];\
-      csii_t csii(column_list,token_list);\
-      const std::size_t parsed_token_count = split_n<InputIterator,csii_t&>\
+   #define strtk_parse_columns_impl(NN)                                          \
+      static const std::size_t N = NN;                                           \
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type; \
+      typedef std::pair<InputIterator,InputIterator> iterator_type;              \
+      typedef details::column_selector_iterator_impl<InputIterator,N> csii_t;    \
+      const std::size_t token_count = (column_list.index_list[N - 1] + 1);       \
+      details::convert_type_assert<itr_type>();                                  \
+      iterator_type token_list[N];                                               \
+      csii_t csii(column_list,token_list);                                       \
+      const std::size_t parsed_token_count = split_n<InputIterator,csii_t&>      \
       (delimiters,begin,end,token_count,csii,split_options::compress_delimiters);\
-      if (token_count > parsed_token_count) return false;\
+      if (token_count > parsed_token_count) return false;                        \
 
-   #define strk_parse_col_seq\
+   #define strk_parse_col_seq \
       return parse_columns(data.data(),data.data() + data.size(),delimiters,column_list,seq);
 
    template <typename InputIterator,
@@ -22439,10 +22477,10 @@ namespace strtk
    #undef strtk_parse_col_token_seq
    #undef strtk_parse_columns_impl
 
-   #define strtk_parse_col_begin()\
-      return parse_columns(data.data(),\
+   #define strtk_parse_col_begin()                              \
+      return parse_columns(data.data(),                         \
                            data.data() + data.size(),delimiters,\
-                           column_list,
+                           column_list,                         \
 
    #define strtk_parse_col_end() );
 
@@ -22976,7 +23014,7 @@ namespace strtk
    {
       if (seq.empty())
          return;
-      fill_n(seq.begin(),seq.size(),t);
+      std::fill_n(seq.begin(),seq.size(),t);
    }
 
    namespace keyvalue
@@ -23307,11 +23345,11 @@ namespace
       return os;
    }
 
-   #define strtk_register_pair_to_ostream(Iterator)\
+   #define strtk_register_pair_to_ostream(Iterator)                                                   \
    static inline std::ostream& operator<<(std::ostream& os, const std::pair<Iterator,Iterator>& range)\
-   { os << std::string(range.first,range.second); return os; }\
-   static inline std::ostream& operator<<(std::ostream& os, std::pair<Iterator,Iterator>& range)\
-   { os << std::string(range.first,range.second); return os; }\
+   { os << std::string(range.first,range.second); return os; }                                        \
+   static inline std::ostream& operator<<(std::ostream& os, std::pair<Iterator,Iterator>& range)      \
+   { os << std::string(range.first,range.second); return os; }                                        \
 
    strtk_register_pair_to_ostream(char*)
    strtk_register_pair_to_ostream(unsigned char*)

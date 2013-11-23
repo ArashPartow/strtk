@@ -44,7 +44,6 @@ public:
    inline bool operator()(const std::string& data, unsigned char octet[4])
    {
       typedef std::pair<const char*,const char*> iterator_type;
-      typedef iterator_type* iterator_type_ptr;
       iterator_type token[4];
       if (4 != strtk::split_n(predicate_,data,4,token))
          return false;

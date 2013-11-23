@@ -23,7 +23,7 @@ BASE_OPTIONS     = -ansi -pedantic-errors -Wall -Wextra -Werror -Wno-long-long
 OPTIONS          = $(BASE_OPTIONS) $(OPTIMIZATION_OPT) -o
 REGEX            = -lboost_regex
 PTHREAD          = -lpthread
-LINKER_OPT       = -L/usr/lib -lstdc++
+LINKER_OPT       = -lstdc++ -lm
 
 BUILD_LIST+=strtk_examples
 BUILD_LIST+=strtk_tokenizer_test

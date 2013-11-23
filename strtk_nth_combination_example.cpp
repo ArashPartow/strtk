@@ -59,7 +59,6 @@ static const std::size_t k = 4;
 void nth_combination_example01()
 {
    typedef std::vector<unsigned char> list_type;
-   typedef strtk::combination_iterator<list_type::iterator> iterator_type;
    list_type char_list;
 
    strtk::iota(char_list,n,static_cast<unsigned char>('A'));
@@ -87,7 +86,6 @@ void nth_combination_example01()
 void nth_combination_example02()
 {
    typedef std::vector<unsigned char> list_type;
-   typedef strtk::combination_iterator<list_type::iterator> iterator_type;
    list_type char_list;
    list_type next_comb_list;
 
@@ -123,7 +121,6 @@ void nth_combination_example02()
 void nth_combination_example03()
 {
    typedef std::vector<unsigned char> list_type;
-   typedef strtk::combination_iterator<list_type::iterator> iterator_type;
    list_type char_list;
 
    strtk::iota(char_list,n,static_cast<unsigned char>('A'));

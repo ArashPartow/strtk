@@ -2288,7 +2288,6 @@ bool test_keyvalue_parser()
       float d4;
       std::string d5;
 
-      typedef unsigned char char_type;
       typedef strtk::keyvalue::parser<strtk::keyvalue::uintkey_map> kvp_type;
 
       strtk::keyvalue::uintkey_map::options options;
