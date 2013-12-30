@@ -2,7 +2,7 @@
  *****************************************************************
  *                     String Toolkit Library                    *
  *                                                               *
- * Author: Arash Partow (2002-2013)                              *
+ * Author: Arash Partow (2002-2014)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -1257,8 +1257,9 @@ namespace strtk
 
    namespace details
    {
-      #if (defined(__MINGW32_VERSION)) ||\
-          (defined(__APPLE__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)) ||\
+      #if (defined(__MINGW32_VERSION)) ||                                                   \
+          (defined(__CYGWIN__) || defined(__CYGWIN32__)) ||                                 \
+          (defined(__APPLE__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)) || \
           (defined(_WIN32) && (_MSC_VER < 1400))
          inline std::size_t strnlength(const char* s, const std::size_t& n)
          {
@@ -3153,6 +3154,46 @@ namespace strtk
 
    } // namespace split_options
 
+   namespace details
+   {
+      template <typename DelimiterPredicate,
+                typename Iterator,
+                typename OutputIterator>
+      inline std::size_t split_compress_delimiters(const DelimiterPredicate& delimiter,
+                                                   const Iterator begin,
+                                                   const Iterator end,
+                                                   OutputIterator out)
+      {
+         std::size_t token_count = 0;
+         std::pair<Iterator,Iterator> range(begin,begin);
+
+         while (end != range.second)
+         {
+            if (delimiter(*range.second))
+            {
+               (*out) = range;
+               ++out;
+               while ((end != ++range.second) && delimiter(*range.second));
+               range.first = range.second;
+               if (end != range.second)
+                  ++range.second;
+               ++token_count;
+            }
+            else
+               ++range.second;
+         }
+
+         if ((range.first != range.second) || delimiter(*(range.second - 1)))
+         {
+            (*out) = range;
+            ++out;
+            ++token_count;
+         }
+
+         return token_count;
+      }
+   }
+
    template <typename DelimiterPredicate,
              typename Iterator,
              typename OutputIterator>
@@ -3163,12 +3204,18 @@ namespace strtk
                             const split_options::type split_option = split_options::default_mode)
    {
       if (begin == end) return 0;
-      std::size_t token_count = 0;
-      std::pair<Iterator,Iterator> range(begin,begin);
       const bool compress_delimiters = split_options::perform_compress_delimiters(split_option);
       const bool include_1st_delimiter = split_options::perform_include_1st_delimiter(split_option);
       const bool include_all_delimiters = (!include_1st_delimiter) && split_options::perform_include_all_delimiters(split_option);
       const bool include_delimiters = include_1st_delimiter || include_all_delimiters;
+
+      if (compress_delimiters && (!include_delimiters))
+      {
+         return details::split_compress_delimiters(delimiter,begin,end,out);
+      }
+
+      std::size_t token_count = 0;
+      std::pair<Iterator,Iterator> range(begin,begin);
 
       while (end != range.second)
       {
@@ -3189,9 +3236,6 @@ namespace strtk
             {
                (*out) = range;
                ++out;
-               if (compress_delimiters)
-                  while ((end != (++range.second)) && delimiter(*range.second)) ;
-               else
                   ++range.second;
             }
             ++token_count;
@@ -5221,19 +5265,22 @@ namespace strtk
            column_split_option(split_options::compress_delimiters),
            row_delimiters("\n\r"),
            column_delimiters(",|;\t "),
-           support_dquotes(false)
+           support_dquotes(false),
+           trim_dquotes(false)
          {}
 
          options(split_options::type sro,
                  split_options::type sco,
                  const std::string& rd,
                  const std::string& cd,
-                 const bool support_dq = false)
+                 const bool support_dq = false,
+                 const bool trim_dq = false)
          : row_split_option(sro),
            column_split_option(sco),
            row_delimiters(rd),
            column_delimiters(cd),
-           support_dquotes(support_dq)
+           support_dquotes(support_dq),
+           trim_dquotes(trim_dq)
          {}
 
          inline options& set_column_split_option(const split_options::type& option)
@@ -5265,6 +5312,7 @@ namespace strtk
          std::string row_delimiters;
          std::string column_delimiters;
          bool support_dquotes;
+         bool trim_dquotes;
       };
 
       class row_type
@@ -6961,7 +7009,7 @@ namespace strtk
             if ('"' == c)
             {
                in_bracket_range_ = !in_bracket_range_;
-               return true;
+               return false;
             }
             else if (in_bracket_range_)
                return false;
@@ -7007,6 +7055,21 @@ namespace strtk
                          strtk::functional_inserter(
                             row_processor<double_quotes_predicate>(dsv_index_,token_predicate_dblq,options_.column_split_option)),
                         strtk::split_options::compress_delimiters);
+
+            if (options_.trim_dquotes)
+            {
+               for (std::size_t i = 0; i < dsv_index_.token_list.size(); ++i)
+               {
+                  if (
+                      ((*(dsv_index_.token_list[i].first     )) == '"') &&
+                      ((*(dsv_index_.token_list[i].second - 1)) == '"')
+                     )
+                  {
+                      ++dsv_index_.token_list[i].first;
+                      --dsv_index_.token_list[i].second;
+                  }
+               }
+            }
          }
          update_minmax_columns();
          return true;
@@ -12886,7 +12949,7 @@ namespace strtk
             return static_cast<int>(convert(static_cast<unsigned int>(v)));
          }
 
-         static inline unsigned long long int convert(const long long int v)
+         static inline long long int convert(const long long int v)
          {
             return static_cast<long long>(convert(static_cast<unsigned long long int>(v)));
          }
@@ -12916,7 +12979,7 @@ namespace strtk
             return (is_little_endian()) ? convert(v) : v;
          }
 
-         static inline unsigned long long int convert_to_be(const long long int v)
+         static inline long long int convert_to_be(const long long int v)
          {
             return (is_little_endian()) ? convert(v) : v;
          }
@@ -13412,10 +13475,9 @@ namespace strtk
       public:
 
          // should be sourced from cstdint
-         // should be sourced from cstdint
-         typedef unsigned int uint32_t;
+         typedef unsigned int   uint32_t;
          typedef unsigned short uint16_t;
-         typedef unsigned char uint8_t;
+         typedef unsigned char  uint8_t;
          typedef unsigned long long int uint64_t;
 
          template <typename T>
@@ -16948,19 +17010,19 @@ namespace strtk
       template <typename T>
       inline bool type_to_string_converter_impl(T value, std::string& result, unsigned_type_tag)
       {
-         const std::size_t radix = 10;
-         const std::size_t radix_sqr = radix * radix;
-         const std::size_t radix_cube = radix * radix * radix;
-         unsigned char buffer[numeric<T>::size + 16];
-         unsigned char* itr = buffer + numeric<T>::size;
+         static const std::size_t radix = 10;
+         static const std::size_t radix_sqr = radix * radix;
+         static const std::size_t radix_cube = radix * radix * radix;
+         static const std::size_t buffer_size = ((strtk::details::numeric<T>::size < 16) ? 16 : 32);
+         unsigned char buffer[buffer_size];
+         unsigned char* itr = buffer + buffer_size;
 
-         if (0 != value)
+         if (value)
          {
-            T temp_v = 0;
             while (value >= static_cast<T>(radix_sqr))
             {
                itr -= 3;
-               temp_v = value / radix_cube;
+               T temp_v = value / radix_cube;
                memcpy(itr,&details::rev_3digit_lut[3 * (value - (temp_v * radix_cube))],3);
                value = temp_v;
             }
@@ -16968,12 +17030,12 @@ namespace strtk
             while (value >= static_cast<T>(radix))
             {
                itr -= 2;
-               temp_v = value / radix_sqr;
+               T temp_v = value / radix_sqr;
                memcpy(itr,&details::rev_2digit_lut[2 * (value - (temp_v * radix_sqr))],2);
                value = temp_v;
             }
 
-            if (0 != value)
+            if (value)
             {
                *(--itr) = static_cast<unsigned char>('0' + value);
             }
@@ -16981,34 +17043,46 @@ namespace strtk
          else
             *(--itr) = '0';
 
-         result.assign(reinterpret_cast<char*>(itr), (buffer + numeric<T>::size) - itr);
+         result.assign(reinterpret_cast<char*>(itr), (buffer + buffer_size) - itr);
          return true;
       }
 
       template <typename T>
-      inline bool type_to_string_converter_impl(T value, std::string& result, strtk::details::signed_type_tag)
-      {
-         const std::size_t radix = 10;
-         const std::size_t radix_sqr = radix * radix;
-         const std::size_t radix_cube = radix * radix * radix;
-         unsigned char buffer[strtk::details::numeric<T>::size + 16];
-         unsigned char* itr = buffer + strtk::details::numeric<T>::size;
-         const bool inc_final_digit = (value == std::numeric_limits<T>::min());
-         if (inc_final_digit)
-         {
-            value += 1;
-         }
-         const bool negative = (value < 0);
-         if (negative)
-            value = static_cast<T>(-value);
+      struct tsci_type {};
 
-         if (0 != value)
+      #define define_tsci_type(Type,ReType) \
+      template <>                           \
+      struct tsci_type<Type>                \
+      {                                     \
+         typedef ReType  type;              \
+      };                                    \
+
+      define_tsci_type(short    ,unsigned short    )
+      define_tsci_type(int      ,unsigned int      )
+      define_tsci_type(long     ,unsigned long     )
+      define_tsci_type(long long,unsigned long long)
+
+      #undef define_tsci_type
+
+      template <typename T>
+      inline bool type_to_string_converter_impl(T valuex, std::string& result, signed_type_tag)
+      {
+         static const std::size_t radix = 10;
+         static const std::size_t radix_sqr   = radix * radix;
+         static const std::size_t radix_cube  = radix * radix * radix;
+         static const std::size_t buffer_size = ((strtk::details::numeric<T>::size < 16) ? 16 : 32);
+         unsigned char buffer[buffer_size];
+         unsigned char* itr = buffer + buffer_size;
+         bool negative = (valuex < 0);
+         typedef typename tsci_type<T>::type TT;
+         TT value = (negative) ? -valuex : valuex;
+
+         if (value)
          {
-            T temp_v = 0;
             while (value >= static_cast<T>(radix_sqr))
             {
                itr -= 3;
-               temp_v = value / radix_cube;
+               T temp_v = value / radix_cube;
                memcpy(itr,&details::rev_3digit_lut[3 * (value - (temp_v * radix_cube))],3);
                value = temp_v;
             }
@@ -17016,27 +17090,25 @@ namespace strtk
             while (value >= static_cast<T>(radix))
             {
                itr -= 2;
-               temp_v = value / radix_sqr;
+               T temp_v = value / radix_sqr;
                memcpy(itr,&details::rev_2digit_lut[2 * (value - (temp_v * radix_sqr))],2);
                value = temp_v;
             }
 
-            if (0 != value)
+            if (value)
             {
                *(--itr) = static_cast<unsigned char>('0' + value);
             }
 
-            if (inc_final_digit)
+            if (negative)
             {
-               buffer[strtk::details::numeric<T>::size - 1] += 1;
+               *(--itr) = '-';
             }
          }
          else
             *(--itr) = '0';
 
-         if (negative) *(--itr) = '-';
-
-         result.assign(reinterpret_cast<char*>(itr),(buffer + numeric<T>::size) - itr);
+         result.assign(reinterpret_cast<char*>(itr), (buffer + buffer_size) - itr);
          return true;
       }
 
@@ -19842,6 +19914,9 @@ namespace strtk
          }
 
       private:
+
+         scoped_restore(const scoped_restore&);
+         scoped_restore& operator=(const scoped_restore&);
 
          bool restore_;
          T& reference_;

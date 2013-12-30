@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * Key-Value Pair Parser Example                                 *
- * Author: Arash Partow (2002-2013)                              *
+ * Author: Arash Partow (1999-2014)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -98,7 +98,6 @@ struct data_store
    float                f1; // key = 110
    std::string        str1; // key = 111
 
-
    char                 c2; // key = 11321
    unsigned char       uc2; // key = 11322
    short                s2; // key = 11323
@@ -110,8 +109,6 @@ struct data_store
    double               d2; // key = 11329
    float                f2; // key = 11310
    std::string        str2; // key = 11311
-
-
 };
 
 void example01()

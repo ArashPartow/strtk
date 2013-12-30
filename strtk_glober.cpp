@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * String Glober                                                 *
- * Author: Arash Partow (2002-2013)                              *
+ * Author: Arash Partow (1999-2014)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -98,7 +98,6 @@ private:
 
    std::vector<std::string> pattern_list_;
 };
-
 
 int main(int argc, char* argv[])
 {

@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * Parse Test                                                    *
- * Author: Arash Partow (2002-2013)                              *
+ * Author: Arash Partow (1999-2014)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -407,7 +407,6 @@ void raw_split_md_speed_test()
           token_count / t.time(),
           (s.size() * md_rounds) / (1048576.0 * t.time()));
 }
-
 
 static const std::string sd_base = "a|bc|def|ghij|klmno|pqrstu|vwxyzAB|CDEFGHIJ|KLMNOPQRS|TUVWXYZ012|3456789!@#$|^&*(){}[]<>?:;,~|";
 static const std::size_t sd_replicate_count = 1000000;

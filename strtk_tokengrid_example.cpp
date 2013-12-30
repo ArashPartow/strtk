@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * Token Grid Example                                            *
- * Author: Arash Partow (2002-2013)                              *
+ * Author: Arash Partow (1999-2014)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -300,7 +300,6 @@ void token_grid_test05()
    }
 }
 
-
 void token_grid_test06()
 {
    std::string data;
@@ -336,7 +335,6 @@ void token_grid_test06()
    std::copy(avg_r.begin(),avg_r.end(),std::ostream_iterator<double>(std::cout,"\t"));
    std::cout << "\n";
 }
-
 
 void token_grid_test07()
 {

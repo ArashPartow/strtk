@@ -484,7 +484,6 @@ void strtk_lexical_cast_test_s2i()
           (s2i_rounds * strint_list_size) / t.time());
 }
 
-
 void strtkfast_lexical_cast_test_s2i()
 {
    print_mode("[fast]");
@@ -507,7 +506,6 @@ void strtkfast_lexical_cast_test_s2i()
           t.time(),
           (s2i_rounds * strint_list_size) / t.time());
 }
-
 
 static const std::string v[] = {
                                    "+004",                     "+005",                      "+006",               "+007",

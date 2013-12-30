@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * String Tokenizer Test                                         *
- * Author: Arash Partow (2002-2013)                              *
+ * Author: Arash Partow (1999-2014)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -1668,7 +1668,6 @@ bool test_parse2()
    if (d[8] != 3.0e+012) { std::cout << "test_parse2() double check8 " << std::endl; return false; }
    if (d[9] != 4.4e+013) { std::cout << "test_parse2() double check9 " << std::endl; return false; }
 
-
    float f[10]  = { 0.0 };
 
    if (!strtk::parse(data,",|\t ",f[0],f[1],f[2],f[3],f[4],f[5],f[6],f[7],f[8],f[9]))
@@ -2341,7 +2340,6 @@ bool test_keyvalue_parser()
       }
    }
 
-
    {
       std::string data = "int_list=-3,-2,-1,0,+1,+2,+3|"
                          "uint_list=0,1,2,3,4,5,6,7,8,9|"
@@ -2354,7 +2352,6 @@ bool test_keyvalue_parser()
       std::list<double> dbl_list;
       std::set<float> flt_list;
       std::queue<std::string> string_list;
-
 
       typedef unsigned char char_type;
       typedef strtk::keyvalue::parser<strtk::keyvalue::stringkey_map> kvp_type;

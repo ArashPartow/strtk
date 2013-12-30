@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * Serializer Example                                            *
- * Author: Arash Partow (2002-2013)                              *
+ * Author: Arash Partow (1999-2014)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -69,20 +69,20 @@ public:
    }
 
    strtk_binary_reader_begin()
-     strtk_binary_reader(id)
-     strtk_binary_reader(name)
-     strtk_binary_reader(age)
-     strtk_binary_reader(height)
-     strtk_binary_reader(weight)
+     strtk_binary_reader(id       )
+     strtk_binary_reader(name     )
+     strtk_binary_reader(age      )
+     strtk_binary_reader(height   )
+     strtk_binary_reader(weight   )
      strtk_binary_reader(is_insane)
    strtk_binary_reader_end()
 
    strtk_binary_writer_begin()
-     strtk_binary_writer(id)
-     strtk_binary_writer(name)
-     strtk_binary_writer(age)
-     strtk_binary_writer(height)
-     strtk_binary_writer(weight)
+     strtk_binary_writer(id       )
+     strtk_binary_writer(name     )
+     strtk_binary_writer(age      )
+     strtk_binary_writer(height   )
+     strtk_binary_writer(weight   )
      strtk_binary_writer(is_insane)
    strtk_binary_writer_end()
 

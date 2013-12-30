@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * Bloom Filter Example                                          *
- * Author: Arash Partow (2002-2013)                              *
+ * Author: Arash Partow (1999-2014)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -82,7 +82,6 @@ int main()
           filter.size() / (8.0 * strtk::one_kilobyte),
           (1.0 * element_count * k) / strtk::one_kilobyte,
           static_cast<unsigned long long>(filter.hash_count()));
-
 
    static const std::size_t buffer_size = k * element_count;
    unsigned char* buffer = new unsigned char[buffer_size];
