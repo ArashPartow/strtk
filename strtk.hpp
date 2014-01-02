@@ -413,16 +413,16 @@ namespace strtk
                                           Sequence<T,Allocator>& sequence,
                                           const std::size_t& buffer_size = one_kilobyte)
    {
-     if (!stream) return 0;
-     std::string buffer;
-     buffer.reserve(buffer_size);
-     std::size_t line_count = 0;
-     while (std::getline(stream,buffer))
-     {
-        ++line_count;
-        sequence.push_back(string_to_type_converter<T>(buffer));
-     }
-     return line_count;
+      if (!stream) return 0;
+      std::string buffer;
+      buffer.reserve(buffer_size);
+      std::size_t line_count = 0;
+      while (std::getline(stream,buffer))
+      {
+         ++line_count;
+         sequence.push_back(string_to_type_converter<T>(buffer));
+      }
+      return line_count;
    }
 
    template <typename T,
@@ -432,16 +432,16 @@ namespace strtk
                                           std::set<T,Comparator,Allocator>& set,
                                           const std::size_t& buffer_size = one_kilobyte)
    {
-     if (!stream) return 0;
-     std::string buffer;
-     buffer.reserve(buffer_size);
-     std::size_t line_count = 0;
-     while (std::getline(stream,buffer))
-     {
-        ++line_count;
-        set.insert(string_to_type_converter<T>(buffer));
-     }
-     return line_count;
+      if (!stream) return 0;
+      std::string buffer;
+      buffer.reserve(buffer_size);
+      std::size_t line_count = 0;
+      while (std::getline(stream,buffer))
+      {
+         ++line_count;
+         set.insert(string_to_type_converter<T>(buffer));
+      }
+      return line_count;
    }
 
    template <typename T,
@@ -451,16 +451,16 @@ namespace strtk
                                           std::multiset<T,Comparator,Allocator>& multiset,
                                           const std::size_t& buffer_size = one_kilobyte)
    {
-     if (!stream) return 0;
-     std::string buffer;
-     buffer.reserve(buffer_size);
-     std::size_t line_count = 0;
-     while (std::getline(stream,buffer))
-     {
-        ++line_count;
-        multiset.insert(string_to_type_converter<T>(buffer));
-     }
-     return line_count;
+      if (!stream) return 0;
+      std::string buffer;
+      buffer.reserve(buffer_size);
+      std::size_t line_count = 0;
+      while (std::getline(stream,buffer))
+      {
+         ++line_count;
+         multiset.insert(string_to_type_converter<T>(buffer));
+      }
+      return line_count;
    }
 
    template <typename T, typename Container>
@@ -468,16 +468,16 @@ namespace strtk
                                           std::queue<T,Container>& queue,
                                           const std::size_t& buffer_size = one_kilobyte)
    {
-     if (!stream) return 0;
-     std::string buffer;
-     buffer.reserve(buffer_size);
-     std::size_t line_count = 0;
-     while (std::getline(stream,buffer))
-     {
-        ++line_count;
-        queue.push(string_to_type_converter<T>(buffer));
-     }
-     return line_count;
+      if (!stream) return 0;
+      std::string buffer;
+      buffer.reserve(buffer_size);
+      std::size_t line_count = 0;
+      while (std::getline(stream,buffer))
+      {
+         ++line_count;
+         queue.push(string_to_type_converter<T>(buffer));
+      }
+      return line_count;
    }
 
    template <typename T, typename Container>
@@ -485,16 +485,16 @@ namespace strtk
                                           std::stack<T,Container>& stack,
                                           const std::size_t& buffer_size = one_kilobyte)
    {
-     if (!stream) return 0;
-     std::string buffer;
-     buffer.reserve(buffer_size);
-     std::size_t line_count = 0;
-     while (std::getline(stream,buffer))
-     {
-        ++line_count;
-        stack.push(string_to_type_converter<T>(buffer));
-     }
-     return line_count;
+      if (!stream) return 0;
+      std::string buffer;
+      buffer.reserve(buffer_size);
+      std::size_t line_count = 0;
+      while (std::getline(stream,buffer))
+      {
+         ++line_count;
+         stack.push(string_to_type_converter<T>(buffer));
+      }
+      return line_count;
    }
 
    template <typename T,
@@ -504,16 +504,16 @@ namespace strtk
                                           std::priority_queue<T,Container,Comparator>& priority_queue,
                                           const std::size_t& buffer_size = one_kilobyte)
    {
-     if (!stream) return 0;
-     std::string buffer;
-     buffer.reserve(buffer_size);
-     std::size_t line_count = 0;
-     while (std::getline(stream,buffer))
-     {
-        ++line_count;
-        priority_queue.push(string_to_type_converter<T>(buffer));
-     }
-     return line_count;
+      if (!stream) return 0;
+      std::string buffer;
+      buffer.reserve(buffer_size);
+      std::size_t line_count = 0;
+      while (std::getline(stream,buffer))
+      {
+         ++line_count;
+         priority_queue.push(string_to_type_converter<T>(buffer));
+      }
+      return line_count;
    }
 
    template <typename T,
@@ -523,11 +523,11 @@ namespace strtk
                                           Sequence<T,Allocator>& sequence,
                                           const std::size_t& buffer_size = one_kilobyte)
    {
-     std::ifstream stream(file_name.c_str());
-     if (!stream)
-        return 0;
-     else
-        return load_from_text_file(stream,sequence,buffer_size);
+      std::ifstream stream(file_name.c_str());
+      if (!stream)
+         return 0;
+      else
+         return load_from_text_file(stream,sequence,buffer_size);
    }
 
    template <typename T,
@@ -537,11 +537,11 @@ namespace strtk
                                           std::set<T,Comparator,Allocator>& set,
                                           const std::size_t& buffer_size = one_kilobyte)
    {
-     std::ifstream stream(file_name.c_str());
-     if (!stream)
-        return 0;
-     else
-        return load_from_text_file(stream,set,buffer_size);
+      std::ifstream stream(file_name.c_str());
+      if (!stream)
+         return 0;
+      else
+         return load_from_text_file(stream,set,buffer_size);
    }
 
    template <typename T,
@@ -551,11 +551,11 @@ namespace strtk
                                           std::multiset<T,Comparator,Allocator>& multiset,
                                           const std::size_t& buffer_size = one_kilobyte)
    {
-     std::ifstream stream(file_name.c_str());
-     if (!stream)
-        return 0;
-     else
-        return load_from_text_file(stream,multiset,buffer_size);
+      std::ifstream stream(file_name.c_str());
+      if (!stream)
+         return 0;
+      else
+         return load_from_text_file(stream,multiset,buffer_size);
    }
 
    template <typename T, typename Container>
@@ -563,11 +563,11 @@ namespace strtk
                                           std::queue<T,Container>& queue,
                                           const std::size_t& buffer_size = one_kilobyte)
    {
-     std::ifstream stream(file_name.c_str());
-     if (!stream)
-        return 0;
-     else
-        return load_from_text_file(stream,queue,buffer_size);
+      std::ifstream stream(file_name.c_str());
+      if (!stream)
+         return 0;
+      else
+         return load_from_text_file(stream,queue,buffer_size);
    }
 
    template <typename T, typename Container>
@@ -575,11 +575,11 @@ namespace strtk
                                           std::stack<T,Container>& stack,
                                           const std::size_t& buffer_size = one_kilobyte)
    {
-     std::ifstream stream(file_name.c_str());
-     if (!stream)
-        return 0;
-     else
-        return load_from_text_file(stream,stack,buffer_size);
+      std::ifstream stream(file_name.c_str());
+      if (!stream)
+         return 0;
+      else
+         return load_from_text_file(stream,stack,buffer_size);
    }
 
    template <typename T,
@@ -589,11 +589,11 @@ namespace strtk
                                           std::priority_queue<T,Container,Comparator>& priority_queue,
                                           const std::size_t& buffer_size = one_kilobyte)
    {
-     std::ifstream stream(file_name.c_str());
-     if (!stream)
-        return 0;
-     else
-        return load_from_text_file(stream,priority_queue,buffer_size);
+      std::ifstream stream(file_name.c_str());
+      if (!stream)
+         return 0;
+      else
+         return load_from_text_file(stream,priority_queue,buffer_size);
    }
 
    template <typename T,
@@ -603,31 +603,31 @@ namespace strtk
                                          const Sequence<T,Allocator>& sequence,
                                          const std::string& delimiter = "")
    {
-     if (!stream) return 0;
+      if (!stream) return 0;
 
-     std::size_t count = 0;
-     typename Sequence<T,Allocator>::const_iterator itr = sequence.begin();
-     typename Sequence<T,Allocator>::const_iterator end = sequence.end();
+      std::size_t count = 0;
+      typename Sequence<T,Allocator>::const_iterator itr = sequence.begin();
+      typename Sequence<T,Allocator>::const_iterator end = sequence.end();
 
-     if (!delimiter.empty())
-     {
-        while (end != itr)
-        {
-           stream << (*itr) << delimiter;
-           ++itr;
-           ++count;
-        }
-     }
-     else
-     {
-        while (end != itr)
-        {
-           stream << (*itr);
-           ++itr;
-           ++count;
-        }
-     }
-     return count;
+      if (!delimiter.empty())
+      {
+         while (end != itr)
+         {
+            stream << (*itr) << delimiter;
+            ++itr;
+            ++count;
+         }
+      }
+      else
+      {
+         while (end != itr)
+         {
+            stream << (*itr);
+            ++itr;
+            ++count;
+         }
+      }
+      return count;
    }
 
    template <typename T,
@@ -637,31 +637,31 @@ namespace strtk
                                          const std::set<T,Comparator,Allocator>& set,
                                          const std::string& delimiter = "")
    {
-     if (!stream) return 0;
+      if (!stream) return 0;
 
-     std::size_t count = 0;
-     typename std::set<T,Comparator,Allocator>::const_iterator itr = set.begin();
-     typename std::set<T,Comparator,Allocator>::const_iterator end = set.end();
+      std::size_t count = 0;
+      typename std::set<T,Comparator,Allocator>::const_iterator itr = set.begin();
+      typename std::set<T,Comparator,Allocator>::const_iterator end = set.end();
 
-     if (!delimiter.empty())
-     {
-        while (end != itr)
-        {
-           stream << (*itr) << delimiter;
-           ++itr;
-           ++count;
-        }
-     }
-     else
-     {
-        while (end != itr)
-        {
-           stream << (*itr);
-           ++itr;
-           ++count;
-        }
-     }
-     return count;
+      if (!delimiter.empty())
+      {
+         while (end != itr)
+         {
+            stream << (*itr) << delimiter;
+            ++itr;
+            ++count;
+         }
+      }
+      else
+      {
+         while (end != itr)
+         {
+            stream << (*itr);
+            ++itr;
+            ++count;
+         }
+      }
+      return count;
    }
 
    template <typename T,
@@ -671,31 +671,31 @@ namespace strtk
                                          const std::multiset<T,Comparator,Allocator>& multiset,
                                          const std::string& delimiter = "")
    {
-     if (!stream) return 0;
+      if (!stream) return 0;
 
-     std::size_t count = 0;
-     typename std::multiset<T,Comparator,Allocator>::const_iterator itr = multiset.begin();
-     typename std::multiset<T,Comparator,Allocator>::const_iterator end = multiset.end();
+      std::size_t count = 0;
+      typename std::multiset<T,Comparator,Allocator>::const_iterator itr = multiset.begin();
+      typename std::multiset<T,Comparator,Allocator>::const_iterator end = multiset.end();
 
-     if (!delimiter.empty())
-     {
-        while (end != itr)
-        {
-           stream << (*itr) << delimiter;
-           ++itr;
-           ++count;
-        }
-     }
-     else
-     {
-        while (end != itr)
-        {
-           stream << (*itr);
-           ++itr;
-           ++count;
-        }
-     }
-     return count;
+      if (!delimiter.empty())
+      {
+         while (end != itr)
+         {
+            stream << (*itr) << delimiter;
+            ++itr;
+            ++count;
+         }
+      }
+      else
+      {
+         while (end != itr)
+         {
+            stream << (*itr);
+            ++itr;
+            ++count;
+         }
+      }
+      return count;
    }
 
    template <typename T,
@@ -705,11 +705,11 @@ namespace strtk
                                          const Sequence<T,Allocator>& sequence,
                                          const std::string& delimiter = "")
    {
-     std::ofstream stream(file_name.c_str());
-     if (!stream)
-        return 0;
-     else
-        return write_to_text_file(stream,sequence,delimiter);
+      std::ofstream stream(file_name.c_str());
+      if (!stream)
+         return 0;
+      else
+         return write_to_text_file(stream,sequence,delimiter);
    }
 
    template <typename T,
@@ -719,11 +719,11 @@ namespace strtk
                                          const std::set<T,Comparator,Allocator>& set,
                                          const std::string& delimiter = "")
    {
-     std::ofstream stream(file_name.c_str());
-     if (!stream)
-        return 0;
-     else
-        return write_to_text_file(stream,set,delimiter);
+      std::ofstream stream(file_name.c_str());
+      if (!stream)
+         return 0;
+      else
+         return write_to_text_file(stream,set,delimiter);
    }
 
    template <typename T,
@@ -733,11 +733,11 @@ namespace strtk
                                          const std::multiset<T,Comparator,Allocator>& multiset,
                                          const std::string& delimiter = "")
    {
-     std::ofstream stream(file_name.c_str());
-     if (!stream)
-        return 0;
-     else
-        return write_to_text_file(stream,multiset,delimiter);
+      std::ofstream stream(file_name.c_str());
+      if (!stream)
+         return 0;
+      else
+         return write_to_text_file(stream,multiset,delimiter);
    }
 
    template <typename InputIterator, typename OutputIterator>
