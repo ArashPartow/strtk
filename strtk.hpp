@@ -5335,6 +5335,12 @@ namespace strtk
            begin_(dsv_index.token_list.begin() +  dsv_index.row_index[index].first)
          {}
 
+         inline bool is_null(const std::size_t& index) const
+         {
+            const range_t& range = *(begin_ + index);
+            return (0 == std::distance(range.first,range.second));
+         }
+
          template <typename T>
          inline T operator[](const std::size_t& index) const
          {
@@ -6579,6 +6585,51 @@ namespace strtk
          max_column_count_ = 0;
          state_ = false;
          file_name_ = "";
+      }
+
+      inline std::size_t column_width(const std::size_t& col,
+                                      const row_range_t& row_range) const
+      {
+         if (col > max_column_count_)
+            return 0;
+         else if (row_range_invalid(row_range))
+            return 0;
+         std::size_t result = 0;
+         for (std::size_t i = row_range.first; i < row_range.second; ++i)
+         {
+            const row_index_range_t& r = dsv_index_.row_index[i];
+            if (col < dsv_index_.token_count(r))
+            {
+               const range_t& range = *(dsv_index_.token_list.begin() + r.first + col);
+               result = std::max<std::size_t>(std::distance(range.first,range.second),result);
+            }
+         }
+         return result;
+      }
+
+      inline std::size_t column_width(const std::size_t& col) const
+      {
+         return column_width(col,all_rows());
+      }
+
+      template <typename Allocator,
+                template <typename,typename> class Sequence>
+      inline void get_column_widths(Sequence<std::size_t,Allocator>& columns)
+      {
+         for (std::size_t c = 0; c < max_column_count(); ++c)
+         {
+            columns.push_back(column_width(c));
+         }
+      }
+
+      template <typename Allocator,
+                template <typename,typename> class Sequence>
+      inline void get_column_widths(Sequence<std::pair<std::size_t,std::size_t>,Allocator>& columns)
+      {
+         for (std::size_t c = 0; c < max_column_count(); ++c)
+         {
+            columns.push_back(std::make_pair(c,column_width(c)));
+         }
       }
 
       template <typename T>
@@ -23579,7 +23630,7 @@ namespace strtk
    {
       static const char* library = "String Toolkit";
       static const char* version = "2.718281828459045235360287471352662497757247093699959574";
-      static const char* date    = "20130630";
+      static const char* date    = "20140118";
 
       static inline std::string data()
       {
