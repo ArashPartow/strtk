@@ -8,11 +8,13 @@ bases. Furthermore the library has  a rich set of features  that makes
 light work of any kind of string processing task.
 
 
+
 [COPYRIGHT NOTICE]
 Free  use  of  the  String  Toolkit  Library  is  permitted  under the
 guidelines and  in accordance  with the  most current  version of  the
 Common Public License.
 http://www.opensource.org/licenses/cpl1.0.php
+
 
 
 [DOWNLOADS & UPDATES]
@@ -26,6 +28,7 @@ Code repository:
 (2) svn checkout http://strtk.googlecode.com/svn/trunk/ strtk
 
 
+
 [INSTALLATION]
 (1) strtk.hpp  should be  placed in  a project  or system include path
 (e.g: /usr/include/).
@@ -37,11 +40,13 @@ is included or as a compiler switch:
    (*) strtk_no_tr1_or_boost
 
 (3) It is advisable to have either Boost installed or a TR1  compliant
+
 C++ standard library. Installation of Boost on:
 (*) Win32  : http://www.boostpro.com/download
 (*) Ubuntu : boost packages via apt-get or synaptic
 (*) Fedora : yum -y install boost-devel
 (*) http://www.boost.org/doc/libs/release/more/getting_started/index.html
+
 
 
 [COMPILATION]
@@ -50,12 +55,17 @@ C++ standard library. Installation of Boost on:
 (3) To strip executables: make strip_bin
 
 
+
 [COMPILER COMPATIBILITY]
-(*) GNU Compiler Collection (4.3+)
-(*) Intel® C++ Compiler (9.x+)
+(*) GNU Compiler Collection (4.1+)
+(*) Intel C++ Compiler (9.x+)
 (*) Clang/LLVM (1.1+)
+(*) PGI C++ (10.x+)
 (*) Microsoft Visual Studio C++ Compiler (8.1+)
 (*) Comeau C++ Compiler (4.3+)
+(*) IBM XL C/C++ (10.x+)
+(*) C++ Builder (XE4+)
+
 
 
 [FILES]
