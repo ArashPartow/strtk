@@ -16782,13 +16782,11 @@ namespace strtk
          }
 
          bool instate = false;
-         int pre_decimal = 0;
 
          if ('.' != (*itr))
          {
             const Iterator curr = itr;
             while ((end != itr) && ('0' == (*itr))) ++itr;
-            const Iterator post_zero_cull_itr = itr;
             unsigned char digit = 0;
 
             #define parse_digit_1 \
@@ -16811,7 +16809,6 @@ namespace strtk
             #undef parse_digit_1
             #undef parse_digit_2
             if (curr != itr) instate = true;
-            pre_decimal = static_cast<int>(std::distance(post_zero_cull_itr,itr));
          }
 
          int exponent = 0;
