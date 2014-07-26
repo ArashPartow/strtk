@@ -40,7 +40,6 @@ is included or as a compiler switch:
    (*) strtk_no_tr1_or_boost
 
 (3) It is advisable to have either Boost installed or a TR1  compliant
-
 C++ standard library. Installation of Boost on:
 (*) Win32  : http://www.boostpro.com/download
 (*) Ubuntu : boost packages via apt-get or synaptic

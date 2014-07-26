@@ -16901,14 +16901,6 @@ namespace strtk
 
          if (0 != exponent)
          {
-            if (
-                 (std::numeric_limits<T>::max_exponent10 < (exponent + pre_decimal)) ||
-                 (std::numeric_limits<T>::min_exponent10 > (exponent + pre_decimal))
-               )
-            {
-               return false;
-            }
-
             const int e = std::abs(exponent);
             static const double fract10[] =
                          {
@@ -23631,8 +23623,8 @@ namespace strtk
    namespace information
    {
       static const char* library = "String Toolkit";
-      static const char* version = "2.718281828459045235360287471352662497757247093699959574";
-      static const char* date    = "20140118";
+      static const char* version = "2.71828182845904523536028747135266249775724709369995957496";
+      static const char* date    = "20140727";
 
       static inline std::string data()
       {
