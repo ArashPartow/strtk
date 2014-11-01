@@ -113,13 +113,14 @@ int main()
       const unsigned char* buf_end = buffer + buffer_size;
 
       strtk::util::timer timer;
-
       timer.start();
+
       while (buf_end != buf_itr)
       {
          filter.insert(buf_itr,k);
          buf_itr += k;
       }
+
       timer.stop();
 
       printf("[insert ] Element Count: %llu\tTotal Time: %5.3fsec\tRate: %10.3felem/sec\n",
@@ -133,16 +134,18 @@ int main()
       const unsigned char* buf_end = buffer + buffer_size;
 
       strtk::util::timer timer;
-
       timer.start();
+
       while (buf_end != buf_itr)
       {
          if (!filter.contains(buf_itr,k))
          {
             std::cout << "Error: Failed to find: " << std::string(buf_itr,buf_itr + k) << std::endl;
          }
+
          buf_itr += k;
       }
+
       timer.stop();
 
       printf("[contain] Element Count: %llu\tTotal Time: %5.3fsec\tRate: %10.3felem/sec\n",
@@ -161,17 +164,19 @@ int main()
       const unsigned char* buf_end = buffer + buffer_size;
 
       strtk::util::timer timer;
-
       timer.start();
+
       while (buf_end != buf_itr)
       {
          if (filter.contains(buf_itr,small_size))
          {
             ++false_positive_count;
          }
+
          ++small_element_count;
          buf_itr += small_size;
       }
+
       timer.stop();
 
       printf("[FPC    ] Element Count: %llu\tFalse Positive Count: %d\tFalse Positive Probability: %9.8f\tTotal Time: %5.3fsec\tRate: %10.3felem/sec\n",
@@ -205,6 +210,7 @@ int main()
          unsigned char* buf_itr = buffer;
          const unsigned char* buf_end = buffer + buffer_size;
          unsigned int failures = 0;
+
          while (buf_end != buf_itr)
          {
             if (!secondary_filter.contains(buf_itr,k))
@@ -212,8 +218,10 @@ int main()
                std::cout << "Error: Failed to find: " << std::string(buf_itr,buf_itr + k) << " in secondary filter!" << std::endl;
                ++failures;
             }
+
             buf_itr += k;
          }
+
          if (0 == failures)
          {
             std::cout << "Successfully replicated bloom filter." << std::endl;

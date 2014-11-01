@@ -32,6 +32,7 @@
 
 #include "strtk.hpp"
 
+
 void information()
 {
    std::cout << strtk::information::data() << std::endl;
@@ -43,13 +44,16 @@ void tokenizer_example01()
    std::string s = "abc|123|xyz|789";
    strtk::single_delimiter_predicate<std::string::value_type> predicate('|');
    typedef strtk::std_string::tokenizer<>::type tokenizer_type;
+
    tokenizer_type tokenizer(s,predicate);
    tokenizer_type::iterator itr = tokenizer.begin();
+
    while (tokenizer.end() != itr)
    {
       std::cout << "[" << itr << "]\t";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -58,14 +62,18 @@ void tokenizer_example02()
    std::cout << "tokenizer_example02" << std::endl;
    std::string s = "abc.123 xyz?789";
    strtk::multiple_char_delimiter_predicate predicate(" .;?");
+
    typedef strtk::std_string::tokenizer<strtk::multiple_char_delimiter_predicate>::type tokenizer_type;
+
    tokenizer_type tokenizer(s,predicate,strtk::tokenize_options::compress_delimiters);
    tokenizer_type::iterator itr = tokenizer.begin();
+
    while (tokenizer.end() != itr)
    {
       std::cout << "[" << itr << "]\t";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -74,14 +82,18 @@ void tokenizer_example03()
    std::cout << "tokenizer_example03" << std::endl;
    std::string s = "abc||123|||||xyz|789";
    strtk::single_delimiter_predicate<std::string::value_type> predicate('|');
+
    typedef strtk::std_string::tokenizer<>::type tokenizer_type;
+
    tokenizer_type tokenizer(s,predicate,strtk::tokenize_options::compress_delimiters);
    tokenizer_type::iterator itr = tokenizer.begin();
+
    while (tokenizer.end() != itr)
    {
       std::cout << "[" << itr << "]\t";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -90,14 +102,18 @@ void tokenizer_example04()
    std::cout << "tokenizer_example04" << std::endl;
    std::string s = "abc.;123? xyz;?789";
    strtk::multiple_char_delimiter_predicate predicate(" .;?");
+
    typedef strtk::std_string::tokenizer<strtk::multiple_char_delimiter_predicate>::type tokenizer_type;
+
    tokenizer_type tokenizer(s,predicate,strtk::tokenize_options::compress_delimiters);
    tokenizer_type::iterator itr = tokenizer.begin();
+
    while (tokenizer.end() != itr)
    {
       std::cout << "[" << itr << "]\t";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -107,14 +123,17 @@ void tokenizer_example05()
    unsigned int data[] = {1,2,3,0,4,5,6,0,7,8,0,9};
    const std::size_t data_size = sizeof(data) / sizeof(unsigned int);
    strtk::single_delimiter_predicate<unsigned int> predicate(0);
+
    typedef strtk::tokenizer< unsigned int*,strtk::single_delimiter_predicate<unsigned int> > tokenizer_type;
    tokenizer_type tokenizer(data,data + data_size,predicate);
    tokenizer_type::iterator itr = tokenizer.begin();
+
    while (tokenizer.end() != itr)
    {
       std::cout << "[" << strtk::join(" ",(*itr).first,(*itr).second) << "]";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -125,14 +144,17 @@ void tokenizer_example06()
    const std::size_t data_size = sizeof(data) / sizeof(unsigned int);
    unsigned int delimiters[2] = {0,10};
    strtk::multiple_delimiter_predicate<unsigned int> predicate(delimiters,delimiters + 2);
+
    typedef strtk::tokenizer< unsigned int*,strtk::multiple_delimiter_predicate<unsigned int> > tokenizer_type;
    tokenizer_type tokenizer(data,data + data_size,predicate);
    tokenizer_type::iterator itr = tokenizer.begin();
+
    while (tokenizer.end() != itr)
    {
       std::cout << "[" << strtk::join(" ",(*itr).first,(*itr).second) << "]";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -142,14 +164,17 @@ void tokenizer_example07()
    double data[] = {1.1,2.2,3.3,0.0,4.4,5.5,6.6,0,7.7,8.8,0,9.9};
    const std::size_t data_size = sizeof(data) / sizeof(double);
    strtk::single_delimiter_predicate<double> predicate(0);
+
    typedef strtk::tokenizer< double*,strtk::single_delimiter_predicate<double> > tokenizer_type;
    tokenizer_type tokenizer(data,data + data_size,predicate);
    tokenizer_type::iterator itr = tokenizer.begin();
+
    while (tokenizer.end() != itr)
    {
       std::cout << "[" << strtk::join(" ",(*itr).first,(*itr).second) << "]";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -160,14 +185,17 @@ void tokenizer_example08()
    const std::size_t data_size = sizeof(data) / sizeof(double);
    double delimiters[2] = {0.0,10.0};
    strtk::multiple_delimiter_predicate<double> predicate(delimiters,delimiters + 2);
+
    typedef strtk::tokenizer< double*,strtk::multiple_delimiter_predicate<double> > tokenizer_type;
    tokenizer_type tokenizer(data,data + data_size,predicate);
    tokenizer_type::iterator itr = tokenizer.begin();
+
    while (tokenizer.end() != itr)
    {
       std::cout << "[" << strtk::join(" ",(*itr).first,(*itr).second) << "]";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -188,17 +216,21 @@ void tokenizer_example10()
    std::string str_list[] = { "abc" , "delimiter" , "ijk" , "delimiter" ,
                               "lmn" , "delimiter" , "opq", "rst" ,"uvw" ,
                               "delimiter" , "xyz" , "123" };
+
    const std::size_t str_list_size = sizeof(str_list) / sizeof(std::string);
    strtk::range::adapter<std::string> range(str_list,str_list_size);
    strtk::single_delimiter_predicate<std::string> predicate("delimiter");
+
    typedef strtk::tokenizer< std::string*,strtk::single_delimiter_predicate<std::string> > tokenizer_type;
    tokenizer_type tokenizer(range.begin(),range.end(),predicate);
    tokenizer_type::iterator itr = tokenizer.begin();
+
    while (tokenizer.end() != itr)
    {
       std::cout << "[" << strtk::join(" ",(*itr).first,(*itr).second) << "]";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -207,8 +239,10 @@ void tokenizer_example11()
    std::cout << "tokenizer_example11" << std::endl;
    std::string s = "123|456|789|101112";
    strtk::single_delimiter_predicate<std::string::value_type> predicate('|');
+
    typedef strtk::std_string::tokenizer<strtk::single_delimiter_predicate<std::string::value_type> >::type tokenizer_type;
    tokenizer_type tokenizer(s,predicate);
+
    std::list<int> token_list;
    std::copy(tokenizer.begin(),tokenizer.end(),strtk::range_to_type_back_inserter(token_list));
    std::cout << strtk::join("\t",token_list) << std::endl;
@@ -219,13 +253,16 @@ void tokenizer_example12()
    std::cout << "tokenizer_example12" << std::endl;
    // tokenizer_example01 with much simpler syntax.
    std::string s = "abc|123|xyz|789";
+
    strtk::std_string::tokenizer<>::type tokenizer(s,strtk::std_string::tokenizer<>::predicate_type('|'));
    strtk::std_string::tokenizer<>::type::iterator itr = tokenizer.begin();
+
    while (tokenizer.end() != itr)
    {
       std::cout << "[" << itr << "]\t";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -248,11 +285,13 @@ void split_example01()
    strtk::single_delimiter_predicate<std::string::value_type> predicate('|');
    strtk::split(predicate,s,std::back_inserter(token_list));
    strtk::std_string::token_list_type::iterator itr = token_list.begin();
+
    while (token_list.end() != itr)
    {
       std::cout << "[" << (*itr) << "]\t";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -264,11 +303,13 @@ void split_example02()
    strtk::multiple_char_delimiter_predicate predicate(" .;?");
    strtk::split(predicate,s,std::back_inserter(token_list));
    strtk::std_string::token_list_type::iterator itr = token_list.begin();
+
    while (token_list.end() != itr)
    {
       std::cout << "[" << (*itr) << "]\t";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -280,11 +321,13 @@ void split_example03()
    strtk::single_delimiter_predicate<std::string::value_type> predicate('|');
    strtk::split(predicate,s,std::back_inserter(token_list),strtk::split_options::compress_delimiters);
    strtk::std_string::token_list_type::iterator itr = token_list.begin();
+
    while (token_list.end() != itr)
    {
       std::cout << "[" << (*itr) << "]\t";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -296,11 +339,13 @@ void split_example04()
    strtk::multiple_char_delimiter_predicate predicate(" .;?");
    strtk::split(predicate,s,std::back_inserter(token_list),strtk::split_options::compress_delimiters);
    strtk::std_string::token_list_type::iterator itr = token_list.begin();
+
    while (token_list.end() != itr)
    {
       std::cout << "[" << (*itr) << "]\t";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -311,11 +356,13 @@ void split_example05()
    strtk::std_string::token_list_type token_list;
    strtk::split(" .;?",s,std::back_inserter(token_list));
    strtk::std_string::token_list_type::iterator itr = token_list.begin();
+
    while (token_list.end() != itr)
    {
       std::cout << "[" << (*itr) << "]\t";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -368,11 +415,13 @@ void split_n_example01()
    const std::size_t token_count = 4;
    strtk::split_n(predicate,s,token_count,std::back_inserter(token_list));
    strtk::std_string::token_list_type::iterator itr = token_list.begin();
+
    while (token_list.end() != itr)
    {
       std::cout << "[" << (*itr) << "]\t";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -385,11 +434,13 @@ void split_n_example02()
    const std::size_t token_count = 4;
    strtk::split_n(predicate,s,token_count,std::back_inserter(token_list));
    strtk::std_string::token_list_type::iterator itr = token_list.begin();
+
    while (token_list.end() != itr)
    {
       std::cout << "[" << (*itr) << "]\t";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -401,11 +452,13 @@ void split_n_example03()
    const std::size_t token_count = 4;
    strtk::split_n(" .;?",s,token_count,std::back_inserter(token_list));
    strtk::std_string::token_list_type::iterator itr = token_list.begin();
+
    while (token_list.end() != itr)
    {
       std::cout << "[" << (*itr) << "]\t";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -461,11 +514,13 @@ void offset_splitter_example01()
    strtk::std_string::token_list_type token_list;
    strtk::offset_splitter(s,os_p,std::back_inserter(token_list));
    strtk::std_string::token_list_type::iterator itr = token_list.begin();
+
    while (token_list.end() != itr)
    {
       std::cout << "[" << (*itr) << "] ";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -478,14 +533,17 @@ void offset_splitter_example02()
    strtk::std_string::token_list_type token_list;
    strtk::offset_splitter(s,os_p,std::back_inserter(token_list));
    strtk::std_string::token_list_type::iterator itr = token_list.begin();
+
    while (token_list.end() != itr)
    {
       if (1 != std::distance((*itr).first,(*itr).second))
       {
          std::cout << "[" << (*itr) << "] ";
       }
+
       ++itr;
    }
+
    std::cout << std::endl;
 }
 
@@ -496,11 +554,13 @@ void offset_splitter_example03()
    strtk::std_string::token_list_type token_list;
    strtk::offset_splitter(s,strtk::offsets(1,2,3,4,5,6,7),std::back_inserter(token_list));
    strtk::std_string::token_list_type::iterator itr = token_list.begin();
+
    while (token_list.end() != itr)
    {
       std::cout << "[" << (*itr) << "] ";
       ++itr;
    }
+
    std::cout << std::endl;
 }
 

@@ -122,8 +122,10 @@ int main(int argc, char* argv[])
    {
       value_list.clear();
       grid.extract_column_checked(column,value_list);
+
       if (value_list.empty())
          continue;
+
       std::cout << "C["<< column << "]" << "\t";
       compute_stats(value_list);
       std::cout << std::endl;
@@ -133,8 +135,10 @@ int main(int argc, char* argv[])
    {
       value_list.clear();
       grid.row(row).parse_checked(value_list);
+
       if (value_list.empty())
          continue;
+
       std::cout << "R["<< row << "]" << "\t";
       compute_stats(value_list);
       std::cout << std::endl;

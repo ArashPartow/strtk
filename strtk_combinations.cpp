@@ -61,6 +61,7 @@ int main(int argc, char* argv[])
    if (argc < 3) return (usage(),1);
 
    std::size_t r = 0;
+
    if (!strtk::string_to_type_converter(std::string(argv[1]),r))
       return (usage("Invalid 'r' value."),1);
 

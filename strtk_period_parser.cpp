@@ -56,13 +56,16 @@ public:
       std::size_t token_count = split_n(predicate_,begin,end,max_token_count,token_list,split_options);
       if (0 == token_count)
          return false;
+
       period = 0;
       double t = 0.0;
       bool encounterd [] = { false, false, false, false };
+
       for (std::size_t i = 0; i < token_count; ++i)
       {
          if (!strtk::string_to_type_converter(token_list[i].first,token_list[i].second - 1,t))
             return false;
+
          switch (std::toupper(*(token_list[i].second - 1)))
          {
             case 'D' : if (encounterd[0]) return false; else { t = 86400000.0 * t; encounterd[0] = true; } break;
@@ -71,10 +74,13 @@ public:
             case 'S' : if (encounterd[3]) return false; else { t =     1000.0 * t; encounterd[3] = true; } break;
             default  : return false;
          }
+
          if (('D' != std::toupper(*(token_list[i].second - 1))) && (t < 0.0))
             return false;
+
          period += static_cast<long long>(t);
       }
+
       return true;
    }
 
@@ -117,6 +123,7 @@ int main()
    const std::size_t period_string_size = sizeof(period_string) / sizeof(std::string);
 
    long long t = 0;
+
    for (std::size_t i = 0; i < period_string_size; ++i)
    {
       if (parser(period_string[i],t))
@@ -124,5 +131,6 @@ int main()
       else
          std::cout << "Failed to parse: " << period_string[i] << std::endl;
    }
+
    return 0;
 }

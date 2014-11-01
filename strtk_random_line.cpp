@@ -42,9 +42,11 @@
    #error This example requires random
 #endif
 
+
 class random_line_selector
 {
 public:
+
    random_line_selector(std::string& line, const std::size_t& seed = 0xA5A5A5A5)
    : line_count_(1),
      line_(line),

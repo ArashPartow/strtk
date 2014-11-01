@@ -80,6 +80,7 @@ void nth_combination_example01()
                 << strtk::join("",index_list)        << " | "
                 << strtk::join("",nth_combination)   << std::endl;
    }
+
    std::cout << std::endl << std::endl;
 }
 
@@ -115,6 +116,7 @@ void nth_combination_example02()
                               next_comb_list.begin() + k,
                               next_comb_list.end());
    }
+
    std::cout << std::endl << std::endl;
 }
 

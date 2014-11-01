@@ -74,6 +74,7 @@ int main()
    for ( ; ; )
    {
       std::cin.read(reinterpret_cast<char*>(buffer),data_width);
+
       if (!(std::cin.eof() || std::cin.bad()))
       {
          strtk::convert_bin_to_hex(buffer,buffer + data_width,hex_buffer);
@@ -93,6 +94,7 @@ int main()
       else
       {
          std::size_t read_in_width = static_cast<std::size_t>(std::cin.gcount());
+
          if (0 != read_in_width)
          {
             strtk::convert_bin_to_hex(buffer,buffer + read_in_width,hex_buffer);
@@ -103,6 +105,7 @@ int main()
             std::cout.write(buffer,read_in_width);
             std::cout << '\n';
          }
+
          break;
       }
    }

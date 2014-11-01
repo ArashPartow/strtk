@@ -43,7 +43,7 @@
 template <typename T>
 inline bool not_equal(const T& t1,
                       const T& t2,
-                      const T& epsilon = 0.0000000001/*std::numeric_limits<T>::epsilon()*/)
+                      const T& epsilon = 0.0000000000001/*std::numeric_limits<T>::epsilon()*/)
 {
    if (t1 != t1) return true;
    if (t2 != t2) return true;
@@ -91,7 +91,9 @@ bool test_tokenizer_itr(const Predicate& p,
 {
    std::string result;
    Tokenizer stk(s,p,compressed_delimiters);
+
    typename Tokenizer::iterator it = stk.begin();
+
    while (stk.end() != it)
    {
       if ((*it).first == (*it).second)
@@ -99,8 +101,10 @@ bool test_tokenizer_itr(const Predicate& p,
       else
          result += std::string((*it).first,(*it).second);
       ++it;
+
       if (it != stk.end()) result += ",";
    }
+
    if (result != expected_result)
    {
       std::cout << "ERROR: result: " << result << "\t expected: " << expected_result << "\t";
@@ -611,8 +615,8 @@ struct data_block
              d2 == db.d2 &&
              d3 == db.d3 &&
              d4 == db.d4 &&
-             d5 == db.d5 &&
-             d6 == db.d6 &&
+    !not_equal(d5,db.d5) &&
+    !not_equal(d6,db.d6) &&
              d7 == db.d7 &&
              d8 == db.d8 &&
              d9 == db.d9 &&
@@ -664,7 +668,7 @@ bool test_fast_convert()
       unsigned int v = 0;
       for (unsigned int i = 0; i < 1000000000; ++i)
       {
-         if (!strtk::fast::signed_numeric_convert(strtk::type_to_string(i),v,true))
+         if (!strtk::fast::numeric_convert(strtk::type_to_string(i),v,true))
          {
             std::cout << "test_fast_convert() - Failed Fast convert 1  i = " << i << std::endl;
          }
@@ -701,10 +705,10 @@ bool test_fast_convert()
       for (std::size_t i = 0 ; i < (sizeof(s) / sizeof(std::string)); ++i)
       {
          unsigned long long t = 0;
-         strtk::fast::signed_numeric_convert(s[i],t);
+         strtk::fast::numeric_convert(s[i],t);
          if (t != v[i])
          {
-            strtk::fast::signed_numeric_convert(s[i],t);
+            strtk::fast::numeric_convert(s[i],t);
 
             std::cout << "test_fast_convert() - Failed Fast convert Special Test unsigned long long "
                       << " index = " << i
@@ -721,6 +725,72 @@ bool test_fast_convert()
 
 bool test_double_convert()
 {
+   {
+      static const std::string fract10_str[] =
+                   {
+                      "0.0",
+                      "1.0E+001", "1.0E+002", "1.0E+003", "1.0E+004", "1.0E+005", "1.0E+006", "1.0E+007", "1.0E+008", "1.0E+009", "1.0E+010",
+                      "1.0E+011", "1.0E+012", "1.0E+013", "1.0E+014", "1.0E+015", "1.0E+016", "1.0E+017", "1.0E+018", "1.0E+019", "1.0E+020",
+                      "1.0E+021", "1.0E+022", "1.0E+023", "1.0E+024", "1.0E+025", "1.0E+026", "1.0E+027", "1.0E+028", "1.0E+029", "1.0E+030",
+                      "1.0E+031", "1.0E+032", "1.0E+033", "1.0E+034", "1.0E+035", "1.0E+036", "1.0E+037", "1.0E+038", "1.0E+039", "1.0E+040",
+                      "1.0E+041", "1.0E+042", "1.0E+043", "1.0E+044", "1.0E+045", "1.0E+046", "1.0E+047", "1.0E+048", "1.0E+049", "1.0E+050",
+                      "1.0E+051", "1.0E+052", "1.0E+053", "1.0E+054", "1.0E+055", "1.0E+056", "1.0E+057", "1.0E+058", "1.0E+059", "1.0E+060",
+                      "1.0E+061", "1.0E+062", "1.0E+063", "1.0E+064", "1.0E+065", "1.0E+066", "1.0E+067", "1.0E+068", "1.0E+069", "1.0E+070",
+                      "1.0E+071", "1.0E+072", "1.0E+073", "1.0E+074", "1.0E+075", "1.0E+076", "1.0E+077", "1.0E+078", "1.0E+079", "1.0E+080",
+                      "1.0E+081", "1.0E+082", "1.0E+083", "1.0E+084", "1.0E+085", "1.0E+086", "1.0E+087", "1.0E+088", "1.0E+089", "1.0E+090",
+                      "1.0E+091", "1.0E+092", "1.0E+093", "1.0E+094", "1.0E+095", "1.0E+096", "1.0E+097", "1.0E+098", "1.0E+099", "1.0E+100",
+                      "1.0E+101", "1.0E+102", "1.0E+103", "1.0E+104", "1.0E+105", "1.0E+106", "1.0E+107", "1.0E+108", "1.0E+109", "1.0E+110",
+                      "1.0E+111", "1.0E+112", "1.0E+113", "1.0E+114", "1.0E+115", "1.0E+116", "1.0E+117", "1.0E+118", "1.0E+119", "1.0E+120",
+                      "1.0E+121", "1.0E+122", "1.0E+123", "1.0E+124", "1.0E+125", "1.0E+126", "1.0E+127", "1.0E+128", "1.0E+129", "1.0E+130",
+                      "1.0E+131", "1.0E+132", "1.0E+133", "1.0E+134", "1.0E+135", "1.0E+136", "1.0E+137", "1.0E+138", "1.0E+139", "1.0E+140",
+                      "1.0E+141", "1.0E+142", "1.0E+143", "1.0E+144", "1.0E+145", "1.0E+146", "1.0E+147", "1.0E+148", "1.0E+149", "1.0E+150",
+                      "1.0E+151", "1.0E+152", "1.0E+153", "1.0E+154", "1.0E+155", "1.0E+156", "1.0E+157", "1.0E+158", "1.0E+159", "1.0E+160",
+                      "1.0E+161", "1.0E+162", "1.0E+163", "1.0E+164", "1.0E+165", "1.0E+166", "1.0E+167", "1.0E+168", "1.0E+169", "1.0E+170",
+                      "1.0E+171", "1.0E+172", "1.0E+173", "1.0E+174", "1.0E+175", "1.0E+176", "1.0E+177", "1.0E+178", "1.0E+179", "1.0E+180",
+                      "1.0E+181", "1.0E+182", "1.0E+183", "1.0E+184", "1.0E+185", "1.0E+186", "1.0E+187", "1.0E+188", "1.0E+189", "1.0E+190",
+                      "1.0E+191", "1.0E+192", "1.0E+193", "1.0E+194", "1.0E+195", "1.0E+196", "1.0E+197", "1.0E+198", "1.0E+199", "1.0E+200",
+                      "1.0E+201", "1.0E+202", "1.0E+203", "1.0E+204", "1.0E+205", "1.0E+206", "1.0E+207", "1.0E+208", "1.0E+209", "1.0E+210",
+                      "1.0E+211", "1.0E+212", "1.0E+213", "1.0E+214", "1.0E+215", "1.0E+216", "1.0E+217", "1.0E+218", "1.0E+219", "1.0E+220",
+                      "1.0E+221", "1.0E+222", "1.0E+223", "1.0E+224", "1.0E+225", "1.0E+226", "1.0E+227", "1.0E+228", "1.0E+229", "1.0E+230",
+                      "1.0E+231", "1.0E+232", "1.0E+233", "1.0E+234", "1.0E+235", "1.0E+236", "1.0E+237", "1.0E+238", "1.0E+239", "1.0E+240",
+                      "1.0E+241", "1.0E+242", "1.0E+243", "1.0E+244", "1.0E+245", "1.0E+246", "1.0E+247", "1.0E+248", "1.0E+249", "1.0E+250",
+                      "1.0E+251", "1.0E+252", "1.0E+253", "1.0E+254", "1.0E+255", "1.0E+256", "1.0E+257", "1.0E+258", "1.0E+259", "1.0E+260",
+                      "1.0E+261", "1.0E+262", "1.0E+263", "1.0E+264", "1.0E+265", "1.0E+266", "1.0E+267", "1.0E+268", "1.0E+269", "1.0E+270",
+                      "1.0E+271", "1.0E+272", "1.0E+273", "1.0E+274", "1.0E+275", "1.0E+276", "1.0E+277", "1.0E+278", "1.0E+279", "1.0E+280",
+                      "1.0E+281", "1.0E+282", "1.0E+283", "1.0E+284", "1.0E+285", "1.0E+286", "1.0E+287", "1.0E+288", "1.0E+289", "1.0E+290",
+                      "1.0E+291", "1.0E+292", "1.0E+293", "1.0E+294", "1.0E+295", "1.0E+296", "1.0E+297", "1.0E+298", "1.0E+299", "1.0E+300",
+                      "1.0E+301", "1.0E+302", "1.0E+303", "1.0E+304", "1.0E+305", "1.0E+306", "1.0E+307", "1.0E+308"
+                   };
+
+      const std::size_t dbl_size = sizeof(fract10_str) / sizeof(std::string);
+
+      bool result = true;
+
+      for (std::size_t i = 1; i < dbl_size; ++i)
+      {
+         double d = std::numeric_limits<double>::quiet_NaN();
+
+         if (!strtk::string_to_type_converter(fract10_str[i],d))
+         {
+            std::cout << "test_double_convert() exp10 test convert failure [" << i << "] "
+                      << "str: ["<< fract10_str[i] << "]" << std::endl;
+            result = false;
+         }
+
+         if (not_equal(d,std::pow(10.0,1.0 * i)))
+         {
+            std::cout << "test_double_convert() exp10 test value check failure [" << i << "] "
+                      << "str: ["  << fract10_str[i] << "]  "
+                      << "value: " << d << " "
+                      << "cmpv : " << std::pow(10.0,1.0 * i) << std::endl;
+            result= false;
+         }
+      }
+
+      if (!result)
+         return false;
+   }
+
    {
       static const std::string double_str[] =
                   {
@@ -1000,13 +1070,15 @@ bool test_double_convert()
          v = 0.0;
          if (!strtk::string_to_type_converter(double_str[i],v))
          {
-            std::cout << "test_double_convert() double convert[" << i << "]" << std::endl;
+            std::cout << "test_double_convert() double convert[" << i << "]"
+                      << " dblstr: [" << double_str[i] << "]" << std::endl;
             return false;
          }
 
-         if ((d[i] != v) && (!strtk_isnan(v)))
+         if (not_equal(d[i],v) && (!strtk_isnan(v)))
          {
-            std::cout << "test_double_convert() double check[" << i << "]" << std::endl;
+            std::cout << "test_double_convert() double check[" << i << "]"
+                      << " dblstr: [" << double_str[i] << "]" << std::endl;
             return false;
          }
       }
@@ -1039,7 +1111,7 @@ bool test_double_convert()
       {
          if (strtk::string_to_type_converter(bad_list[i],v))
          {
-            std::cout << "test_double_convert() bad test failure [" << i << "] " << std::endl;
+            std::cout << "test_double_convert() bad test failure [" << i << "]  - [" << bad_list[i] << "]" << std::endl;
             return false;
          }
       }
@@ -1050,6 +1122,7 @@ bool test_double_convert()
       std::string s;
       s.reserve(32);
       double t = 0.0;
+
       for (int i = -static_cast<int>(count); i < static_cast<int>(count); ++i)
       {
          if (!strtk::type_to_string(i,s))
@@ -1077,8 +1150,10 @@ bool test_double_convert()
    {
       std::string s;
       s.reserve(256);
+
       double v = -111111.11;
       double t = 0.0;
+
       while (v < +111111.11)
       {
          std_double_to_string(v,s);
@@ -1109,12 +1184,15 @@ bool test_double_convert()
                0.999, 0.13579, 0.97531
              };
       std::size_t delta_size = sizeof(delta) / sizeof(double);
+
       std::string s;
       s.reserve(256);
       double tmp = 0.0;
+
       for (int i = 0; i < 1000000; ++i)
       {
          std_double_to_string(d1,s);
+
          if (!strtk::string_to_type_converter(s,tmp))
          {
             std::cout << "test_double_convert() - (1) final test string to double failure @ " << i << std::endl;
@@ -1130,6 +1208,7 @@ bool test_double_convert()
          d1 += delta[std::abs(i) % delta_size];
 
          std_double_to_string(d2,s);
+
          if (!strtk::string_to_type_converter(s,tmp))
          {
             std::cout << "test_double_convert() - (2) final test string to double failure @ " << i << std::endl;
@@ -1351,6 +1430,76 @@ bool test_int_uint_convert()
    s.reserve(32);
 
    {
+      const std::string test_str[] =
+      {
+         "0",
+         "1",
+         "12",
+         "123",
+         "1234",
+         "12345",
+         "123456",
+         "1234567",
+         "12345678",
+         "123456789",
+         "-0",
+         "-1",
+         "-12",
+         "-123",
+         "-1234",
+         "-12345",
+         "-123456",
+         "-1234567",
+         "-12345678",
+         "-123456789",
+         "-2147483574"
+      };
+
+      const int test_int[] =
+      {
+         0,
+         1,
+         12,
+         123,
+         1234,
+         12345,
+         123456,
+         1234567,
+         12345678,
+         123456789,
+         -0,
+         -1,
+         -12,
+         -123,
+         -1234,
+         -12345,
+         -123456,
+         -1234567,
+         -12345678,
+         -123456789,
+         -2147483574
+      };
+
+      for (std::size_t i = 0; i < sizeof(test_str) / sizeof(std::string); ++i)
+      {
+         int t = 9999999;
+
+         if (!strtk::string_to_type_converter(test_str[i],t))
+         {
+            std::cout << "test_int_uint_convert() - Failed basic string to int @ " << i << std::endl;
+            return false;
+         }
+
+         if (test_int[i] != t)
+         {
+            std::cout << "test_int_uint_convert() - Failed basic (int) i == t @ " << i << std::endl;
+            return false;
+         }
+      }
+
+   }
+
+   {
       int t = 0;
       for (int i = -static_cast<int>(count); i < static_cast<int>(count); ++i)
       {
@@ -1429,17 +1578,20 @@ bool test_int_uint_convert()
                      "+0001234567890123",
                      "+00012345678901234",
                      "+000123456789012345",
-                     ""
+                     "+", "-", "+-", "-+", ""
                   };
    static const std::size_t bad_list_size = sizeof(bad_list) / sizeof(std::string);
 
    {
       int t = 0;
+
       for (std::size_t i = 0; i < bad_list_size; ++i)
       {
          if (strtk::string_to_type_converter(bad_list[i],t))
          {
-            std::cout << "test_int_uint_convert() - Failed bad test for int @ " << i << std::endl;
+            std::cout << "test_int_uint_convert() - Failed bad test for int @ " << i
+                      << " str: [" << bad_list[i] << "]" << std::endl;
+
             return false;
          }
       }
@@ -1451,7 +1603,9 @@ bool test_int_uint_convert()
       {
          if (strtk::string_to_type_converter(bad_list[i],t))
          {
-            std::cout << "test_int_uint_convert() - Failed bad test for uint @ " << i << std::endl;
+            std::cout << "test_int_uint_convert() - Failed bad test for uint @ " << i
+                      << " str: [" << bad_list[i] << "]" << std::endl;
+
             return false;
          }
       }
@@ -1463,7 +1617,9 @@ bool test_int_uint_convert()
       {
          if (strtk::string_to_type_converter(bad_list[i],t))
          {
-            std::cout << "test_int_uint_convert() - Failed bad test for short @ " << i << std::endl;
+            std::cout << "test_int_uint_convert() - Failed bad test for short @ " << i
+                      << " str: [" << bad_list[i] << "]" << std::endl;
+
             return false;
          }
       }
@@ -1475,7 +1631,9 @@ bool test_int_uint_convert()
       {
          if (strtk::string_to_type_converter(bad_list[i],t))
          {
-            std::cout << "test_int_uint_convert() - Failed bad test for ushort @ " << i << std::endl;
+            std::cout << "test_int_uint_convert() - Failed bad test for ushort @ " << i
+                      << " str: [" << bad_list[i] << "]" << std::endl;
+
             return false;
          }
       }
@@ -1646,7 +1804,7 @@ bool test_int_uint_convert()
 
       if (strtk::string_to_type_converter(s4,t))
       {
-         std::cout << "test_int_uint_convert() - Failed bad test for extreme int str: " << s3 << std::endl;
+         std::cout << "test_int_uint_convert() - Failed bad test for extreme int str: " << s4 << std::endl;
          return false;
       }
    }
@@ -1725,11 +1883,13 @@ bool test_parse1()
    int i = 0;
    double d = 0;
    std::string s;
+
    if (!strtk::parse(data,",|\t ",i,d,s))
    {
       std::cout << "test_parse() - parse fail 1" << std::endl;
       return false;
    }
+
    if ((i != 1) || (d != 987.654) || (s != "abc"))
    {
       std::cout << "test_parse() - parse fail 2" << std::endl;
@@ -1751,16 +1911,16 @@ bool test_parse2()
       return false;
    }
 
-   if (d[0] !=      1.0) { std::cout << "test_parse2() double check0 " << std::endl; return false; }
-   if (d[1] !=      2.0) { std::cout << "test_parse2() double check1 " << std::endl; return false; }
-   if (d[2] !=      3.3) { std::cout << "test_parse2() double check2 " << std::endl; return false; }
-   if (d[3] !=      0.4) { std::cout << "test_parse2() double check3 " << std::endl; return false; }
-   if (d[4] !=  123.456) { std::cout << "test_parse2() double check4 " << std::endl; return false; }
-   if (d[5] !=      3.3) { std::cout << "test_parse2() double check5 " << std::endl; return false; }
-   if (d[6] != 1.0e+010) { std::cout << "test_parse2() double check6 " << std::endl; return false; }
-   if (d[7] != 2.2e+011) { std::cout << "test_parse2() double check7 " << std::endl; return false; }
-   if (d[8] != 3.0e+012) { std::cout << "test_parse2() double check8 " << std::endl; return false; }
-   if (d[9] != 4.4e+013) { std::cout << "test_parse2() double check9 " << std::endl; return false; }
+   if (not_equal(d[0],     1.0)) { std::cout << "test_parse2() double check0 " << std::endl; return false; }
+   if (not_equal(d[1],     2.0)) { std::cout << "test_parse2() double check1 " << std::endl; return false; }
+   if (not_equal(d[2],     3.3)) { std::cout << "test_parse2() double check2 " << std::endl; return false; }
+   if (not_equal(d[3],     0.4)) { std::cout << "test_parse2() double check3 " << std::endl; return false; }
+   if (not_equal(d[4], 123.456)) { std::cout << "test_parse2() double check4 " << std::endl; return false; }
+   if (not_equal(d[5],     3.3)) { std::cout << "test_parse2() double check5 " << std::endl; return false; }
+   if (not_equal(d[6],1.0e+010)) { std::cout << "test_parse2() double check6 " << std::endl; return false; }
+   if (not_equal(d[7],2.2e+011)) { std::cout << "test_parse2() double check7 " << std::endl; return false; }
+   if (not_equal(d[8],3.0e+012)) { std::cout << "test_parse2() double check8 " << std::endl; return false; }
+   if (not_equal(d[9],4.4e+013)) { std::cout << "test_parse2() double check9 " << std::endl; return false; }
 
    float f[10]  = { 0.0 };
 
@@ -1770,16 +1930,16 @@ bool test_parse2()
       return false;
    }
 
-   if (f[0] !=      1.0f) { std::cout << "test_parse2() float check0 " << std::endl; return false; }
-   if (f[1] !=      2.0f) { std::cout << "test_parse2() float check1 " << std::endl; return false; }
-   if (f[2] !=      3.3f) { std::cout << "test_parse2() float check2 " << std::endl; return false; }
-   if (f[3] !=      0.4f) { std::cout << "test_parse2() float check3 " << std::endl; return false; }
-   if (f[4] !=  123.456f) { std::cout << "test_parse2() float check4 " << std::endl; return false; }
-   if (f[5] !=      3.3f) { std::cout << "test_parse2() float check5 " << std::endl; return false; }
-   if (f[6] != 1.0e+010f) { std::cout << "test_parse2() float check6 " << std::endl; return false; }
-   if (f[7] != 2.2e+011f) { std::cout << "test_parse2() float check7 " << std::endl; return false; }
-   if (f[8] != 3.0e+012f) { std::cout << "test_parse2() float check8 " << std::endl; return false; }
-   if (f[9] != 4.4e+013f) { std::cout << "test_parse2() float check9 " << std::endl; return false; }
+   if (not_equal(f[0],     1.0f)) { std::cout << "test_parse2() float check0 " << std::endl; return false; }
+   if (not_equal(f[1],     2.0f)) { std::cout << "test_parse2() float check1 " << std::endl; return false; }
+   if (not_equal(f[2],     3.3f)) { std::cout << "test_parse2() float check2 " << std::endl; return false; }
+   if (not_equal(f[3],     0.4f)) { std::cout << "test_parse2() float check3 " << std::endl; return false; }
+   if (not_equal(f[4], 123.456f)) { std::cout << "test_parse2() float check4 " << std::endl; return false; }
+   if (not_equal(f[5],     3.3f)) { std::cout << "test_parse2() float check5 " << std::endl; return false; }
+   if (not_equal(f[6],1.0e+010f)) { std::cout << "test_parse2() float check6 " << std::endl; return false; }
+   if (not_equal(f[7],2.2e+011f)) { std::cout << "test_parse2() float check7 " << std::endl; return false; }
+   if (not_equal(f[8],3.0e+012f)) { std::cout << "test_parse2() float check8 " << std::endl; return false; }
+   if (not_equal(f[9],4.4e+013f)) { std::cout << "test_parse2() float check9 " << std::endl; return false; }
 
    return true;
 }
@@ -1797,6 +1957,8 @@ bool test_parse3()
 
    std::vector<double> double_list;
 
+   bool result = true;
+
    if (!strtk::parse(data,",|\t ",double_list))
    {
       std::cout << "test_parse2() - parse double fail" << std::endl;
@@ -1807,8 +1969,9 @@ bool test_parse3()
    {
       if (123.456e3 != double_list[i])
       {
-         std::cout << "test_parse3() double check[" << i << "] " << std::endl;
-         return false;
+         std::cout << "test_parse3() double check[" << i << "] ";
+         printf("value: %30.20f\n",double_list[i]);
+         result = false;
       }
    }
 
@@ -1816,20 +1979,21 @@ bool test_parse3()
 
    if (!strtk::parse(data,",|\t ",float_list))
    {
-      std::cout << "test_parse3() - parse float fail" << std::endl;
-      return false;
+      std::cout << "test_parse3() - parse float fail." << std::endl;
+      result = false;
    }
 
    for (std::size_t i = 0; i < float_list.size(); ++i)
    {
       if (123.456e3f != float_list[i])
       {
-         std::cout << "test_parse3() float check[" << i << "] " << std::endl;
-         return false;
+         std::cout << "test_parse3() float check[" << i << "] ";
+         printf("value: %20.10f\n",float_list[i]);
+         result = false;
       }
    }
 
-   return  true;
+   return  result;
 }
 
 bool test_parse4()
@@ -2013,6 +2177,7 @@ bool test_kv_parse()
       test_details::data_store ds;
       strtk::util::value v1;
       strtk::util::value v2;
+
       for (std::size_t i = 0; i < rounds; ++i)
       {
          v1.assign(ds.  c); if (!v1(slist[ 0])) { std::cout << "Failed parsing slist[00] via v1!" << std::endl; return false; }
@@ -2079,6 +2244,7 @@ bool test_kv_parse()
          p = strtk::make_pair<const char*>(s);
          int x = 0;
          strtk::util::value v(x);
+
          if (!v(p))
          {
             std::cout << "test_kv_parse() - (int) failed parse at index: " << i << std::endl;
@@ -2104,6 +2270,7 @@ bool test_kv_parse()
          p = strtk::make_pair<const char*>(s);
          unsigned int x = 0;
          strtk::util::value v(x);
+
          if (!v(p))
          {
             std::cout << "test_kv_parse() - (unsigned int) failed parse at index: " << i << std::endl;
@@ -2130,6 +2297,7 @@ bool test_kv_parse()
          p = strtk::make_pair<const char*>(s);
          float x = 0;
          strtk::util::value v(x);
+
          if (!v(p))
          {
             std::cout << "test_kv_parse() - (float) failed parse at index: " << i << std::endl;
@@ -2156,6 +2324,7 @@ bool test_kv_parse()
          p = strtk::make_pair<const char*>(s);
          double x = 0;
          strtk::util::value v(x);
+
          if (!v(p))
          {
             std::cout << "test_kv_parse() - (double) failed parse at index: " << i << std::endl;
@@ -2581,7 +2750,6 @@ bool test_keyvalue_parser()
          std::cout << "test_keyvalue_parser() - Error d5 parse failure. d5: " << d5 << std::endl;
          return false;
       }
-
    }
 
    return true;

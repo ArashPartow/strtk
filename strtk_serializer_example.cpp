@@ -61,8 +61,9 @@ public:
 
    void clear()
    {
-      name = "";
-      age = 0;
+      id     = 0;
+      name   = "";
+      age    = 0;
       height = 0.0;
       weight = 0.0f;
       is_insane = false;
@@ -143,6 +144,7 @@ bool example02(char* buffer, const unsigned int buffer_size)
          p_out.height += 1.23;
          p_out.weight += 4.567f;
          p_out.is_insane = !p_out.is_insane;
+
          if (!writer(p_out))
          {
             std::cout << "example02() - Failed to write person:" << i << std::endl;
@@ -170,6 +172,7 @@ bool example02(char* buffer, const unsigned int buffer_size)
          p_expected.height += 1.23;
          p_expected.weight += 4.567f;
          p_expected.is_insane = !p_expected.is_insane;
+
          if (!reader(p_in))
          {
             std::cout << "example02() - Failed to read person:" << i << std::endl;
@@ -211,6 +214,7 @@ bool example03(char* buffer, const unsigned int buffer_size)
             std::cout << "example03() - Failed to write person:" << i << std::endl;
             return false;
          }
+
          p.id++;
          p.age++;
          p.height += 1.23;
@@ -219,6 +223,7 @@ bool example03(char* buffer, const unsigned int buffer_size)
       }
 
       std::ofstream o_stream(file_name.c_str(),std::ios::binary);
+
       if (!o_stream)
       {
          std::cout << "example03() - ERROR Could not open file!(1)" << std::endl;
@@ -269,6 +274,7 @@ bool example03(char* buffer, const unsigned int buffer_size)
             std::cout << "example03() - Comparison between expected and read failed @ " << i << std::endl;
             return false;
          }
+
          p_expected.id++;
          p_expected.age++;
          p_expected.height += 1.23;
@@ -290,22 +296,27 @@ bool example04(char* buffer, const unsigned int buffer_size)
       {
          strtk::binary::writer writer(buffer,buffer_size);
          writer.clear();
+
          for (unsigned int i = 0; i < max_count; lst.push_back(i++)) ;
+
          if (!writer(lst))
          {
             std::cout << "example04() - Failed to write list of 'unsigned int'" << std::endl;
             return false;
          }
+
          lst.clear();
       }
 
       {
          strtk::binary::reader reader(buffer,buffer_size);
+
          if (!reader(lst))
          {
             std::cout << "example04() - Failed to read list of 'unsigned int'" << std::endl;
             return false;
          }
+
          for (unsigned int i = 0; i < max_count; ++i)
          {
             if (lst[i] != i)
@@ -332,18 +343,22 @@ bool example04(char* buffer, const unsigned int buffer_size)
 
          for (std::size_t i = 0; i < max_count; ++i)
          {
-            lst.push_back(magic[i % magic_count] * i);
+            const float d = magic[i % magic_count] * i;
+            lst.push_back(d);
          }
+
          if (!writer(lst))
          {
             std::cout << "example04() - Failed to write list of " << strtk::type_name(lst) << std::endl;
             return false;
          }
+
          lst.clear();
       }
 
       {
          strtk::binary::reader reader(buffer,buffer_size);
+
          if (!reader(lst))
          {
             std::cout << "example04() - Failed to read list of " << strtk::type_name(lst) << std::endl;
@@ -352,11 +367,11 @@ bool example04(char* buffer, const unsigned int buffer_size)
 
          for (std::size_t i = 0; i < max_count; ++i)
          {
-            const float d = magic[i % magic_count] * i;
-            if (lst[i] != d)
+            const float f = magic[i % magic_count] * i;
+            if (lst[i] != f)
             {
                std::cout << "example04() - 'float' failure at index: " << i
-                         << " expected value: "                     << d << std::endl;
+                         << " expected value: "                        << f << std::endl;
                return false;
             }
          }
@@ -378,18 +393,22 @@ bool example04(char* buffer, const unsigned int buffer_size)
          writer.clear();
          for (std::size_t i = 0; i < max_count; ++i)
          {
-            lst.push_back(magic[i % magic_count] * i);
+            const double d = magic[i % magic_count] * i;
+            lst.push_back(d);
          }
+
          if (!writer(lst))
          {
             std::cout << "example04() - Failed to write list of " << strtk::type_name(lst) << std::endl;
             return false;
          }
+
          lst.clear();
       }
 
       {
          strtk::binary::reader reader(buffer,buffer_size);
+
          if (!reader(lst))
          {
             std::cout << "example04() - Failed to read list of " << strtk::type_name(lst) << std::endl;
@@ -403,7 +422,7 @@ bool example04(char* buffer, const unsigned int buffer_size)
             if (*itr != d)
             {
                std::cout << "example04() - 'double' failure at index: " << i
-                         << " expected value: "                      << d << std::endl;
+                         << " expected value: "                         << d << std::endl;
                return false;
             }
          }
@@ -421,23 +440,28 @@ bool example04(char* buffer, const unsigned int buffer_size)
          {
             lst.insert(i);
          }
+
          if (!writer(lst))
          {
             std::cout << "example04() - Failed to write list of " << strtk::type_name(lst) << std::endl;
             return false;
          }
+
          lst.clear();
       }
 
       {
          strtk::binary::reader reader(buffer,buffer_size);
+
          if (!reader(lst))
          {
             std::cout << "example04() - Failed to read list of " << strtk::type_name(lst) << std::endl;
             return false;
          }
+
          int i = -(max_count / 2);
          std::set<int>::iterator itr = lst.begin();
+
          while (lst.end() != itr)
          {
             if (i != *itr)
@@ -551,6 +575,7 @@ bool example04(char* buffer, const unsigned int buffer_size)
       static const std::size_t max = 10;
       std::vector< std::pair<unsigned long long,person> > p_out_list;
       std::deque< std::pair<unsigned long long,person> > p_in_list;
+
       {
          person p;
          p.id        = 0LL;
@@ -559,6 +584,7 @@ bool example04(char* buffer, const unsigned int buffer_size)
          p.height    = 123.456;
          p.weight    = 333.7777f;
          p.is_insane = false;
+
          for (std::size_t i = 0; i < max; ++i)
          {
             p_out_list.push_back(std::make_pair(i,p));
@@ -569,6 +595,7 @@ bool example04(char* buffer, const unsigned int buffer_size)
          }
 
          strtk::binary::writer writer (buffer,buffer_size);
+
          if (!writer(p_out_list))
          {
             std::cout << "example04() - Failed to write type: " << strtk::type_name(p_out_list) << std::endl;
@@ -578,6 +605,7 @@ bool example04(char* buffer, const unsigned int buffer_size)
 
       {
          strtk::binary::reader reader(buffer,buffer_size);
+
          if (!reader(p_in_list))
          {
             std::cout << "example04() - Failed to read type: " << strtk::type_name(p_in_list) << std::endl;
@@ -616,11 +644,14 @@ bool example05(char* buffer, const unsigned int buffer_size)
    {
       strtk::binary::writer writer(buffer,buffer_size);
       unsigned long long total_written = 0;
+
       strtk::util::timer t;
       t.start();
+
       for (std::size_t r = 0; r < rounds; ++r)
       {
          writer.reset();
+
          for (std::size_t i = 0; i < person_count; ++i)
          {
             if (!writer(p))
@@ -629,8 +660,10 @@ bool example05(char* buffer, const unsigned int buffer_size)
                return false;
             }
          }
+
          total_written += writer.amount_written();
       }
+
       t.stop();
 
       printf("[strtk::binary::writer] Person Count:%10llu  Total time:%8.4f  Rate:%18.4fpersons/s %9.3fMB/s\n",
@@ -643,11 +676,14 @@ bool example05(char* buffer, const unsigned int buffer_size)
    {
       strtk::binary::reader reader(buffer,buffer_size);
       unsigned long long total_read = 0;
+
       strtk::util::timer t;
       t.start();
+
       for (std::size_t r = 0; r < rounds; ++r)
       {
          reader.reset();
+
          for (std::size_t i = 0; i < person_count; ++i)
          {
             if (!reader(p))
@@ -656,9 +692,12 @@ bool example05(char* buffer, const unsigned int buffer_size)
                return false;
             }
          }
+
          total_read += reader.amount_read();
       }
+
       t.stop();
+
       printf("[strtk::binary::reader] Person Count:%10llu  Total time:%8.4f  Rate:%18.4fpersons/s %9.3fMB/s\n",
              static_cast<unsigned long long>(rounds * person_count),
              t.time(),
@@ -686,18 +725,23 @@ bool example05(char* buffer, const unsigned int buffer_size)
       {
          strtk::binary::writer writer(buffer,buffer_size);
          unsigned long long total_written = 0;
+
          strtk::util::timer t;
          t.start();
+
          for (std::size_t r = 0; r < rounds; ++r)
          {
             writer.reset();
+
             if (!writer(dbl_list))
             {
                std::cout << "example05() - Failed to write " << strtk::type_name(dbl_list) << " @ round " << r << std::endl;
                return false;
             }
+
             total_written += writer.amount_written();
          }
+
          t.stop();
 
          printf("[strtk::binary::writer] Double Count:%10llu  Total time:%8.4f  Rate:%18.4fdoubles/s %9.3fMB/s\n",
@@ -710,20 +754,27 @@ bool example05(char* buffer, const unsigned int buffer_size)
       {
          strtk::binary::reader reader(buffer,buffer_size);
          unsigned long long total_read = 0;
+
          dbl_list.clear();
+
          strtk::util::timer t;
          t.start();
+
          for (std::size_t r = 0; r < rounds; ++r)
          {
             reader.reset();
+
             if (!reader(dbl_list))
             {
                std::cout << "example05() - Failed to read " << strtk::type_name(dbl_list) << " @ round " << r << std::endl;
                return false;
             }
+
             dbl_list.clear();
             total_read += reader.amount_read();
+
          }
+
          t.stop();
 
          printf("[strtk::binary::reader] Double Count:%10llu  Total time:%8.4f  Rate:%18.4fdoubles/s %9.3fMB/s\n",
@@ -736,10 +787,12 @@ bool example05(char* buffer, const unsigned int buffer_size)
 
    {
       const std::size_t rounds = 1000;
-      const std::size_t size = 10;
+      const std::size_t size   = 10;
+
       std::string s = "0123456789abcdefghij";
       std::vector<std::string> str_list;
       str_list.reserve(200000);
+
       strtk::for_each_combination(s.begin(),s.end(),
                                   size,
                                   strtk::range_to_type_back_inserter(str_list));
@@ -747,19 +800,26 @@ bool example05(char* buffer, const unsigned int buffer_size)
       {
          strtk::binary::writer writer(buffer,buffer_size);
          writer.clear();
+
+         unsigned long long total_written = 0;
+
          strtk::util::timer t;
          t.start();
-         unsigned long long total_written = 0;
+
          for (std::size_t r = 0; r < rounds; ++r)
          {
             writer.reset();
+
             if (!writer(str_list))
             {
                std::cout << "example05() - Failed to write string permutation " << strtk::type_name(str_list) << " @ round " << r << std::endl;
                return false;
             }
+
             total_written += writer.amount_written();
+
          }
+
          t.stop();
 
          printf("[strtk::binary::writer] String-Permutation Count:%10llu  Total time:%8.4f  Rate:%14.4fstr/s %8.3fMB/s\n",
@@ -771,20 +831,26 @@ bool example05(char* buffer, const unsigned int buffer_size)
 
       {
          strtk::binary::reader reader(buffer,buffer_size);
+
+         unsigned long long total_read = 0;
+
          strtk::util::timer t;
          t.start();
-         unsigned long long total_read = 0;
+
          for (std::size_t r = 0; r < rounds; ++r)
          {
             str_list.clear();
             reader.reset();
+
             if (!reader(str_list))
             {
                std::cout << "example05() - Failed to read string permutation " << strtk::type_name(str_list) << " @ round " << r << std::endl;
                return false;
             }
+
             total_read += reader.amount_read();
          }
+
          t.stop();
 
          printf("[strtk::binary::reader] String-Permutation Count:%10llu  Total time:%8.4f  Rate:%14.4fstr/s %8.3fMB/s\n",
@@ -892,6 +958,7 @@ bool example07(char* buffer, const unsigned int buffer_size)
 
    int i = 123;
    int j = 0;
+
    if (!writer(i,4,strtk::binary::writer::left_padding,'0'))
    {
       std::cout << "Failed to write padded 4 char int!" << std::endl;
@@ -925,6 +992,7 @@ bool example08(char* buffer, const unsigned int buffer_size)
       writer(d);
       writer(c);
    }
+
    {
       strtk::binary::reader reader(buffer,buffer_size);
       std::vector<int> v;
@@ -934,6 +1002,7 @@ bool example08(char* buffer, const unsigned int buffer_size)
       reader(d);
       reader(c);
    }
+
    return true;
 }
 
@@ -1065,6 +1134,7 @@ int main()
 {
    static const std::size_t max_buffer_size = 10 * strtk::one_megabyte; // 10MB
    char* buffer = new char[max_buffer_size];
+
    example01(buffer,max_buffer_size);
    example02(buffer,max_buffer_size);
    example03(buffer,max_buffer_size);
@@ -1075,6 +1145,8 @@ int main()
    example08(buffer,max_buffer_size);
    example09(buffer);
    example10(buffer);
+
    delete[] buffer;
+
    return 0;
 }

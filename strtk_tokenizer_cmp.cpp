@@ -58,6 +58,7 @@
  #include <boost/spirit/include/karma.hpp>
 #endif
 
+
 static const std::string base = "a+bc=def ghij-klmno?pqrstu&vwxyzAB@CDEFGHIJ~KLMNOPQRS#TUVWXYZ012|3456789abcd|efghijklmnopqrsdu!";
 static const std::size_t tokenizer_replicate_count = 2000000;
 static const std::string delimiters = "-+=~&*[]{}()<>|!?@^%$#\".,;:_ /\\\t\r\n";
@@ -84,15 +85,19 @@ void strtk_tokenizer_timed_test()
    tokenizer_type::iterator itr = tokenizer.begin();
    tokenizer_type::const_iterator end = tokenizer.end();
    unsigned int token_count = 0;
+
    strtk::util::timer t;
    t.start();
+
    while (end != itr)
    {
       so += std::string((*itr).first,(*itr).second);
       ++itr;
       ++token_count;
    }
+
    t.stop();
+
    printf("Tokens:%10u\tTime:%8.4fsec\tRate:%14.4ftks/sec %5.2fMB/s\n",
           token_count,
           t.time(),
@@ -114,15 +119,19 @@ void boost_tokenizer_timed_test()
    tokenizer_type::iterator itr = tokenizer.begin();
    tokenizer_type::const_iterator end = tokenizer.end();
    unsigned int token_count = 0;
+
    strtk::util::timer t;
    t.start();
+
    while (end != itr)
    {
       so += *itr;
       ++itr;
       ++token_count;
    }
+
    t.stop();
+
    printf("Tokens:%10u\tTime:%8.4fsec\tRate:%14.4ftks/sec %5.2fMB/s\n",
           token_count,
           t.time(),
@@ -142,10 +151,14 @@ void strtk_split_timed_test()
    s.resize(s.size() - 1);
    std::vector<std::string> token_list;
    token_list.reserve(split_reserve_size);
+
    strtk::util::timer t;
    t.start();
+
    strtk::parse(s,delimiters,token_list);
+
    t.stop();
+
    printf("Tokens:%10lu\tTime:%8.4fsec\tRate:%14.4ftks/sec %5.2fMB/s\n",
           static_cast<unsigned long>(token_list.size()),
           t.time(),
@@ -162,10 +175,14 @@ void boost_split_timed_test()
    s.resize(s.size() - 1);
    std::vector<std::string> token_list;
    token_list.reserve(split_reserve_size);
+
    strtk::util::timer t;
    t.start();
+
    boost::split(token_list, s, boost::is_any_of(delimiters));
+
    t.stop();
+
    printf("Tokens:%10lu\tTime:%8.4fsec\tRate:%14.4ftks/sec %5.2fMB/s\n",
           static_cast<unsigned long>(token_list.size()),
           t.time(),
@@ -181,14 +198,18 @@ void sprintf_lexical_cast_test_i2s()
    std::string s;
    s.reserve(32);
    std::size_t total_length = 0;
+
    strtk::util::timer t;
    t.start();
+
    for (int i = (-max_i2s / 2); i < (max_i2s / 2); ++i)
    {
       s.resize(sprintf(const_cast<char*>(s.c_str()),"%d",i));
       total_length += s.size();
    }
+
    t.stop();
+
    printf("Numbers:%10lu\tTotal:%12lu\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
           static_cast<unsigned long>(max_i2s),
           static_cast<unsigned long>(total_length),
@@ -202,14 +223,18 @@ void boost_lexical_cast_test_i2s()
    std::string s;
    s.reserve(32);
    std::size_t total_length = 0;
+
    strtk::util::timer t;
    t.start();
+
    for (int i = (-max_i2s / 2); i < (max_i2s / 2); ++i)
    {
       s = boost::lexical_cast<std::string>(i);
       total_length += s.size();
    }
+
    t.stop();
+
    printf("Numbers:%10lu\tTotal:%12lu\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
           static_cast<unsigned long>(max_i2s),
           static_cast<unsigned long>(total_length),
@@ -237,14 +262,18 @@ void karma_lexical_cast_test_i2s()
    std::string s;
    s.reserve(32);
    std::size_t total_length = 0;
+
    strtk::util::timer t;
    t.start();
+
    for (int i = (-max_i2s / 2); i < (max_i2s / 2); ++i)
    {
       karma_int_to_string(i,s);
       total_length += s.size();
    }
+
    t.stop();
+
    printf("Numbers:%10lu\tTotal:%12lu\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
           static_cast<unsigned long>(max_i2s),
           static_cast<unsigned long>(total_length),
@@ -261,14 +290,18 @@ void strtk_lexical_cast_test_i2s()
    std::string s;
    s.reserve(32);
    std::size_t total_length = 0;
+
    strtk::util::timer t;
    t.start();
+
    for (int i = (-max_i2s / 2); i < (max_i2s / 2); ++i)
    {
       strtk::type_to_string(i,s);
       total_length += s.size();
    }
+
    t.stop();
+
    printf("Numbers:%10lu\tTotal:%12lu\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
           static_cast<unsigned long>(max_i2s),
           static_cast<unsigned long>(total_length),
@@ -316,6 +349,7 @@ static const std::string strint_list[] =
                  "7420011", "-72376922", "-68873971",  "23765361",   "4040725", "-22359806",  "85777219",  "10099223", "-90364256", "-40158172",
                 "-7948696", "-64344821",  "34404238",  "84037448", "-85084788", "-42078409", "-56550310",  "96898389",   "-595829", "-73166703",
                       "-0",        "-1",        "-2",        "-3",        "-4",        "-5",        "-6",        "-7",        "-8",        "-9",
+              "2147483647", "31",  "2147483610", "33",  "2147483573", "37",  "2147483536",
                "-82838342",  "64441808",  "43641062", "-64419642", "-44421934",  "75232413", "-75773725", "-89139509",  "12812089", "-97633526",
                 "36090916", "-57706234",  "17804655",   "4189936",  "-4100124",  "38803710", "-39735126", "-62397437",  "75801648",  "51302332",
                 "73433906",  "13015224", "-12624818",  "91360377",  "11576319", "-54467535",   "8892431",  "36319780",  "38832042",  "50172572",
@@ -329,6 +363,7 @@ static const std::string strint_list[] =
                 "64501793",  "53146328",   "5152287",  "-9674493",  "68105580",  "57245637",  "39740229", "-74071854",  "86777268",  "86484437",
                "-86962508",  "12644427", "-62944073",  "59539680",  "43340539",  "30661534",  "20143968", "-68183731", "-48250926",  "42669063",
                     "+000",      "+001",      "+002",      "+003",      "+004",      "+005",      "+006",      "+007",      "+008",      "+009",
+              "2147483499", "71",  "2147483462", "73",  "2147483425", "77",  "2147483388",
                 "87736852",  "-4444906", "-48094147",  "54774735",  "54571890", "-22473078",  "95053418",    "393654", "-33229960",  "32276798",
                "-48361110",  "44295939", "-79813406",  "11630865",  "38544571",  "70972830",  "-9821748", "-60965384", "-13096675", "-24569041",
                      "708",      "-467",      "-794",       "610",      "+929",       "766",       "152",       "482",       "397",      "-191",
@@ -342,6 +377,7 @@ static const std::string strint_list[] =
                  "0000000",   "1111111",   "2222222",   "3333333",   "4444444",  "-0000000",  "-1111111",  "-2222222",  "-3333333",  "-4444444",
                 "00000000",  "11111111",  "22222222",  "33333333",  "44444444", "-00000000", "-11111111", "-22222222", "-33333333", "-44444444",
                "000000000", "111111111", "222222222", "333333333", "444444444","-000000000","-111111111","-222222222","-333333333","-444444444",
+              "2147483351", "51",  "2147483314", "53", "-2147483648", "57", "-2147483611",
                       "55",        "66",        "77",        "88",        "99",       "-55",       "-66",       "-77",       "-88",       "-99",
                      "555",       "666",       "777",       "888",       "999",      "-555",      "-666",      "-777",      "-888",      "-999",
                     "5555",      "6666",      "7777",      "8888",      "9999",     "-5555",     "-6666",     "-7777",     "-8888",     "-9999",
@@ -350,6 +386,7 @@ static const std::string strint_list[] =
                  "5555555",   "6666666",   "7777777",   "8888888",   "9999999",  "-5555555",  "-6666666",  "-7777777",  "-8888888",  "-9999999",
                 "55555555",  "66666666",  "77777777",  "88888888",  "99999999", "-55555555", "-66666666", "-77777777", "-88888888", "-99999999",
                "555555555", "666666666", "777777777", "888888888", "999999999","-555555555","-666666666","-777777777","-888888888","-999999999",
+             "-2147483574",        "91", "-2147483537", "93", "-2147483500", "97", "-2147483463",
               "0000000011", "0000000022", "0000000033", "0000000044", "-000000011", "-000000022", "-000000033", "-000000044", "-000000088",
               "0000000111", "0000000222", "0000000333", "0000000444", "-000000111", "-000000222", "-000000333", "-000000444", "-000000888",
               "0000001111", "0000002222", "0000003333", "0000004444", "-000001111", "-000002222", "-000003333", "-000004444", "-000008888",
@@ -366,6 +403,7 @@ static const std::string strint_list[] =
               "0005555555", "0006666666", "0007777777", "0008888888", "0009999999", "-005555555", "-006666666", "-007777777", "-009999999",
               "0055555555", "0066666666", "0077777777", "0088888888", "0099999999", "-055555555", "-066666666", "-077777777", "-099999999",
               "0555555555", "0666666666", "0777777777", "0888888888", "0999999999", "-555555555", "-666666666", "-777777777", "-999999999",
+             "-2147483426",        "101", "-2147483389",       "103", "-2147483352", "105", "-2147483315",
                "0000001234567890", "+0000001234567890", "-0000001234567890",
                 "000001234567890",  "+000001234567890",  "-000001234567890",
                  "00001234567890",   "+00001234567890",   "-00001234567890",
@@ -377,15 +415,17 @@ static const std::string strint_list[] =
 
 static const std::size_t strint_list_size = sizeof(strint_list) / sizeof(std::string);
 
-static const std::size_t s2i_rounds = 100000;
+static const std::size_t s2i_rounds = 200000;
 
 void atoi_lexical_cast_test_s2i()
 {
    print_mode("[atoi]");
    int total = 0;
    int n = 0;
+
    strtk::util::timer t;
    t.start();
+
    for (std::size_t x = 0; x < s2i_rounds; ++x)
    {
       for (std::size_t i = 0; i < strint_list_size; ++i)
@@ -394,7 +434,9 @@ void atoi_lexical_cast_test_s2i()
          total += n;
       }
    }
+
    t.stop();
+
    printf("Numbers:%10lu\tTotal:%12d\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
           static_cast<unsigned long>(s2i_rounds * strint_list_size),
           total,
@@ -407,8 +449,10 @@ void boost_lexical_cast_test_s2i()
    print_mode("[boost]");
    int total = 0;
    int n = 0;
+
    strtk::util::timer t;
    t.start();
+
    for (std::size_t x = 0; x < s2i_rounds; ++x)
    {
       for (std::size_t i = 0; i < strint_list_size; ++i)
@@ -417,7 +461,9 @@ void boost_lexical_cast_test_s2i()
          total += n;
       }
    }
+
    t.stop();
+
    printf("Numbers:%10lu\tTotal:%12d\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
           static_cast<unsigned long>(s2i_rounds * strint_list_size),
           total,
@@ -440,8 +486,10 @@ void qi_lexical_cast_test_s2i()
    print_mode("[qi]");
    int total = 0;
    int n = 0;
+
    strtk::util::timer t;
    t.start();
+
    for (std::size_t x = 0; x < s2i_rounds; ++x)
    {
       for (std::size_t i = 0; i < strint_list_size; ++i)
@@ -450,7 +498,9 @@ void qi_lexical_cast_test_s2i()
          total += n;
       }
    }
+
    t.stop();
+
    printf("Numbers:%10lu\tTotal:%12d\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
           static_cast<unsigned long>(s2i_rounds * strint_list_size),
           total,
@@ -466,8 +516,10 @@ void strtk_lexical_cast_test_s2i()
    print_mode("[strtk]");
    int total = 0;
    int n = 0;
+
    strtk::util::timer t;
    t.start();
+
    for (std::size_t x = 0; x < s2i_rounds; ++x)
    {
       for (std::size_t i = 0; i < strint_list_size; ++i)
@@ -476,7 +528,9 @@ void strtk_lexical_cast_test_s2i()
          total += n;
       }
    }
+
    t.stop();
+
    printf("Numbers:%10lu\tTotal:%12d\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
           static_cast<unsigned long>(s2i_rounds * strint_list_size),
           total,
@@ -489,8 +543,10 @@ void strtkfast_lexical_cast_test_s2i()
    print_mode("[fast]");
    int total = 0;
    int n = 0;
+
    strtk::util::timer t;
    t.start();
+
    for (std::size_t x = 0; x < s2i_rounds; ++x)
    {
       for (std::size_t i = 0; i < strint_list_size; ++i)
@@ -499,7 +555,9 @@ void strtkfast_lexical_cast_test_s2i()
          total += n;
       }
    }
+
    t.stop();
+
    printf("Numbers:%10lu\tTotal:%12d\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
           static_cast<unsigned long>(s2i_rounds * strint_list_size),
           total,
@@ -694,15 +752,17 @@ static const std::string v[] = {
                   };
 
 static const std::size_t v_size = sizeof(v) / sizeof(std::string);
-static const std::size_t s2d_rounds = 40000;
+static const std::size_t s2d_rounds = 70000;
 
 void atof_cast_test_s2d()
 {
    print_mode("[atof]");
    double sum = 0.0;
    double d   = 0.0;
+
    strtk::util::timer t;
    t.start();
+
    for (std::size_t r = 0; r < s2d_rounds; ++r)
    {
       for (std::size_t i = 0; i < v_size; ++i)
@@ -714,7 +774,9 @@ void atof_cast_test_s2d()
             sum -= d;
       }
    }
+
    t.stop();
+
    printf("Numbers:%10llu\tError:%14.12f\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
           static_cast<unsigned long long>(s2d_rounds * v_size),
           std::abs(sum),
@@ -727,8 +789,10 @@ void boost_cast_test_s2d()
    print_mode("[boost]");
    double sum = 0.0;
    double d   = 0.0;
+
    strtk::util::timer t;
    t.start();
+
    for (std::size_t r = 0; r < s2d_rounds; ++r)
    {
       for (std::size_t i = 0; i < v_size; ++i)
@@ -740,7 +804,9 @@ void boost_cast_test_s2d()
             sum -= d;
       }
    }
+
    t.stop();
+
    printf("Numbers:%10llu\tError:%14.12f\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
           static_cast<unsigned long long>(s2d_rounds * v_size),
           std::abs(sum),
@@ -763,8 +829,10 @@ void qi_cast_test_s2d()
    print_mode("[qi]");
    double sum = 0.0;
    double d   = 0.0;
+
    strtk::util::timer t;
    t.start();
+
    for (std::size_t r = 0; r < s2d_rounds; ++r)
    {
       for (std::size_t i = 0; i < v_size; ++i)
@@ -776,7 +844,9 @@ void qi_cast_test_s2d()
             sum -= d;
       }
    }
+
    t.stop();
+
    printf("Numbers:%10llu\tError:%14.12f\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
           static_cast<unsigned long long>(s2d_rounds * v_size),
           std::abs(sum),
@@ -792,20 +862,25 @@ void strtk_cast_test_s2d()
    print_mode("[strtk]");
    double sum = 0.0;
    double d   = 0.0;
+
    strtk::util::timer t;
    t.start();
+
    for (std::size_t r = 0; r < s2d_rounds; ++r)
    {
       for (std::size_t i = 0; i < v_size; ++i)
       {
          strtk::string_to_type_converter(v[i],d);
+
          if (r & 1)
             sum += d;
          else
             sum -= d;
       }
    }
+
    t.stop();
+
    printf("Numbers:%10llu\tError:%14.12f\tTime:%8.4fsec\tRate:%14.4fnums/sec\n",
           static_cast<unsigned long long>(s2d_rounds * v_size),
           std::abs(sum),
@@ -818,24 +893,29 @@ int main()
    std::cout << "Tokenizer Test" << std::endl;
    boost_tokenizer_timed_test();
    strtk_tokenizer_timed_test();
+
    std::cout << "Split Test" << std::endl;
    boost_split_timed_test();
    strtk_split_timed_test();
+
    std::cout << "Integer To String Test" << std::endl;
    sprintf_lexical_cast_test_i2s();
-   boost_lexical_cast_test_i2s();
-   karma_lexical_cast_test_i2s();
-   strtk_lexical_cast_test_i2s();
+   boost_lexical_cast_test_i2s  ();
+   karma_lexical_cast_test_i2s  ();
+   strtk_lexical_cast_test_i2s  ();
+
    std::cout << "String To Integer Test" << std::endl;
-   atoi_lexical_cast_test_s2i();
+   atoi_lexical_cast_test_s2i ();
    boost_lexical_cast_test_s2i();
-   qi_lexical_cast_test_s2i();
+   qi_lexical_cast_test_s2i   ();
    strtk_lexical_cast_test_s2i();
    strtkfast_lexical_cast_test_s2i();
+
    std::cout << "String To Double Test" << std::endl;
-   atof_cast_test_s2d();
+   atof_cast_test_s2d ();
    boost_cast_test_s2d();
-   qi_cast_test_s2d();
+   qi_cast_test_s2d   ();
    strtk_cast_test_s2d();
+
    return 0;
 }

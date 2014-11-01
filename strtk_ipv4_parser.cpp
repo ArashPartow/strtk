@@ -45,12 +45,15 @@ public:
    {
       typedef std::pair<const char*,const char*> iterator_type;
       iterator_type token[4];
+
       if (4 != strtk::split_n(predicate_,data,4,token))
          return false;
+
       if (!process_token(token[0],octet[0])) return false;
       if (!process_token(token[1],octet[1])) return false;
       if (!process_token(token[2],octet[2])) return false;
       if (!process_token(token[3],octet[3])) return false;
+
       return true;
    }
 
@@ -89,6 +92,7 @@ void print_octet(const unsigned char octet[4])
 int main()
 {
    unsigned char octet[4] = {0};
+
    static const std::string ip[] =
                 {
                    "1.1.1.1",
@@ -108,11 +112,14 @@ int main()
          std::cout << "IP (string):" << strtk::text::right_align(15,' ',ip[i]) << "\t";
          print_octet(octet);
       }
+
       unsigned int ip_int = 0;
+
       if (!parser(ip[i],ip_int))
          std::cout << "Failed to parse ip_int: " << ip[i] << std::endl;
       else
          std::cout << "\tIP(int): " << strtk::text::right_align(' ',ip_int) << std::endl;
    }
+
    return 0;
 }
