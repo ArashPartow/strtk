@@ -9,6 +9,28 @@ light work of any kind of string processing task.
 
 
 
+
+[CAPABILITIES]
+The StrTk library has the following capabilities:
+ * Generic string tokenizer and token iterators
+ * Fast Split routines
+ * User specified delimiter and splitter policies (simple and regex based etc.)
+ * Conversions between data and hex and base-64
+ * In-place removal and replace routines
+ * Wild-card matching and globbing
+ * Search and Replace
+ * Fast token grid and Comma Separated Values (CSV and DSV) processing
+ * Extremely fast String to Integer, Double and other POD conversions
+ * Extensible string processing templates and algorithms (eg: combinatorics and randomizations)
+ * Prefix tree and Bloom filter structures for efficient string matching and testing
+ * Fast and simple-to-use binary serialization
+ * Seamless integration with STL and Boost
+ * Easy to use wrappers of common string processing usage patterns
+ * Single header file solution requires no installation or building
+
+
+
+
 [COPYRIGHT NOTICE]
 Free  use  of  the  String  Toolkit  Library  is  permitted  under the
 guidelines and  in accordance  with the  most current  version of  the
@@ -24,8 +46,7 @@ be found at:
 (2) http://strtk.partow.net
 
 Code repository:
-(1) http://code.google.com/p/strtk/
-(2) svn checkout http://strtk.googlecode.com/svn/trunk/ strtk
+https://github.com/ArashPartow/strtk
 
 
 
@@ -61,7 +82,6 @@ C++ standard library. Installation of Boost on:
 (*) Clang/LLVM (1.1+)
 (*) PGI C++ (10.x+)
 (*) Microsoft Visual Studio C++ Compiler (8.1+)
-(*) Comeau C++ Compiler (4.3+)
 (*) IBM XL C/C++ (10.x+)
 (*) C++ Builder (XE4+)
 
@@ -94,3 +114,4 @@ C++ standard library. Installation of Boost on:
 (23) strtk_tokenizer_cmp.cpp
 (24) strtk_tokenizer_test.cpp
 (25) strtk_wordfreq.cpp
+
