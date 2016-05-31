@@ -2,7 +2,7 @@
  *****************************************************************
  *                     String Toolkit Library                    *
  *                                                               *
- * Author: Arash Partow (2002-2014)                              *
+ * Author: Arash Partow (2002-2016)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -5188,9 +5188,9 @@ namespace strtk
 
             for (std::size_t i = row; i < row_index.size(); ++i)
             {
-               row_index_range_t& r = row_index[i];
-               r.first  -= static_cast<unsigned int>(number_of_tokens);
-               r.second -= static_cast<unsigned int>(number_of_tokens);
+               row_index_range_t& curr_row = row_index[i];
+               curr_row.first  -= static_cast<unsigned int>(number_of_tokens);
+               curr_row.second -= static_cast<unsigned int>(number_of_tokens);
             }
 
             return true;
@@ -5900,8 +5900,8 @@ namespace strtk
 
             while (end != itr)
             {
-               const range_t& range = (*itr);
-               if (string_to_type_converter(range.first,range.second,t))
+               const range_t& curr_range = (*itr);
+               if (string_to_type_converter(curr_range.first, curr_range.second,t))
                   sequence.push_back(t);
                else
                   return false;

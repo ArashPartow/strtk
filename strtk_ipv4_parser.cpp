@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * IPv4 Parser                                                   *
- * Author: Arash Partow (2002-2014)                              *
+ * Author: Arash Partow (2002-2016)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
