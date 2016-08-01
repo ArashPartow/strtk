@@ -1668,17 +1668,29 @@ bool test_int_uint_convert()
    }
 
    {
-      const short int max_shrtint = std::numeric_limits<short int>::max();
-      const int       max_int     = std::numeric_limits<int      >::max();
-      const long long max_lnglng  = std::numeric_limits<long long>::max();
+      const short int          max_shrtint  = std::numeric_limits<short int         >::max();
+      const unsigned short int max_ushrtint = std::numeric_limits<unsigned short int>::max();
+      const int                max_int      = std::numeric_limits<int               >::max();
+      const unsigned int       max_uint     = std::numeric_limits<unsigned int      >::max();
+      const long long          max_lnglng   = std::numeric_limits<long long         >::max();
+      const unsigned long long max_ulnglng  = std::numeric_limits<unsigned long long>::max();
 
-      const std::string max_shrtint_str = "32767";
-      const std::string max_int_str     = "2147483647";
-      const std::string max_lnglng_str  = "9223372036854775807";
+      const std::string max_shrtint_str  =                "32767";
+      const std::string max_ushrtint_str =                "65535";
+      const std::string max_int_str      =           "2147483647";
+      const std::string max_uint_str     =           "4294967295";
+      const std::string max_lnglng_str   =  "9223372036854775807";
+      const std::string max_ulnglng_str  = "18446744073709551615";
 
       if (max_shrtint_str != strtk::type_to_string(max_shrtint))
       {
          std::cout << "test_int_uint_convert() - Failed max short int to string conversion! [1]  result:" << strtk::type_to_string(max_shrtint) << std::endl;
+         return false;
+      }
+
+      if (max_ushrtint_str != strtk::type_to_string(max_ushrtint))
+      {
+         std::cout << "test_int_uint_convert() - Failed max unsigned short int to string conversion! [1]  result:" << strtk::type_to_string(max_ushrtint) << std::endl;
          return false;
       }
 
@@ -1688,9 +1700,103 @@ bool test_int_uint_convert()
          return false;
       }
 
+      if (max_uint_str != strtk::type_to_string(max_uint))
+      {
+         std::cout << "test_int_uint_convert() - Failed max uint to string conversion! [1]  result:" << strtk::type_to_string(max_uint) << std::endl;
+         return false;
+      }
+
       if (max_lnglng_str != strtk::type_to_string(max_lnglng))
       {
          std::cout << "test_int_uint_convert() - Failed max long long to string conversion! [1]  result:" << strtk::type_to_string(max_lnglng) << std::endl;
+         return false;
+      }
+
+      if (max_ulnglng_str != strtk::type_to_string(max_ulnglng))
+      {
+         std::cout << "test_int_uint_convert() - Failed max long long to string conversion! [1]  result:" << strtk::type_to_string(max_ulnglng) << std::endl;
+         return false;
+      }
+
+      if (max_shrtint != strtk::string_to_type_converter<short int>(max_shrtint_str))
+      {
+         std::cout << "test_int_uint_convert() - Failed string to max short int conversion! [1]  result:" << strtk::string_to_type_converter<short int>(max_shrtint_str) << std::endl;
+         return false;
+      }
+
+      if (max_ushrtint != strtk::string_to_type_converter<unsigned short int>(max_ushrtint_str))
+      {
+         std::cout << "test_int_uint_convert() - Failed string to max short int conversion! [1]  result:" << strtk::string_to_type_converter<unsigned short int>(max_ushrtint_str) << std::endl;
+         return false;
+      }
+
+      if (max_int != strtk::string_to_type_converter<int>(max_int_str))
+      {
+         std::cout << "test_int_uint_convert() - Failed string to max int conversion! [1]  result:" << strtk::string_to_type_converter<int>(max_int_str) << std::endl;
+         return false;
+      }
+
+      if (max_uint != strtk::string_to_type_converter<unsigned int>(max_uint_str))
+      {
+         std::cout << "test_int_uint_convert() - Failed string to max uint conversion! [1]  result:" << strtk::string_to_type_converter<unsigned int>(max_uint_str) << std::endl;
+         return false;
+      }
+
+      if (max_lnglng != strtk::string_to_type_converter<long long>(max_lnglng_str))
+      {
+         std::cout << "test_int_uint_convert() - Failed string to max long long conversion! [1]  result:" << strtk::string_to_type_converter<long long>(max_lnglng_str) << std::endl;
+         return false;
+      }
+
+      if (max_ulnglng != strtk::string_to_type_converter<unsigned long long>(max_ulnglng_str))
+      {
+         std::cout << "test_int_uint_convert() - Failed string to max long long conversion! [1]  result:" << strtk::string_to_type_converter<unsigned long long>(max_ulnglng_str) << std::endl;
+         return false;
+      }
+   }
+
+   {
+      const short int min_shrtint  = std::numeric_limits<short int>::min();
+      const int       min_int      = std::numeric_limits<int      >::min();
+      const long long min_lnglng   = std::numeric_limits<long long>::min();
+
+      const std::string min_shrtint_str  =               "-32768";
+      const std::string min_int_str      =          "-2147483648";
+      const std::string min_lnglng_str   = "-9223372036854775808";
+
+      if (min_shrtint_str != strtk::type_to_string(min_shrtint))
+      {
+         std::cout << "test_int_uint_convert() - Failed min short int to string conversion! [1]  result:" << strtk::type_to_string(min_shrtint) << std::endl;
+         return false;
+      }
+
+      if (min_int_str != strtk::type_to_string(min_int))
+      {
+         std::cout << "test_int_uint_convert() - Failed min int to string conversion! [1]  result:" << strtk::type_to_string(min_int) << std::endl;
+         return false;
+      }
+
+      if (min_lnglng_str != strtk::type_to_string(min_lnglng))
+      {
+         std::cout << "test_int_uint_convert() - Failed min long long to string conversion! [1]  result:" << strtk::type_to_string(min_lnglng) << std::endl;
+         return false;
+      }
+
+      if (min_shrtint != strtk::string_to_type_converter<short int>(min_shrtint_str))
+      {
+         std::cout << "test_int_uint_convert() - Failed string to min short int conversion! [1]  result:" << strtk::string_to_type_converter<short int>(min_shrtint_str) << std::endl;
+         return false;
+      }
+
+      if (min_int != strtk::string_to_type_converter<int>(min_int_str))
+      {
+         std::cout << "test_int_uint_convert() - Failed string to min int conversion! [1]  result:" << strtk::string_to_type_converter<int>(min_int_str) << std::endl;
+         return false;
+      }
+
+      if (min_lnglng != strtk::string_to_type_converter<long long>(min_lnglng_str))
+      {
+         std::cout << "test_int_uint_convert() - Failed string to min long long conversion! [1]  result:" << strtk::string_to_type_converter<long long>(min_lnglng_str) << std::endl;
          return false;
       }
    }

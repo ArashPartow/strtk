@@ -6378,19 +6378,19 @@ namespace strtk
          return max_column_count_;
       }
 
-      inline range_t token(const unsigned int& row, const std::size_t& col) const
+      inline range_t token(const std::size_t& row, const std::size_t& col) const
       {
          return dsv_index_(col,row);
       }
 
       template <typename T>
-      inline T get(const unsigned int& row, const std::size_t& col)
+      inline T get(const std::size_t& row, const std::size_t& col)
       {
          range_t r = token(row,col);
          return string_to_type_converter<T>(r.first,r.second);
       }
 
-      inline row_type row(const unsigned int& row_index) const
+      inline row_type row(const std::size_t& row_index) const
       {
          return row_type(row_index,dsv_index_);
       }
@@ -7928,19 +7928,23 @@ namespace strtk
 
       iterator_type_ptr itr = token_list;
 
-      if (!string_to_type_converter((*itr).first,(*itr).second, t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t5)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t6)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t7)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t8)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t9)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t10)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t11)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t12)) return false;
-      return true;
+      #define strtk_cmpstmt(N)                                         \
+      if (!string_to_type_converter((*itr).first,(*itr).second, t##N)) \
+         return false;                                                 \
+      ++itr;                                                           \
+
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      strtk_cmpstmt( 5)
+      strtk_cmpstmt( 6)
+      strtk_cmpstmt( 7)
+      strtk_cmpstmt( 8)
+      strtk_cmpstmt( 9)
+      strtk_cmpstmt(10)
+      strtk_cmpstmt(11)
+      return string_to_type_converter((*itr).first,(*itr).second,t12);
    }
 
    template <typename InputIterator,
@@ -7972,18 +7976,17 @@ namespace strtk
 
       iterator_type_ptr itr = token_list;
 
-      if (!string_to_type_converter((*itr).first,(*itr).second, t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t5)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t6)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t7)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t8)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t9)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t10)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t11)) return false;
-      return true;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      strtk_cmpstmt( 5)
+      strtk_cmpstmt( 6)
+      strtk_cmpstmt( 7)
+      strtk_cmpstmt( 8)
+      strtk_cmpstmt( 9)
+      strtk_cmpstmt(10)
+      return string_to_type_converter((*itr).first,(*itr).second,t11);
    }
 
    template <typename InputIterator,
@@ -8014,17 +8017,16 @@ namespace strtk
          return false;
 
       iterator_type_ptr itr = token_list;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t5)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t6)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t7)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t8)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t9)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t10)) return false;
-      return true;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      strtk_cmpstmt( 5)
+      strtk_cmpstmt( 6)
+      strtk_cmpstmt( 7)
+      strtk_cmpstmt( 8)
+      strtk_cmpstmt( 9)
+      return string_to_type_converter((*itr).first,(*itr).second,t10);
    }
 
    template <typename InputIterator,
@@ -8054,16 +8056,15 @@ namespace strtk
          return false;
 
       iterator_type_ptr itr = token_list;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t6)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t7)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t8)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t9)) return false;
-      return true;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      strtk_cmpstmt( 5)
+      strtk_cmpstmt( 6)
+      strtk_cmpstmt( 7)
+      strtk_cmpstmt( 8)
+      return string_to_type_converter((*itr).first,(*itr).second,t9);
    }
 
    template <typename InputIterator,
@@ -8091,15 +8092,14 @@ namespace strtk
          return false;
 
       iterator_type_ptr itr = token_list;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t6)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t7)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t8)) return false;
-      return true;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      strtk_cmpstmt( 5)
+      strtk_cmpstmt( 6)
+      strtk_cmpstmt( 7)
+      return string_to_type_converter((*itr).first,(*itr).second,t8);
    }
 
    template <typename InputIterator,
@@ -8127,14 +8127,13 @@ namespace strtk
          return false;
 
       iterator_type_ptr itr = token_list;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t6)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t7)) return false;
-      return true;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      strtk_cmpstmt( 5)
+      strtk_cmpstmt( 6)
+      return string_to_type_converter((*itr).first,(*itr).second,t7);
    }
 
    template <typename InputIterator,
@@ -8162,13 +8161,12 @@ namespace strtk
          return false;
 
       iterator_type_ptr itr = token_list;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t6)) return false;
-      return true;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      strtk_cmpstmt( 5)
+      return string_to_type_converter((*itr).first,(*itr).second,t6);
    }
 
    template <typename InputIterator,
@@ -8197,12 +8195,11 @@ namespace strtk
          return false;
 
       iterator_type_ptr itr = token_list;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false;
-      return true;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      return string_to_type_converter((*itr).first,(*itr).second,t5);
    }
 
    template <typename InputIterator,
@@ -8229,11 +8226,10 @@ namespace strtk
          return false;
 
       iterator_type_ptr itr = token_list;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false;
-      return true;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      return string_to_type_converter((*itr).first,(*itr).second,t4);
    }
 
    template <typename InputIterator,
@@ -8259,10 +8255,9 @@ namespace strtk
          return false;
 
       iterator_type_ptr itr = token_list;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false;
-      return true;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      return string_to_type_converter((*itr).first,(*itr).second,t3);
    }
 
    template <typename InputIterator, typename T1, typename T2>
@@ -8287,9 +8282,9 @@ namespace strtk
          return false;
 
       iterator_type_ptr itr = token_list;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false;
-      return true;
+      strtk_cmpstmt(1)
+      return string_to_type_converter((*itr).first,(*itr).second,t2);
+      #undef strtk_cmpstmt
    }
 
    template <typename InputIterator, typename T>
@@ -8875,17 +8870,23 @@ namespace strtk
       if (token_list.size() < 12) return false;
 
       iterator_type_ptr itr = token_list.begin();
-      if (!string_to_type_converter((*itr).first,(*itr).second, t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t5)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t6)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t7)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t8)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t9)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t10)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t11)) return false; ++itr;
+
+      #define strtk_cmpstmt(N)                                         \
+      if (!string_to_type_converter((*itr).first,(*itr).second, t##N)) \
+         return false;                                                 \
+      ++itr;                                                           \
+
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      strtk_cmpstmt( 5)
+      strtk_cmpstmt( 6)
+      strtk_cmpstmt( 7)
+      strtk_cmpstmt( 8)
+      strtk_cmpstmt( 9)
+      strtk_cmpstmt(10)
+      strtk_cmpstmt(11)
       return ca(itr,token_list.end());
    }
 
@@ -8921,16 +8922,16 @@ namespace strtk
       if (token_list.size() < 11) return false;
 
       iterator_type_ptr itr = token_list.begin();
-      if (!string_to_type_converter((*itr).first,(*itr).second, t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t5)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t6)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t7)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t8)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second, t9)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t10)) return false; ++itr;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      strtk_cmpstmt( 5)
+      strtk_cmpstmt( 6)
+      strtk_cmpstmt( 7)
+      strtk_cmpstmt( 8)
+      strtk_cmpstmt( 9)
+      strtk_cmpstmt(10)
       return ca(itr,token_list.end());
    }
 
@@ -8965,15 +8966,15 @@ namespace strtk
       if (token_list.size() < 10) return false;
 
       iterator_type_ptr itr = token_list.begin();
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t6)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t7)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t8)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t9)) return false; ++itr;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      strtk_cmpstmt( 5)
+      strtk_cmpstmt( 6)
+      strtk_cmpstmt( 7)
+      strtk_cmpstmt( 8)
+      strtk_cmpstmt( 9)
       return ca(itr,token_list.end());
    }
 
@@ -9008,14 +9009,14 @@ namespace strtk
       if (token_list.size() < 9) return false;
 
       iterator_type_ptr itr = token_list.begin();
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t6)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t7)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t8)) return false; ++itr;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      strtk_cmpstmt( 5)
+      strtk_cmpstmt( 6)
+      strtk_cmpstmt( 7)
+      strtk_cmpstmt( 8)
       return ca(itr,token_list.end());
    }
 
@@ -9049,13 +9050,13 @@ namespace strtk
       if (token_list.size() < 8) return false;
 
       iterator_type_ptr itr = token_list.begin();
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t6)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t7)) return false; ++itr;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      strtk_cmpstmt( 5)
+      strtk_cmpstmt( 6)
+      strtk_cmpstmt( 7)
       return ca(itr,token_list.end());
    }
 
@@ -9089,12 +9090,12 @@ namespace strtk
       if (token_list.size() < 7) return false;
 
       iterator_type_ptr itr = token_list.begin();
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t6)) return false; ++itr;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      strtk_cmpstmt( 5)
+      strtk_cmpstmt( 6)
       return ca(itr,token_list.end());
    }
 
@@ -9128,11 +9129,11 @@ namespace strtk
       if (token_list.size() < 6) return false;
 
       iterator_type_ptr itr = token_list.begin();
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t5)) return false; ++itr;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
+      strtk_cmpstmt( 5)
       return ca(itr,token_list.end());
    }
 
@@ -9165,10 +9166,10 @@ namespace strtk
       if (token_list.size() < 5) return false;
 
       iterator_type_ptr itr = token_list.begin();
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t4)) return false; ++itr;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
+      strtk_cmpstmt( 4)
       return ca(itr,token_list.end());
    }
 
@@ -9201,9 +9202,9 @@ namespace strtk
       if (token_list.size() < 4) return false;
 
       iterator_type_ptr itr = token_list.begin();
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t3)) return false; ++itr;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
+      strtk_cmpstmt( 3)
       return ca(itr,token_list.end());
    }
 
@@ -9235,8 +9236,8 @@ namespace strtk
 
       if (token_list.size() < 3) return false;
       iterator_type_ptr itr = token_list.begin();
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
-      if (!string_to_type_converter((*itr).first,(*itr).second,t2)) return false; ++itr;
+      strtk_cmpstmt( 1)
+      strtk_cmpstmt( 2)
       return ca(itr,token_list.end());
    }
 
@@ -9268,8 +9269,9 @@ namespace strtk
       if (token_list.size() < 2) return false;
 
       iterator_type_ptr itr = token_list.begin();
-      if (!string_to_type_converter((*itr).first,(*itr).second,t1)) return false; ++itr;
+      strtk_cmpstmt( 1)
       return ca(itr,token_list.end());
+      #undef strtk_cmpstmt
    }
 
    template <typename InputIterator,
@@ -9859,15 +9861,21 @@ namespace strtk
    {
       if (9 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t3)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[3]),t4)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[4]),t5)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[5]),t6)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[6]),t7)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[7]),t8)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[8]),t9)) return result; ++result;
+
+      #define strtk_cmpstmt(N)                                  \
+      if (!string_to_type_converter(std::string(argv[N]),t##N)) \
+         return result;                                         \
+      ++result;                                                 \
+
+      strtk_cmpstmt(1)
+      strtk_cmpstmt(2)
+      strtk_cmpstmt(3)
+      strtk_cmpstmt(4)
+      strtk_cmpstmt(5)
+      strtk_cmpstmt(6)
+      strtk_cmpstmt(7)
+      strtk_cmpstmt(8)
+      strtk_cmpstmt(9)
       return result;
    }
 
@@ -9880,14 +9888,14 @@ namespace strtk
    {
       if (8 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t3)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[3]),t4)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[4]),t5)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[5]),t6)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[6]),t7)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[7]),t8)) return result; ++result;
+      strtk_cmpstmt(1)
+      strtk_cmpstmt(2)
+      strtk_cmpstmt(3)
+      strtk_cmpstmt(4)
+      strtk_cmpstmt(5)
+      strtk_cmpstmt(6)
+      strtk_cmpstmt(7)
+      strtk_cmpstmt(8)
       return result;
    }
 
@@ -9900,13 +9908,13 @@ namespace strtk
    {
       if (7 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t3)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[3]),t4)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[4]),t5)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[5]),t6)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[6]),t7)) return result; ++result;
+      strtk_cmpstmt(1)
+      strtk_cmpstmt(2)
+      strtk_cmpstmt(3)
+      strtk_cmpstmt(4)
+      strtk_cmpstmt(5)
+      strtk_cmpstmt(6)
+      strtk_cmpstmt(7)
       return result;
    }
 
@@ -9919,12 +9927,12 @@ namespace strtk
    {
       if (6 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t3)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[3]),t4)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[4]),t5)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[5]),t6)) return result; ++result;
+      strtk_cmpstmt(1)
+      strtk_cmpstmt(2)
+      strtk_cmpstmt(3)
+      strtk_cmpstmt(4)
+      strtk_cmpstmt(5)
+      strtk_cmpstmt(6)
       return result;
    }
 
@@ -9934,11 +9942,11 @@ namespace strtk
    {
       if (5 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t3)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[3]),t4)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[4]),t5)) return result; ++result;
+      strtk_cmpstmt(1)
+      strtk_cmpstmt(2)
+      strtk_cmpstmt(3)
+      strtk_cmpstmt(4)
+      strtk_cmpstmt(5)
       return result;
    }
 
@@ -9948,10 +9956,10 @@ namespace strtk
    {
       if (4 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t3)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[3]),t4)) return result; ++result;
+      strtk_cmpstmt(1)
+      strtk_cmpstmt(2)
+      strtk_cmpstmt(3)
+      strtk_cmpstmt(4)
       return result;
    }
 
@@ -9961,9 +9969,9 @@ namespace strtk
    {
       if (3 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[2]),t3)) return result; ++result;
+      strtk_cmpstmt(1)
+      strtk_cmpstmt(2)
+      strtk_cmpstmt(3)
       return result;
    }
 
@@ -9973,8 +9981,8 @@ namespace strtk
    {
       if (2 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
-      if (!string_to_type_converter(std::string(argv[1]),t2)) return result; ++result;
+      strtk_cmpstmt(1)
+      strtk_cmpstmt(2)
       return result;
    }
 
@@ -9984,8 +9992,9 @@ namespace strtk
    {
       if (1 != argc) return 0;
       std::size_t result = 0;
-      if (!string_to_type_converter(std::string(argv[0]),t1)) return result; ++result;
+      strtk_cmpstmt(1)
       return result;
+      #undef strtk_cmpstmt
    }
 
    #define strtk_parse_begin(Type)                                            \
@@ -12878,6 +12887,16 @@ namespace strtk
          };
 
          template <typename T, typename Iterator>
+         struct numeric_convert_impl<T,Iterator,20>
+         {
+            static inline void process(const Iterator itr, T& t)
+            {
+               strtk::fast::details::numeric_convert_impl<T,Iterator,19>::process(itr + 1,t);
+               t += static_cast<T>((itr[0] - '0') * 10000000000000000000ULL);
+            }
+         };
+
+         template <typename T, typename Iterator>
          struct numeric_convert_impl<T,Iterator,19>
          {
             static inline void process(const Iterator itr, T& t)
@@ -13228,27 +13247,16 @@ namespace strtk
       {
          switch (n)
          {
-            case  0 : return details::all_digits_check_impl<Iterator, 0>::process(itr);
-            case  1 : return details::all_digits_check_impl<Iterator, 1>::process(itr);
-            case  2 : return details::all_digits_check_impl<Iterator, 2>::process(itr);
-            case  3 : return details::all_digits_check_impl<Iterator, 3>::process(itr);
-            case  4 : return details::all_digits_check_impl<Iterator, 4>::process(itr);
-            case  5 : return details::all_digits_check_impl<Iterator, 5>::process(itr);
-            case  6 : return details::all_digits_check_impl<Iterator, 6>::process(itr);
-            case  7 : return details::all_digits_check_impl<Iterator, 7>::process(itr);
-            case  8 : return details::all_digits_check_impl<Iterator, 8>::process(itr);
-            case  9 : return details::all_digits_check_impl<Iterator, 9>::process(itr);
-            case 10 : return details::all_digits_check_impl<Iterator,10>::process(itr);
-            case 11 : return details::all_digits_check_impl<Iterator,11>::process(itr);
-            case 12 : return details::all_digits_check_impl<Iterator,12>::process(itr);
-            case 13 : return details::all_digits_check_impl<Iterator,13>::process(itr);
-            case 14 : return details::all_digits_check_impl<Iterator,14>::process(itr);
-            case 15 : return details::all_digits_check_impl<Iterator,15>::process(itr);
-            case 16 : return details::all_digits_check_impl<Iterator,16>::process(itr);
-            case 17 : return details::all_digits_check_impl<Iterator,17>::process(itr);
-            case 18 : return details::all_digits_check_impl<Iterator,18>::process(itr);
-            case 19 : return details::all_digits_check_impl<Iterator,19>::process(itr);
+            #define case_stmt(N)                                                      \
+            case N : return details::all_digits_check_impl<Iterator,N>::process(itr); \
+
+            case_stmt( 0) case_stmt( 1) case_stmt( 2) case_stmt( 3)
+            case_stmt( 4) case_stmt( 5) case_stmt( 6) case_stmt( 7)
+            case_stmt( 8) case_stmt( 9) case_stmt(10) case_stmt(11)
+            case_stmt(12) case_stmt(13) case_stmt(14) case_stmt(15)
+            case_stmt(16) case_stmt(17) case_stmt(18) case_stmt(19)
             default : return false;
+            #undef case_stmt
          }
       }
 
@@ -13336,27 +13344,17 @@ namespace strtk
 
          switch (n)
          {
-            case  0 : details::numeric_convert_impl<T,Iterator, 0>::process(itr,t); return true;
-            case  1 : details::numeric_convert_impl<T,Iterator, 1>::process(itr,t); return true;
-            case  2 : details::numeric_convert_impl<T,Iterator, 2>::process(itr,t); return true;
-            case  3 : details::numeric_convert_impl<T,Iterator, 3>::process(itr,t); return true;
-            case  4 : details::numeric_convert_impl<T,Iterator, 4>::process(itr,t); return true;
-            case  5 : details::numeric_convert_impl<T,Iterator, 5>::process(itr,t); return true;
-            case  6 : details::numeric_convert_impl<T,Iterator, 6>::process(itr,t); return true;
-            case  7 : details::numeric_convert_impl<T,Iterator, 7>::process(itr,t); return true;
-            case  8 : details::numeric_convert_impl<T,Iterator, 8>::process(itr,t); return true;
-            case  9 : details::numeric_convert_impl<T,Iterator, 9>::process(itr,t); return true;
-            case 10 : details::numeric_convert_impl<T,Iterator,10>::process(itr,t); return true;
-            case 11 : details::numeric_convert_impl<T,Iterator,11>::process(itr,t); return true;
-            case 12 : details::numeric_convert_impl<T,Iterator,12>::process(itr,t); return true;
-            case 13 : details::numeric_convert_impl<T,Iterator,13>::process(itr,t); return true;
-            case 14 : details::numeric_convert_impl<T,Iterator,14>::process(itr,t); return true;
-            case 15 : details::numeric_convert_impl<T,Iterator,15>::process(itr,t); return true;
-            case 16 : details::numeric_convert_impl<T,Iterator,16>::process(itr,t); return true;
-            case 17 : details::numeric_convert_impl<T,Iterator,17>::process(itr,t); return true;
-            case 18 : details::numeric_convert_impl<T,Iterator,18>::process(itr,t); return true;
-            case 19 : details::numeric_convert_impl<T,Iterator,19>::process(itr,t); return true;
+            #define case_stmt(N)                                                                   \
+            case N : { details::numeric_convert_impl<T,Iterator,N>::process(itr,t); return true; } \
+
+            case_stmt( 0) case_stmt( 1) case_stmt( 2) case_stmt( 3)
+            case_stmt( 4) case_stmt( 5) case_stmt( 6) case_stmt( 7)
+            case_stmt( 8) case_stmt( 9) case_stmt(10) case_stmt(11)
+            case_stmt(12) case_stmt(13) case_stmt(14) case_stmt(15)
+            case_stmt(16) case_stmt(17) case_stmt(18) case_stmt(19)
+            case_stmt(20)
             default : return false;
+            #undef case_stmt
          }
       }
 
@@ -15255,16 +15253,24 @@ namespace strtk
       }
 
       inline std::string remaining_string(const std::size_t& index,
-                                          const std::string& str)
+                                          const std::string& str,
+                                          const bool return_empty = false)
       {
-         return (index < str.size()) ? str.substr(index,str.size() - index) : str;
+         if (index < str.size())
+            return str.substr(index,str.size() - index);
+         else
+            return (!return_empty) ? str : "";
       }
 
       inline void remaining_string(const std::size_t& index,
                                    const std::string& str,
-                                   std::string& result)
+                                   std::string& result,
+                                   const bool return_empty = false)
       {
-         result = (index < str.size()) ? str.substr(index,str.size() - index) : str;
+         if (index < str.size())
+            result =  str.substr(index,str.size() - index);
+         else
+            result = (!return_empty) ? str : "";
       }
 
       inline bool is_letter(const char c)
@@ -16710,7 +16716,7 @@ namespace strtk
       {
          static const unsigned int length       = 20;
          static const unsigned int size         = 24;
-         static const unsigned int bound_length = 19;
+         static const unsigned int bound_length = 20;
          static const unsigned long long m10    = 1844674407370955161;
          static const unsigned long long ldpos  = 5;
       };
@@ -16893,7 +16899,9 @@ namespace strtk
       strtk_register_supported_iterator_type(std::string::iterator)
       strtk_register_supported_iterator_type(std::string::const_iterator)
 
+      #ifndef _LIBCPP_VERSION
       strtk_register_sequence_iterator_type(std::vector)
+      #endif
       strtk_register_sequence_iterator_type(std::deque)
 
       strtk_register_sink_type_tag(float)
@@ -17129,11 +17137,11 @@ namespace strtk
       }
 
       #ifdef __builtin_expect
-      # define strtk_likely(x)       __builtin_expect((x),1)
-      # define strtk_unlikely(x)     __builtin_expect((x),0)
+      # define strtk_likely(x)    __builtin_expect((x),1)
+      # define strtk_unlikely(x)  __builtin_expect((x),0)
       #else
-      # define strtk_likely(x)       (x)
-      # define strtk_unlikely(x)     (x)
+      # define strtk_likely(x)    (x)
+      # define strtk_unlikely(x)  (x)
       #endif
 
       template <typename Iterator, typename T>
@@ -17156,25 +17164,20 @@ namespace strtk
 
          switch (length)
          {
-            case 19 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 18 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 17 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 16 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 15 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 14 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 13 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 12 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 11 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 10 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  9 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  8 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  7 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  6 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  5 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  4 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  3 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  2 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  1 : if (strtk_unlikely((digit = (*itr - '0'))>= 10))                                          return false;
+            #define case_stmt(N)                                      \
+            case N : if (strtk_likely((digit = (*itr++ - '0')) < 10)) \
+                        t = t * 10 + static_cast<T>(digit);           \
+                     else                                             \
+                        return false;                                 \
+
+            case_stmt(20) case_stmt(19) case_stmt(18) case_stmt(17)
+            case_stmt(16) case_stmt(15) case_stmt(14) case_stmt(13)
+            case_stmt(12) case_stmt(11) case_stmt(10) case_stmt( 9)
+            case_stmt( 8) case_stmt( 7) case_stmt( 6) case_stmt( 5)
+            case_stmt( 4) case_stmt( 3) case_stmt( 2)
+            case  1 : if (strtk_unlikely((digit = (*itr - '0'))>= 10))
+                        return false;
+            #undef case_stmt
          }
 
          if (length == numeric<T>::bound_length)
@@ -17223,31 +17226,26 @@ namespace strtk
 
          switch (length)
          {
-            case 19 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 18 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 17 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 16 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 15 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 14 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 13 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 12 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 11 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case 10 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  9 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  8 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  7 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  6 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  5 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  4 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  3 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  2 : if (strtk_likely((digit = (*itr++ - '0')) < 10)) t = t * 10 + static_cast<T>(digit); else return false;
-            case  1 : if (strtk_unlikely((digit = (*itr - '0'))>= 10))                                          return false;
+            #define case_stmt(N)                                      \
+            case N : if (strtk_likely((digit = (*itr++ - '0')) < 10)) \
+                        t = t * 10 + static_cast<T>(digit);           \
+                     else                                             \
+                        return false;                                 \
+
+            case_stmt(19) case_stmt(18) case_stmt(17) case_stmt(16)
+            case_stmt(15) case_stmt(14) case_stmt(13) case_stmt(12)
+            case_stmt(11) case_stmt(10) case_stmt( 9) case_stmt( 8)
+            case_stmt( 7) case_stmt( 6) case_stmt( 5) case_stmt( 4)
+            case_stmt( 3) case_stmt( 2)
+            case  1 : if (strtk_unlikely((digit = (*itr - '0'))>= 10))
+                         return false;
+            #undef case_stmt
          }
 
          if (length == numeric<T>::bound_length)
          {
             if (!(
-                   (t < numeric<T>::m10) ||
+                   (t < static_cast<T>(numeric<T>::m10)) ||
                    (
                      (t == numeric<T>::m10) &&
                      (static_cast<T>(digit) <= last_digit)
@@ -17464,7 +17462,7 @@ namespace strtk
                if (curr != itr)
                {
                   instate = true;
-                  d += pow10(tmp_d,-std::distance(curr,itr));
+                  d += pow10(tmp_d,static_cast<int>(-std::distance(curr,itr)));
                }
 
                #undef parse_digit_1
@@ -22375,9 +22373,8 @@ namespace strtk
                       T6& t6, T7& t7, T8& t8, T9& t9, T10& t10)
    {
       return
-         details::column_selector_impl
-            <T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10>
-               (col_list,t0,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10);
+         details::column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10>
+            (col_list,t0,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10);
    }
 
    template <typename T0, typename T1, typename T2, typename T3,
@@ -22389,9 +22386,8 @@ namespace strtk
                       T6& t6, T7& t7, T8& t8, T9& t9)
    {
       return
-         details::column_selector_impl
-            <T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>
-               (col_list,t0,t1,t2,t3,t4,t5,t6,t7,t8,t9);
+         details::column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>
+            (col_list,t0,t1,t2,t3,t4,t5,t6,t7,t8,t9);
    }
 
    template <typename T0, typename T1, typename T2, typename T3,
@@ -22403,9 +22399,8 @@ namespace strtk
                       T6& t6, T7& t7, T8& t8)
    {
       return
-         details::column_selector_impl
-            <T0,T1,T2,T3,T4,T5,T6,T7,T8>
-               (col_list,t0,t1,t2,t3,t4,t5,t6,t7,t8);
+         details::column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7,T8>
+            (col_list,t0,t1,t2,t3,t4,t5,t6,t7,t8);
    }
 
    template <typename T0, typename T1, typename T2, typename T3,
@@ -22416,9 +22411,8 @@ namespace strtk
                       T6& t6, T7& t7)
    {
       return
-         details::column_selector_impl
-            <T0,T1,T2,T3,T4,T5,T6,T7>
-               (col_list,t0,t1,t2,t3,t4,t5,t6,t7);
+         details::column_selector_impl<T0,T1,T2,T3,T4,T5,T6,T7>
+            (col_list,t0,t1,t2,t3,t4,t5,t6,t7);
    }
 
    template <typename T0, typename T1, typename T2, typename T3,
@@ -22428,9 +22422,8 @@ namespace strtk
                       T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6)
    {
       return
-         details::column_selector_impl
-            <T0,T1,T2,T3,T4,T5,T6>
-               (col_list,t0,t1,t2,t3,t4,t5,t6);
+         details::column_selector_impl<T0,T1,T2,T3,T4,T5,T6>
+            (col_list,t0,t1,t2,t3,t4,t5,t6);
    }
 
    template <typename T0, typename T1, typename T2, typename T3,
@@ -22440,9 +22433,8 @@ namespace strtk
                       T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5)
    {
       return
-         details::column_selector_impl
-            <T0,T1,T2,T3,T4,T5>
-               (col_list,t0,t1,t2,t3,t4,t5);
+         details::column_selector_impl<T0,T1,T2,T3,T4,T5>
+            (col_list,t0,t1,t2,t3,t4,t5);
    }
 
    template <typename T0, typename T1, typename T2,
@@ -22452,9 +22444,8 @@ namespace strtk
                       T0& t0, T1& t1, T2& t2, T3& t3, T4& t4)
    {
       return
-         details::column_selector_impl
-            <T0,T1,T2,T3,T4>
-               (col_list,t0,t1,t2,t3,t4);
+         details::column_selector_impl<T0,T1,T2,T3,T4>
+            (col_list,t0,t1,t2,t3,t4);
    }
 
    template <typename T0, typename T1, typename T2, typename T3>
@@ -22463,9 +22454,8 @@ namespace strtk
                       T0& t0, T1& t1, T2& t2, T3& t3)
    {
       return
-         details::column_selector_impl
-            <T0,T1,T2,T3>
-               (col_list,t0,t1,t2,t3);
+         details::column_selector_impl<T0,T1,T2,T3>
+            (col_list,t0,t1,t2,t3);
    }
 
    template <typename T0, typename T1, typename T2>
@@ -22474,9 +22464,8 @@ namespace strtk
                       T0& t0, T1& t1, T2& t2)
    {
       return
-         details::column_selector_impl
-            <T0,T1,T2>
-               (col_list,t0,t1,t2);
+         details::column_selector_impl<T0,T1,T2>
+            (col_list,t0,t1,t2);
    }
 
    template <typename T0, typename T1>
@@ -22485,9 +22474,8 @@ namespace strtk
                       T0& t0, T1& t1)
    {
       return
-         details::column_selector_impl
-            <T0,T1>
-               (col_list,t0,t1);
+         details::column_selector_impl<T0,T1>
+            (col_list,t0,t1);
    }
 
    template <typename T0>
@@ -22495,9 +22483,8 @@ namespace strtk
       column_selector(const details::column_list_impl<1>& col_list, T0& t0)
    {
       return
-         details::column_selector_impl
-            <T0>
-               (col_list,t0);
+         details::column_selector_impl<T0>
+            (col_list,t0);
    }
 
    namespace details
@@ -24272,8 +24259,9 @@ namespace strtk
    namespace information
    {
       static const char* library = "String Toolkit";
-      static const char* version = "2.718281828459045235360287471352662497757247093699959574966";
-      static const char* date    = "20140810";
+      static const char* version = "2.718281828459045235360287471352"
+                                   "66249775724709369995957496696762";
+      static const char* date    = "20160707";
 
       static inline std::string data()
       {
