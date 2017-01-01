@@ -3,14 +3,14 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * String Glober                                                 *
- * Author: Arash Partow (2002-2016)                              *
+ * Author: Arash Partow (2002-2017)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
  * Free use of the String Toolkit Library is permitted under the *
  * guidelines and in accordance with the most current version of *
- * the Common Public License.                                    *
- * http://www.opensource.org/licenses/cpl1.0.php                 *
+ * the MIT License.                                              *
+ * http://www.opensource.org/licenses/MIT                        *
  *                                                               *
  *****************************************************************
 */
@@ -27,8 +27,8 @@
                 The  patterns  can  be  constructed  using  either  of   the
                 following wild-card characters:
 
-                * : match on zero or more characters
-                ? : match on zero or one character
+                * : match on zero or more characters ? : match on zero
+                or one character
 
                Example usage:
 

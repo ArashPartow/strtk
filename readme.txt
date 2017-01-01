@@ -34,8 +34,8 @@ The StrTk library has the following capabilities:
 [COPYRIGHT NOTICE]
 Free  use  of  the  String  Toolkit  Library  is  permitted  under the
 guidelines and  in accordance  with the  most current  version of  the
-Common Public License.
-http://www.opensource.org/licenses/cpl1.0.php
+MIT License.
+http://www.opensource.org/licenses/MIT
 
 
 

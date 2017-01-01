@@ -3,14 +3,14 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * Serializer Example                                            *
- * Author: Arash Partow (2002-2016)                              *
+ * Author: Arash Partow (2002-2017)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
  * Free use of the String Toolkit Library is permitted under the *
  * guidelines and in accordance with the most current version of *
- * the Common Public License.                                    *
- * http://www.opensource.org/licenses/cpl1.0.php                 *
+ * the MIT License.                                              *
+ * http://www.opensource.org/licenses/MIT                        *
  *                                                               *
  *****************************************************************
 */
@@ -631,78 +631,80 @@ bool example04(char* buffer, const unsigned int buffer_size)
 
 bool example05(char* buffer, const unsigned int buffer_size)
 {
-   const std::size_t rounds = 100000;
-   const std::size_t person_count = 1000;
-   person p;
-   p.id        = 12345678901234567890ULL;
-   p.name      = "Mr. Rumpelstilzchen";
-   p.age       = 637;
-   p.height    = 123.4567;
-   p.weight    = 765.345f;
-   p.is_insane = true;
-
    {
-      strtk::binary::writer writer(buffer,buffer_size);
-      unsigned long long total_written = 0;
+      const std::size_t rounds = 100000;
+      const std::size_t person_count = 1000;
+      person p;
+      p.id        = 12345678901234567890ULL;
+      p.name      = "Mr. Rumpelstilzchen";
+      p.age       = 637;
+      p.height    = 123.4567;
+      p.weight    = 765.345f;
+      p.is_insane = true;
 
-      strtk::util::timer t;
-      t.start();
-
-      for (std::size_t r = 0; r < rounds; ++r)
       {
-         writer.reset();
+         strtk::binary::writer writer(buffer,buffer_size);
+         unsigned long long total_written = 0;
 
-         for (std::size_t i = 0; i < person_count; ++i)
+         strtk::util::timer t;
+         t.start();
+
+         for (std::size_t r = 0; r < rounds; ++r)
          {
-            if (!writer(p))
+            writer.reset();
+
+            for (std::size_t i = 0; i < person_count; ++i)
             {
-               std::cout << "example05() - Failed to write index " << i << " @ round " << r << std::endl;
-               return false;
+               if (!writer(p))
+               {
+                  std::cout << "example05() - Failed to write index " << i << " @ round " << r << std::endl;
+                  return false;
+               }
             }
+
+            total_written += writer.amount_written();
          }
 
-         total_written += writer.amount_written();
+         t.stop();
+
+         printf("[strtk::binary::writer] Person Count:%10llu  Total time:%8.4f  Rate:%18.4fpersons/s %9.3fMB/s\n",
+                static_cast<unsigned long long>(rounds * person_count),
+                t.time(),
+                (rounds * person_count) / t.time(),
+                total_written / (1048576.0 * t.time()));
       }
 
-      t.stop();
-
-      printf("[strtk::binary::writer] Person Count:%10llu  Total time:%8.4f  Rate:%18.4fpersons/s %9.3fMB/s\n",
-             static_cast<unsigned long long>(rounds * person_count),
-             t.time(),
-             (rounds * person_count) / t.time(),
-             total_written / (1048576.0 * t.time()));
-   }
-
-   {
-      strtk::binary::reader reader(buffer,buffer_size);
-      unsigned long long total_read = 0;
-
-      strtk::util::timer t;
-      t.start();
-
-      for (std::size_t r = 0; r < rounds; ++r)
       {
-         reader.reset();
+         strtk::binary::reader reader(buffer,buffer_size);
+         unsigned long long total_read = 0;
 
-         for (std::size_t i = 0; i < person_count; ++i)
+         strtk::util::timer t;
+         t.start();
+
+         for (std::size_t r = 0; r < rounds; ++r)
          {
-            if (!reader(p))
+            reader.reset();
+
+            for (std::size_t i = 0; i < person_count; ++i)
             {
-               std::cout << "example05() - Failed to read index " << i << " @ round " << r << std::endl;
-               return false;
+               if (!reader(p))
+               {
+                  std::cout << "example05() - Failed to read index " << i << " @ round " << r << std::endl;
+                  return false;
+               }
             }
+
+            total_read += reader.amount_read();
          }
 
-         total_read += reader.amount_read();
+         t.stop();
+
+         printf("[strtk::binary::reader] Person Count:%10llu  Total time:%8.4f  Rate:%18.4fpersons/s %9.3fMB/s\n",
+                static_cast<unsigned long long>(rounds * person_count),
+                t.time(),
+                (rounds * person_count) / t.time(),
+                total_read / (1048576.0 * t.time()));
       }
-
-      t.stop();
-
-      printf("[strtk::binary::reader] Person Count:%10llu  Total time:%8.4f  Rate:%18.4fpersons/s %9.3fMB/s\n",
-             static_cast<unsigned long long>(rounds * person_count),
-             t.time(),
-             (rounds * person_count) / t.time(),
-             total_read / (1048576.0 * t.time()));
    }
 
    {

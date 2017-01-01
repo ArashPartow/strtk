@@ -3,14 +3,14 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * String Tokenizer Test                                         *
- * Author: Arash Partow (2002-2016)                              *
+ * Author: Arash Partow (2002-2017)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
  * Free use of the String Toolkit Library is permitted under the *
  * guidelines and in accordance with the most current version of *
- * the Common Public License.                                    *
- * http://www.opensource.org/licenses/cpl1.0.php                 *
+ * the MIT License.                                              *
+ * http://www.opensource.org/licenses/MIT                        *
  *                                                               *
  *****************************************************************
 */
@@ -391,7 +391,9 @@ bool test_tokenizer_options()
 
       typedef strtk::std_string::tokenizer<strtk::multiple_char_delimiter_predicate>::type tokenizer_type;
 
-      tokenizer_type tokenizer(s,strtk::multiple_char_delimiter_predicate("abcijkxyz"),tokenize_options);
+      const strtk::multiple_char_delimiter_predicate mcdp("abcijkxyz");
+
+      tokenizer_type tokenizer(s, mcdp, tokenize_options);
       tokenizer_type::iterator itr = tokenizer.begin();
       tokenizer_type::iterator end = tokenizer.end();
 
