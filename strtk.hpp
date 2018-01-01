@@ -2,7 +2,7 @@
  *****************************************************************
  *                     String Toolkit Library                    *
  *                                                               *
- * Author: Arash Partow (2002-2017)                              *
+ * Author: Arash Partow (2002-2018)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -63,6 +63,20 @@
    // Requires definition of a TR1 compatible regex library header
    //#include <regex>
    #include <boost/regex.hpp>
+#endif
+
+#if __GNUC__  >= 7
+
+   #define strtk_disable_fallthrough_begin                       \
+   _Pragma ("GCC diagnostic push")                               \
+   _Pragma ("GCC diagnostic ignored \"-Wimplicit-fallthrough\"") \
+
+   #define strtk_disable_fallthrough_end                         \
+   _Pragma ("GCC diagnostic pop")                                \
+
+#else
+   #define strtk_disable_fallthrough_begin (void)0;
+   #define strtk_disable_fallthrough_end   (void)0;
 #endif
 
 
@@ -4753,8 +4767,7 @@ namespace strtk
 
    inline void convert_to_uppercase(unsigned char* begin, unsigned char* end)
    {
-      std::transform(begin,end,begin,::toupper);
-      /*
+      //std::transform(begin,end,begin,::toupper);
       unsigned char* itr = begin;
       while (end != itr)
       {
@@ -4762,7 +4775,6 @@ namespace strtk
          (*itr) = static_cast<unsigned char>(::toupper(static_cast<int>(*itr)));
          ++itr;
       }
-      */
    }
 
    inline void convert_to_uppercase(char* begin, char* end)
@@ -4779,8 +4791,7 @@ namespace strtk
 
    inline void convert_to_lowercase(unsigned char* begin, unsigned char* end)
    {
-      std::transform(begin,end,begin,::tolower);
-      /*
+      //std::transform(begin,end,begin,::tolower);
       unsigned char* itr = begin;
       while (end != itr)
       {
@@ -4788,7 +4799,6 @@ namespace strtk
          (*itr) = static_cast<unsigned char>(::tolower(static_cast<int>(*itr)));
          ++itr;
       }
-      */
    }
 
    inline void convert_to_lowercase(char* begin, char* end)
@@ -17453,6 +17463,7 @@ namespace strtk
          if (strtk_unlikely((length = std::distance(itr,end)) > numeric<T>::bound_length))
             return false;
 
+         strtk_disable_fallthrough_begin
          switch (length)
          {
             #define case_stmt(N)                                      \
@@ -17470,6 +17481,7 @@ namespace strtk
                         return false;
             #undef case_stmt
          }
+         strtk_disable_fallthrough_end
 
          if (length == numeric<T>::bound_length)
          {
@@ -17515,6 +17527,7 @@ namespace strtk
          if (strtk_unlikely((length = std::distance(itr,end)) > numeric<T>::bound_length))
             return false;
 
+         strtk_disable_fallthrough_begin
          switch (length)
          {
             #define case_stmt(N)                                      \
@@ -17532,6 +17545,7 @@ namespace strtk
                          return false;
             #undef case_stmt
          }
+         strtk_disable_fallthrough_end
 
          if (length == numeric<T>::bound_length)
          {
@@ -17575,6 +17589,7 @@ namespace strtk
 
          if ((length = std::distance(itr,end)) <= 4)
          {
+            strtk_disable_fallthrough_begin
             switch (length)
             {
                #ifdef strtk_use_lut
@@ -17595,6 +17610,7 @@ namespace strtk
 
                #undef strtk_process_digit
             }
+            strtk_disable_fallthrough_end
          }
          else
             return_result = false;
@@ -19114,19 +19130,19 @@ namespace strtk
                                   T5& t5, T6&   t6, T7&   t7, T8&   t8,
                                   T9& t9, T10& t10, T11& t11, T12& t12)
    {
-      t1 = (*reinterpret_cast< T1*>(data)); data += sizeof( T1);
-      t2 = (*reinterpret_cast< T2*>(data)); data += sizeof( T2);
-      t3 = (*reinterpret_cast< T3*>(data)); data += sizeof( T3);
-      t4 = (*reinterpret_cast< T4*>(data)); data += sizeof( T4);
-      t5 = (*reinterpret_cast< T5*>(data)); data += sizeof( T5);
-      t6 = (*reinterpret_cast< T6*>(data)); data += sizeof( T6);
-      t7 = (*reinterpret_cast< T7*>(data)); data += sizeof( T7);
-      t8 = (*reinterpret_cast< T8*>(data)); data += sizeof( T8);
-      t9 = (*reinterpret_cast< T9*>(data)); data += sizeof( T9);
-     t10 = (*reinterpret_cast<T10*>(data)); data += sizeof(T10);
-     t11 = (*reinterpret_cast<T11*>(data)); data += sizeof(T11);
-     t12 = (*reinterpret_cast<T12*>(data)); data += sizeof(T12);
-     return data;
+      ::memcpy(& t1, data, sizeof( T1)); data += sizeof( T1);
+      ::memcpy(& t2, data, sizeof( T2)); data += sizeof( T2);
+      ::memcpy(& t3, data, sizeof( T3)); data += sizeof( T3);
+      ::memcpy(& t4, data, sizeof( T4)); data += sizeof( T4);
+      ::memcpy(& t5, data, sizeof( T5)); data += sizeof( T5);
+      ::memcpy(& t6, data, sizeof( T6)); data += sizeof( T6);
+      ::memcpy(& t7, data, sizeof( T7)); data += sizeof( T7);
+      ::memcpy(& t8, data, sizeof( T8)); data += sizeof( T8);
+      ::memcpy(& t9, data, sizeof( T9)); data += sizeof( T9);
+      ::memcpy(&t10, data, sizeof(T10)); data += sizeof(T10);
+      ::memcpy(&t11, data, sizeof(T11)); data += sizeof(T11);
+      ::memcpy(&t12, data, sizeof(T12)); data += sizeof(T12);
+      return data;
    }
 
    template <typename T1,  typename T2, typename  T3, typename T4,
@@ -19137,18 +19153,18 @@ namespace strtk
                                   T5& t5, T6&   t6, T7&   t7, T8& t8,
                                   T9& t9, T10& t10, T11& t11)
    {
-      t1 = (*reinterpret_cast< T1*>(data)); data += sizeof( T1);
-      t2 = (*reinterpret_cast< T2*>(data)); data += sizeof( T2);
-      t3 = (*reinterpret_cast< T3*>(data)); data += sizeof( T3);
-      t4 = (*reinterpret_cast< T4*>(data)); data += sizeof( T4);
-      t5 = (*reinterpret_cast< T5*>(data)); data += sizeof( T5);
-      t6 = (*reinterpret_cast< T6*>(data)); data += sizeof( T6);
-      t7 = (*reinterpret_cast< T7*>(data)); data += sizeof( T7);
-      t8 = (*reinterpret_cast< T8*>(data)); data += sizeof( T8);
-      t9 = (*reinterpret_cast< T9*>(data)); data += sizeof( T9);
-     t10 = (*reinterpret_cast<T10*>(data)); data += sizeof(T10);
-     t11 = (*reinterpret_cast<T11*>(data)); data += sizeof(T11);
-     return data;
+      ::memcpy(& t1, data, sizeof( T1)); data += sizeof( T1);
+      ::memcpy(& t2, data, sizeof( T2)); data += sizeof( T2);
+      ::memcpy(& t3, data, sizeof( T3)); data += sizeof( T3);
+      ::memcpy(& t4, data, sizeof( T4)); data += sizeof( T4);
+      ::memcpy(& t5, data, sizeof( T5)); data += sizeof( T5);
+      ::memcpy(& t6, data, sizeof( T6)); data += sizeof( T6);
+      ::memcpy(& t7, data, sizeof( T7)); data += sizeof( T7);
+      ::memcpy(& t8, data, sizeof( T8)); data += sizeof( T8);
+      ::memcpy(& t9, data, sizeof( T9)); data += sizeof( T9);
+      ::memcpy(&t10, data, sizeof(T10)); data += sizeof(T10);
+      ::memcpy(&t11, data, sizeof(T11)); data += sizeof(T11);
+      return data;
    }
 
    template <typename T1, typename T2, typename T3, typename T4,
@@ -19159,16 +19175,16 @@ namespace strtk
                                   T5& t5, T6& t6, T7& t7, T8& t8,
                                   T9& t9, T10& t10)
    {
-       t1 = (*reinterpret_cast< T1*>(data)); data += sizeof( T1);
-       t2 = (*reinterpret_cast< T2*>(data)); data += sizeof( T2);
-       t3 = (*reinterpret_cast< T3*>(data)); data += sizeof( T3);
-       t4 = (*reinterpret_cast< T4*>(data)); data += sizeof( T4);
-       t5 = (*reinterpret_cast< T5*>(data)); data += sizeof( T5);
-       t6 = (*reinterpret_cast< T6*>(data)); data += sizeof( T6);
-       t7 = (*reinterpret_cast< T7*>(data)); data += sizeof( T7);
-       t8 = (*reinterpret_cast< T8*>(data)); data += sizeof( T8);
-       t9 = (*reinterpret_cast< T9*>(data)); data += sizeof( T9);
-      t10 = (*reinterpret_cast<T10*>(data)); data += sizeof(T10);
+      ::memcpy(& t1, data, sizeof( T1)); data += sizeof( T1);
+      ::memcpy(& t2, data, sizeof( T2)); data += sizeof( T2);
+      ::memcpy(& t3, data, sizeof( T3)); data += sizeof( T3);
+      ::memcpy(& t4, data, sizeof( T4)); data += sizeof( T4);
+      ::memcpy(& t5, data, sizeof( T5)); data += sizeof( T5);
+      ::memcpy(& t6, data, sizeof( T6)); data += sizeof( T6);
+      ::memcpy(& t7, data, sizeof( T7)); data += sizeof( T7);
+      ::memcpy(& t8, data, sizeof( T8)); data += sizeof( T8);
+      ::memcpy(& t9, data, sizeof( T9)); data += sizeof( T9);
+      ::memcpy(&t10, data, sizeof(T10)); data += sizeof(T10);
       return data;
    }
 
@@ -19180,15 +19196,15 @@ namespace strtk
                                   T5& t5, T6& t6, T7& t7, T8& t8,
                                   T9& t9)
    {
-      t1 = (*reinterpret_cast<T1*>(data)); data += sizeof(T1);
-      t2 = (*reinterpret_cast<T2*>(data)); data += sizeof(T2);
-      t3 = (*reinterpret_cast<T3*>(data)); data += sizeof(T3);
-      t4 = (*reinterpret_cast<T4*>(data)); data += sizeof(T4);
-      t5 = (*reinterpret_cast<T5*>(data)); data += sizeof(T5);
-      t6 = (*reinterpret_cast<T6*>(data)); data += sizeof(T6);
-      t7 = (*reinterpret_cast<T7*>(data)); data += sizeof(T7);
-      t8 = (*reinterpret_cast<T8*>(data)); data += sizeof(T8);
-      t9 = (*reinterpret_cast<T9*>(data)); data += sizeof(T9);
+      ::memcpy(& t1, data, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(& t2, data, sizeof(T2)); data += sizeof(T2);
+      ::memcpy(& t3, data, sizeof(T3)); data += sizeof(T3);
+      ::memcpy(& t4, data, sizeof(T4)); data += sizeof(T4);
+      ::memcpy(& t5, data, sizeof(T5)); data += sizeof(T5);
+      ::memcpy(& t6, data, sizeof(T6)); data += sizeof(T6);
+      ::memcpy(& t7, data, sizeof(T7)); data += sizeof(T7);
+      ::memcpy(& t8, data, sizeof(T8)); data += sizeof(T8);
+      ::memcpy(& t9, data, sizeof(T9)); data += sizeof(T9);
       return data;
    }
 
@@ -19198,14 +19214,14 @@ namespace strtk
                                   T1& t1, T2& t2, T3& t3, T4& t4,
                                   T5& t5, T6& t6, T7& t7, T8& t8)
    {
-      t1 = (*reinterpret_cast<T1*>(data)); data += sizeof(T1);
-      t2 = (*reinterpret_cast<T2*>(data)); data += sizeof(T2);
-      t3 = (*reinterpret_cast<T3*>(data)); data += sizeof(T3);
-      t4 = (*reinterpret_cast<T4*>(data)); data += sizeof(T4);
-      t5 = (*reinterpret_cast<T5*>(data)); data += sizeof(T5);
-      t6 = (*reinterpret_cast<T6*>(data)); data += sizeof(T6);
-      t7 = (*reinterpret_cast<T7*>(data)); data += sizeof(T7);
-      t8 = (*reinterpret_cast<T8*>(data)); data += sizeof(T8);
+      ::memcpy(& t1, data, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(& t2, data, sizeof(T2)); data += sizeof(T2);
+      ::memcpy(& t3, data, sizeof(T3)); data += sizeof(T3);
+      ::memcpy(& t4, data, sizeof(T4)); data += sizeof(T4);
+      ::memcpy(& t5, data, sizeof(T5)); data += sizeof(T5);
+      ::memcpy(& t6, data, sizeof(T6)); data += sizeof(T6);
+      ::memcpy(& t7, data, sizeof(T7)); data += sizeof(T7);
+      ::memcpy(& t8, data, sizeof(T8)); data += sizeof(T8);
       return data;
    }
 
@@ -19215,13 +19231,13 @@ namespace strtk
                                   T1& t1, T2& t2, T3& t3, T4& t4,
                                   T5& t5, T6& t6, T7& t7)
    {
-      t1 = (*reinterpret_cast<T1*>(data)); data += sizeof(T1);
-      t2 = (*reinterpret_cast<T2*>(data)); data += sizeof(T2);
-      t3 = (*reinterpret_cast<T3*>(data)); data += sizeof(T3);
-      t4 = (*reinterpret_cast<T4*>(data)); data += sizeof(T4);
-      t5 = (*reinterpret_cast<T5*>(data)); data += sizeof(T5);
-      t6 = (*reinterpret_cast<T6*>(data)); data += sizeof(T6);
-      t7 = (*reinterpret_cast<T7*>(data)); data += sizeof(T7);
+      ::memcpy(& t1, data, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(& t2, data, sizeof(T2)); data += sizeof(T2);
+      ::memcpy(& t3, data, sizeof(T3)); data += sizeof(T3);
+      ::memcpy(& t4, data, sizeof(T4)); data += sizeof(T4);
+      ::memcpy(& t5, data, sizeof(T5)); data += sizeof(T5);
+      ::memcpy(& t6, data, sizeof(T6)); data += sizeof(T6);
+      ::memcpy(& t7, data, sizeof(T7)); data += sizeof(T7);
       return data;
    }
 
@@ -19231,12 +19247,12 @@ namespace strtk
                                   T1& t1, T2& t2, T3& t3, T4& t4,
                                   T5& t5, T6& t6)
    {
-      t1 = (*reinterpret_cast<T1*>(data)); data += sizeof(T1);
-      t2 = (*reinterpret_cast<T2*>(data)); data += sizeof(T2);
-      t3 = (*reinterpret_cast<T3*>(data)); data += sizeof(T3);
-      t4 = (*reinterpret_cast<T4*>(data)); data += sizeof(T4);
-      t5 = (*reinterpret_cast<T5*>(data)); data += sizeof(T5);
-      t6 = (*reinterpret_cast<T6*>(data)); data += sizeof(T6);
+      ::memcpy(& t1, data, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(& t2, data, sizeof(T2)); data += sizeof(T2);
+      ::memcpy(& t3, data, sizeof(T3)); data += sizeof(T3);
+      ::memcpy(& t4, data, sizeof(T4)); data += sizeof(T4);
+      ::memcpy(& t5, data, sizeof(T5)); data += sizeof(T5);
+      ::memcpy(& t6, data, sizeof(T6)); data += sizeof(T6);
       return data;
    }
 
@@ -19246,11 +19262,11 @@ namespace strtk
                                   T1& t1, T2& t2, T3& t3, T4& t4,
                                   T5& t5)
    {
-      t1 = (*reinterpret_cast<T1*>(data)); data += sizeof(T1);
-      t2 = (*reinterpret_cast<T2*>(data)); data += sizeof(T2);
-      t3 = (*reinterpret_cast<T3*>(data)); data += sizeof(T3);
-      t4 = (*reinterpret_cast<T4*>(data)); data += sizeof(T4);
-      t5 = (*reinterpret_cast<T5*>(data)); data += sizeof(T5);
+      ::memcpy(& t1, data, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(& t2, data, sizeof(T2)); data += sizeof(T2);
+      ::memcpy(& t3, data, sizeof(T3)); data += sizeof(T3);
+      ::memcpy(& t4, data, sizeof(T4)); data += sizeof(T4);
+      ::memcpy(& t5, data, sizeof(T5)); data += sizeof(T5);
       return data;
    }
 
@@ -19258,10 +19274,10 @@ namespace strtk
    inline unsigned char* read_pod(unsigned char* data,
                                   T1& t1, T2& t2, T3& t3, T4& t4)
    {
-      t1 = (*reinterpret_cast<T1*>(data)); data += sizeof(T1);
-      t2 = (*reinterpret_cast<T2*>(data)); data += sizeof(T2);
-      t3 = (*reinterpret_cast<T3*>(data)); data += sizeof(T3);
-      t4 = (*reinterpret_cast<T4*>(data)); data += sizeof(T4);
+      ::memcpy(& t1, data, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(& t2, data, sizeof(T2)); data += sizeof(T2);
+      ::memcpy(& t3, data, sizeof(T3)); data += sizeof(T3);
+      ::memcpy(& t4, data, sizeof(T4)); data += sizeof(T4);
       return data;
    }
 
@@ -19269,9 +19285,9 @@ namespace strtk
    inline unsigned char* read_pod(unsigned char* data,
                                   T1& t1, T2& t2, T3& t3)
    {
-      t1 = (*reinterpret_cast<T1*>(data)); data += sizeof(T1);
-      t2 = (*reinterpret_cast<T2*>(data)); data += sizeof(T2);
-      t3 = (*reinterpret_cast<T3*>(data)); data += sizeof(T3);
+      ::memcpy(& t1, data, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(& t2, data, sizeof(T2)); data += sizeof(T2);
+      ::memcpy(& t3, data, sizeof(T3)); data += sizeof(T3);
       return data;
    }
 
@@ -19279,8 +19295,8 @@ namespace strtk
    inline unsigned char* read_pod(unsigned char* data,
                                   T1& t1, T2& t2)
    {
-      t1 = (*reinterpret_cast<T1*>(data)); data += sizeof(T1);
-      t2 = (*reinterpret_cast<T2*>(data)); data += sizeof(T2);
+      ::memcpy(& t1, data, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(& t2, data, sizeof(T2)); data += sizeof(T2);
       return data;
    }
 
@@ -19288,7 +19304,7 @@ namespace strtk
    inline unsigned char* read_pod(unsigned char* data,
                                   T1& t1)
    {
-      t1 = (*reinterpret_cast<T1*>(data)); data += sizeof(T1);
+      ::memcpy(& t1, data, sizeof(T1)); data += sizeof(T1);
       return data;
    }
 
@@ -19345,18 +19361,18 @@ namespace strtk
                                    const T5& t5, const T6&   t6, const T7&   t7, const T8& t8,
                                    const T9& t9, const T10& t10, const T11& t11, const T12& t12)
    {
-      (*reinterpret_cast< T1*>(data)) =  t1; data += sizeof( T1);
-      (*reinterpret_cast< T2*>(data)) =  t2; data += sizeof( T2);
-      (*reinterpret_cast< T3*>(data)) =  t3; data += sizeof( T3);
-      (*reinterpret_cast< T4*>(data)) =  t4; data += sizeof( T4);
-      (*reinterpret_cast< T5*>(data)) =  t5; data += sizeof( T5);
-      (*reinterpret_cast< T6*>(data)) =  t6; data += sizeof( T6);
-      (*reinterpret_cast< T7*>(data)) =  t7; data += sizeof( T7);
-      (*reinterpret_cast< T8*>(data)) =  t8; data += sizeof( T8);
-      (*reinterpret_cast< T9*>(data)) =  t9; data += sizeof( T9);
-      (*reinterpret_cast<T10*>(data)) = t10; data += sizeof(T10);
-      (*reinterpret_cast<T11*>(data)) = t11; data += sizeof(T11);
-      (*reinterpret_cast<T12*>(data)) = t12; data += sizeof(T12);
+      ::memcpy(data, &t1, sizeof( T1)); data += sizeof( T1);
+      ::memcpy(data, &t2, sizeof( T2)); data += sizeof( T2);
+      ::memcpy(data, &t3, sizeof( T3)); data += sizeof( T3);
+      ::memcpy(data, &t4, sizeof( T4)); data += sizeof( T4);
+      ::memcpy(data, &t5, sizeof( T5)); data += sizeof( T5);
+      ::memcpy(data, &t6, sizeof( T6)); data += sizeof( T6);
+      ::memcpy(data, &t7, sizeof( T7)); data += sizeof( T7);
+      ::memcpy(data, &t8, sizeof( T8)); data += sizeof( T8);
+      ::memcpy(data, &t9, sizeof( T9)); data += sizeof( T9);
+      ::memcpy(data,&t10, sizeof(T10)); data += sizeof(T10);
+      ::memcpy(data,&t11, sizeof(T11)); data += sizeof(T11);
+      ::memcpy(data,&t12, sizeof(T12)); data += sizeof(T12);
       return data;
    }
 
@@ -19368,17 +19384,17 @@ namespace strtk
                                    const T5& t5, const T6&   t6, const T7&   t7, const T8& t8,
                                    const T9& t9, const T10& t10, const T11& t11)
    {
-      (*reinterpret_cast< T1*>(data)) =  t1; data += sizeof( T1);
-      (*reinterpret_cast< T2*>(data)) =  t2; data += sizeof( T2);
-      (*reinterpret_cast< T3*>(data)) =  t3; data += sizeof( T3);
-      (*reinterpret_cast< T4*>(data)) =  t4; data += sizeof( T4);
-      (*reinterpret_cast< T5*>(data)) =  t5; data += sizeof( T5);
-      (*reinterpret_cast< T6*>(data)) =  t6; data += sizeof( T6);
-      (*reinterpret_cast< T7*>(data)) =  t7; data += sizeof( T7);
-      (*reinterpret_cast< T8*>(data)) =  t8; data += sizeof( T8);
-      (*reinterpret_cast< T9*>(data)) =  t9; data += sizeof( T9);
-      (*reinterpret_cast<T10*>(data)) = t10; data += sizeof(T10);
-      (*reinterpret_cast<T11*>(data)) = t11; data += sizeof(T11);
+      ::memcpy(data, &t1, sizeof( T1)); data += sizeof( T1);
+      ::memcpy(data, &t2, sizeof( T2)); data += sizeof( T2);
+      ::memcpy(data, &t3, sizeof( T3)); data += sizeof( T3);
+      ::memcpy(data, &t4, sizeof( T4)); data += sizeof( T4);
+      ::memcpy(data, &t5, sizeof( T5)); data += sizeof( T5);
+      ::memcpy(data, &t6, sizeof( T6)); data += sizeof( T6);
+      ::memcpy(data, &t7, sizeof( T7)); data += sizeof( T7);
+      ::memcpy(data, &t8, sizeof( T8)); data += sizeof( T8);
+      ::memcpy(data, &t9, sizeof( T9)); data += sizeof( T9);
+      ::memcpy(data,&t10, sizeof(T10)); data += sizeof(T10);
+      ::memcpy(data,&t11, sizeof(T11)); data += sizeof(T11);
       return data;
    }
 
@@ -19390,16 +19406,16 @@ namespace strtk
                                    const T5& t5, const T6& t6, const T7& t7, const T8& t8,
                                    const T9& t9, const T10& t10)
    {
-      (*reinterpret_cast< T1*>(data)) =  t1; data += sizeof( T1);
-      (*reinterpret_cast< T2*>(data)) =  t2; data += sizeof( T2);
-      (*reinterpret_cast< T3*>(data)) =  t3; data += sizeof( T3);
-      (*reinterpret_cast< T4*>(data)) =  t4; data += sizeof( T4);
-      (*reinterpret_cast< T5*>(data)) =  t5; data += sizeof( T5);
-      (*reinterpret_cast< T6*>(data)) =  t6; data += sizeof( T6);
-      (*reinterpret_cast< T7*>(data)) =  t7; data += sizeof( T7);
-      (*reinterpret_cast< T8*>(data)) =  t8; data += sizeof( T8);
-      (*reinterpret_cast< T9*>(data)) =  t9; data += sizeof( T9);
-      (*reinterpret_cast<T10*>(data)) = t10; data += sizeof(T10);
+      ::memcpy(data, &t1, sizeof( T1)); data += sizeof( T1);
+      ::memcpy(data, &t2, sizeof( T2)); data += sizeof( T2);
+      ::memcpy(data, &t3, sizeof( T3)); data += sizeof( T3);
+      ::memcpy(data, &t4, sizeof( T4)); data += sizeof( T4);
+      ::memcpy(data, &t5, sizeof( T5)); data += sizeof( T5);
+      ::memcpy(data, &t6, sizeof( T6)); data += sizeof( T6);
+      ::memcpy(data, &t7, sizeof( T7)); data += sizeof( T7);
+      ::memcpy(data, &t8, sizeof( T8)); data += sizeof( T8);
+      ::memcpy(data, &t9, sizeof( T9)); data += sizeof( T9);
+      ::memcpy(data,&t10, sizeof(T10)); data += sizeof(T10);
       return data;
    }
 
@@ -19411,15 +19427,15 @@ namespace strtk
                                    const T5& t5, const T6& t6, const T7& t7, const T8& t8,
                                    const T9& t9)
    {
-      (*reinterpret_cast<T1*>(data)) = t1; data += sizeof(T1);
-      (*reinterpret_cast<T2*>(data)) = t2; data += sizeof(T2);
-      (*reinterpret_cast<T3*>(data)) = t3; data += sizeof(T3);
-      (*reinterpret_cast<T4*>(data)) = t4; data += sizeof(T4);
-      (*reinterpret_cast<T5*>(data)) = t5; data += sizeof(T5);
-      (*reinterpret_cast<T6*>(data)) = t6; data += sizeof(T6);
-      (*reinterpret_cast<T7*>(data)) = t7; data += sizeof(T7);
-      (*reinterpret_cast<T8*>(data)) = t8; data += sizeof(T8);
-      (*reinterpret_cast<T9*>(data)) = t9; data += sizeof(T9);
+      ::memcpy(data, &t1, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(data, &t2, sizeof(T2)); data += sizeof(T2);
+      ::memcpy(data, &t3, sizeof(T3)); data += sizeof(T3);
+      ::memcpy(data, &t4, sizeof(T4)); data += sizeof(T4);
+      ::memcpy(data, &t5, sizeof(T5)); data += sizeof(T5);
+      ::memcpy(data, &t6, sizeof(T6)); data += sizeof(T6);
+      ::memcpy(data, &t7, sizeof(T7)); data += sizeof(T7);
+      ::memcpy(data, &t8, sizeof(T8)); data += sizeof(T8);
+      ::memcpy(data, &t9, sizeof(T9)); data += sizeof(T9);
       return data;
    }
 
@@ -19429,14 +19445,14 @@ namespace strtk
                                    const T1& t1, const T2& t2, const T3& t3, const T4& t4,
                                    const T5& t5, const T6& t6, const T7& t7, const T8& t8)
    {
-      (*reinterpret_cast<T1*>(data)) = t1; data += sizeof(T1);
-      (*reinterpret_cast<T2*>(data)) = t2; data += sizeof(T2);
-      (*reinterpret_cast<T3*>(data)) = t3; data += sizeof(T3);
-      (*reinterpret_cast<T4*>(data)) = t4; data += sizeof(T4);
-      (*reinterpret_cast<T5*>(data)) = t5; data += sizeof(T5);
-      (*reinterpret_cast<T6*>(data)) = t6; data += sizeof(T6);
-      (*reinterpret_cast<T7*>(data)) = t7; data += sizeof(T7);
-      (*reinterpret_cast<T8*>(data)) = t8; data += sizeof(T8);
+      ::memcpy(data, &t1, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(data, &t2, sizeof(T2)); data += sizeof(T2);
+      ::memcpy(data, &t3, sizeof(T3)); data += sizeof(T3);
+      ::memcpy(data, &t4, sizeof(T4)); data += sizeof(T4);
+      ::memcpy(data, &t5, sizeof(T5)); data += sizeof(T5);
+      ::memcpy(data, &t6, sizeof(T6)); data += sizeof(T6);
+      ::memcpy(data, &t7, sizeof(T7)); data += sizeof(T7);
+      ::memcpy(data, &t8, sizeof(T8)); data += sizeof(T8);
       return data;
    }
 
@@ -19446,13 +19462,13 @@ namespace strtk
                                    const T1& t1, const T2& t2, const T3& t3, const T4& t4,
                                    const T5& t5, const T6& t6, const T7& t7)
    {
-      (*reinterpret_cast<T1*>(data)) = t1; data += sizeof(T1);
-      (*reinterpret_cast<T2*>(data)) = t2; data += sizeof(T2);
-      (*reinterpret_cast<T3*>(data)) = t3; data += sizeof(T3);
-      (*reinterpret_cast<T4*>(data)) = t4; data += sizeof(T4);
-      (*reinterpret_cast<T5*>(data)) = t5; data += sizeof(T5);
-      (*reinterpret_cast<T6*>(data)) = t6; data += sizeof(T6);
-      (*reinterpret_cast<T7*>(data)) = t7; data += sizeof(T7);
+      ::memcpy(data, &t1, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(data, &t2, sizeof(T2)); data += sizeof(T2);
+      ::memcpy(data, &t3, sizeof(T3)); data += sizeof(T3);
+      ::memcpy(data, &t4, sizeof(T4)); data += sizeof(T4);
+      ::memcpy(data, &t5, sizeof(T5)); data += sizeof(T5);
+      ::memcpy(data, &t6, sizeof(T6)); data += sizeof(T6);
+      ::memcpy(data, &t7, sizeof(T7)); data += sizeof(T7);
       return data;
    }
 
@@ -19462,12 +19478,12 @@ namespace strtk
                                    const T1& t1, const T2& t2, const T3& t3, const T4& t4,
                                    const T5& t5, const T6& t6)
    {
-      (*reinterpret_cast<T1*>(data)) = t1; data += sizeof(T1);
-      (*reinterpret_cast<T2*>(data)) = t2; data += sizeof(T2);
-      (*reinterpret_cast<T3*>(data)) = t3; data += sizeof(T3);
-      (*reinterpret_cast<T4*>(data)) = t4; data += sizeof(T4);
-      (*reinterpret_cast<T5*>(data)) = t5; data += sizeof(T5);
-      (*reinterpret_cast<T6*>(data)) = t6; data += sizeof(T6);
+      ::memcpy(data, &t1, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(data, &t2, sizeof(T2)); data += sizeof(T2);
+      ::memcpy(data, &t3, sizeof(T3)); data += sizeof(T3);
+      ::memcpy(data, &t4, sizeof(T4)); data += sizeof(T4);
+      ::memcpy(data, &t5, sizeof(T5)); data += sizeof(T5);
+      ::memcpy(data, &t6, sizeof(T6)); data += sizeof(T6);
       return data;
    }
 
@@ -19477,11 +19493,11 @@ namespace strtk
                                    const T1& t1, const T2& t2, const T3& t3, const T4& t4,
                                    const T5& t5)
    {
-      (*reinterpret_cast<T1*>(data)) = t1; data += sizeof(T1);
-      (*reinterpret_cast<T2*>(data)) = t2; data += sizeof(T2);
-      (*reinterpret_cast<T3*>(data)) = t3; data += sizeof(T3);
-      (*reinterpret_cast<T4*>(data)) = t4; data += sizeof(T4);
-      (*reinterpret_cast<T5*>(data)) = t5; data += sizeof(T5);
+      ::memcpy(data, &t1, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(data, &t2, sizeof(T2)); data += sizeof(T2);
+      ::memcpy(data, &t3, sizeof(T3)); data += sizeof(T3);
+      ::memcpy(data, &t4, sizeof(T4)); data += sizeof(T4);
+      ::memcpy(data, &t5, sizeof(T5)); data += sizeof(T5);
       return data;
    }
 
@@ -19489,10 +19505,10 @@ namespace strtk
    inline unsigned char* write_pod(unsigned char* data,
                                    const T1& t1, const T2& t2, const T3& t3, const T4& t4)
    {
-      (*reinterpret_cast<T1*>(data)) = t1; data += sizeof(T1);
-      (*reinterpret_cast<T2*>(data)) = t2; data += sizeof(T2);
-      (*reinterpret_cast<T3*>(data)) = t3; data += sizeof(T3);
-      (*reinterpret_cast<T4*>(data)) = t4; data += sizeof(T4);
+      ::memcpy(data, &t1, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(data, &t2, sizeof(T2)); data += sizeof(T2);
+      ::memcpy(data, &t3, sizeof(T3)); data += sizeof(T3);
+      ::memcpy(data, &t4, sizeof(T4)); data += sizeof(T4);
       return data;
    }
 
@@ -19500,9 +19516,9 @@ namespace strtk
    inline unsigned char* write_pod(unsigned char* data,
                                    const T1& t1, const T2& t2, const T3& t3)
    {
-      (*reinterpret_cast<T1*>(data)) = t1; data += sizeof(T1);
-      (*reinterpret_cast<T2*>(data)) = t2; data += sizeof(T2);
-      (*reinterpret_cast<T3*>(data)) = t3; data += sizeof(T3);
+      ::memcpy(data, &t1, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(data, &t2, sizeof(T2)); data += sizeof(T2);
+      ::memcpy(data, &t3, sizeof(T3)); data += sizeof(T3);
       return data;
    }
 
@@ -19510,8 +19526,8 @@ namespace strtk
    inline unsigned char* write_pod(unsigned char* data,
                                    const T1& t1, const T2& t2)
    {
-      (*reinterpret_cast<T1*>(data)) = t1; data += sizeof(T1);
-      (*reinterpret_cast<T2*>(data)) = t2; data += sizeof(T2);
+      ::memcpy(data, &t1, sizeof(T1)); data += sizeof(T1);
+      ::memcpy(data, &t2, sizeof(T2)); data += sizeof(T2);
       return data;
    }
 
@@ -19519,16 +19535,16 @@ namespace strtk
    inline unsigned char* write_pod(unsigned char* data,
                                    const T1& t1)
    {
-      (*reinterpret_cast<T1*>(data)) = t1; data += sizeof(T1);
+      ::memcpy(data, &t1, sizeof(T1)); data += sizeof(T1);
       return data;
    }
 
    template <typename T, std::size_t N>
    inline unsigned char* write_pod(unsigned char* data, const T (&t)[N])
    {
-      T* ptr = reinterpret_cast<T*>(data);
-      std::copy(t,t + N,ptr);
-      return data + (N * sizeof(T));
+      ::memcpy(data, t, N * sizeof(T));
+      data += (N * sizeof(T));
+      return data;
    }
 
    template <typename T,
@@ -19537,9 +19553,9 @@ namespace strtk
    inline unsigned char* write_pod(unsigned char* data,
                                    const Sequence<T,Allocator>& sequence)
    {
-      T* ptr = reinterpret_cast<T>(data);
-      std::copy(sequence.begin(),sequence.end(),ptr);
-      return data + (sequence.size() * sizeof(T));
+      ::memcpy(data, sequence.data(), sequence.size() * sizeof(T));
+      data += (sequence.size() * sizeof(T));
+      return data;
    }
 
    template <typename T,
@@ -20152,7 +20168,7 @@ namespace strtk
             generate_unique_salt();
             raw_table_size_ = table_size_ / bits_per_char;
             bit_table_ = new cell_type[static_cast<std::size_t>(raw_table_size_)];
-            std::fill_n(bit_table_,raw_table_size_,0x00);
+            std::fill_n(&bit_table_[0], static_cast<std::size_t>(raw_table_size_), static_cast<unsigned char>(0x00));
          }
 
          filter(const filter& filter)
@@ -20173,7 +20189,7 @@ namespace strtk
                   (random_seed_                        == f.random_seed_)                        &&
                   (desired_false_positive_probability_ == f.desired_false_positive_probability_) &&
                   (salt_                               == f.salt_)                               &&
-                  std::equal(f.bit_table_,f.bit_table_ + raw_table_size_,bit_table_);
+                  std::equal(f.bit_table_, f.bit_table_ + raw_table_size_, bit_table_);
             }
             else
                return true;
@@ -20197,7 +20213,7 @@ namespace strtk
                desired_false_positive_probability_ = f.desired_false_positive_probability_;
                delete[] bit_table_;
                bit_table_               = new cell_type[static_cast<std::size_t>(raw_table_size_)];
-               std::copy(f.bit_table_,f.bit_table_ + raw_table_size_,bit_table_);
+               std::copy(f.bit_table_, f.bit_table_ + raw_table_size_, bit_table_);
                salt_                    = f.salt_;
             }
             return *this;
@@ -20215,7 +20231,7 @@ namespace strtk
 
          inline void clear()
          {
-            std::fill_n(bit_table_,raw_table_size_,0x00);
+            std::fill_n(&bit_table_[0], static_cast<std::size_t>(raw_table_size_), static_cast<unsigned char>(0x00));
             inserted_element_count_ = 0;
          }
 
@@ -20225,7 +20241,7 @@ namespace strtk
             std::size_t bit = 0;
             for (std::size_t i = 0; i < salt_.size(); ++i)
             {
-               compute_indices(hash_ap(key_begin,length,salt_[i]),bit_index,bit);
+               compute_indices(hash_ap(key_begin,length,salt_[i]), bit_index, bit);
                bit_table_[bit_index / bits_per_char] |= bit_mask[bit];
             }
             ++inserted_element_count_;
@@ -21055,13 +21071,13 @@ namespace strtk
          semantic_action_impl()
          : function_holder_(0)
          {
-            std::fill_n(function_holder_buffer_,sizeof(function_holder_buffer_),0x00);
+            std::fill_n(function_holder_buffer_, sizeof(function_holder_buffer_), static_cast<unsigned char>(0x00));
          }
 
          template <typename Function>
          inline explicit semantic_action_impl(const Function& f)
          {
-            std::fill_n(function_holder_buffer_,sizeof(function_holder_buffer_),0x00);
+            std::fill_n(function_holder_buffer_, sizeof(function_holder_buffer_), static_cast<unsigned char>(0x00));
             assign(f);
          }
 
@@ -21275,13 +21291,13 @@ namespace strtk
          value()
          : type_holder_(0)
          {
-            std::fill_n(type_holder_buffer_,sizeof(type_holder_buffer_),0x00);
+            std::fill_n(type_holder_buffer_, sizeof(type_holder_buffer_), static_cast<unsigned char>(0x00));
          }
 
          template <typename T>
          inline explicit value(T& t)
          {
-            std::fill_n(type_holder_buffer_,sizeof(type_holder_buffer_),0x00);
+            std::fill_n(type_holder_buffer_, sizeof(type_holder_buffer_), static_cast<unsigned char>(0x00));
             assign(t);
          }
 
@@ -22034,9 +22050,7 @@ namespace strtk
          std::swap(stack,null_stack);
       }
 
-      template <typename T,
-                typename Container,
-                typename Comparator>
+      template <typename T, typename Container, typename Comparator>
       inline void clear(std::priority_queue<T,Container,Comparator>& priority_queue)
       {
          std::priority_queue<T> null_pqueue;

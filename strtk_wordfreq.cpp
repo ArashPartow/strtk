@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * Word Frequency Calculator                                     *
- * Author: Arash Partow (2002-2017)                              *
+ * Author: Arash Partow (2002-2018)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *

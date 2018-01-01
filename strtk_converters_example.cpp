@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * Converters Examples                                           *
- * Author: Arash Partow (2002-2017)                              *
+ * Author: Arash Partow (2002-2018)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
@@ -29,8 +29,8 @@
 
 void example01()
 {
-   std::string text = "A professional is a person who knows more and more about less and less "
-                      "until they know everything about nothing.";
+   std::string text = "An expert is someone who knows more and more about less and "
+                      "less until they know absolutely everything about nothing";
    std::string hex;
    std::string base64;
    std::string hexbin;
@@ -72,7 +72,7 @@ void example03()
       for (std::size_t i = 0; i < k; ++i) buffer1[i] = static_cast<unsigned char>(i);
 
       std::size_t b64_size = strtk::convert_bin_to_base64(buffer1,buffer1 + k, b64_buffer);
-      std::fill_n(buffer2,k,0x00);
+      std::fill_n(buffer2, k, static_cast<unsigned char>(0x00));
       strtk::convert_base64_to_bin(b64_buffer,b64_buffer + b64_size, buffer2);
 
       for (std::size_t i = 0; i < k; ++i)

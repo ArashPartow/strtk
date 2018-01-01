@@ -2,7 +2,7 @@
 # *****************************************************************
 # *                     String Toolkit Library                    *
 # *                                                               *
-# * Author: Arash Partow (2002-2014)                              *
+# * Author: Arash Partow (2002-2018)                              *
 # * URL: http://www.partow.net/programming/strtk/index.html       *
 # *                                                               *
 # * Copyright notice:                                             *
@@ -17,7 +17,7 @@
 
 COMPILER         = -c++
 #COMPILER        = -clang
-OPTIMIZATION_OPT = -O1
+OPTIMIZATION_OPT = -O2
 NO_EXTRA_LIBS    = -Dstrtk_no_tr1_or_boost
 BASE_OPTIONS     = -ansi -pedantic-errors -Wall -Wextra -Werror -Wno-long-long
 OPTIONS          = $(BASE_OPTIONS) $(OPTIMIZATION_OPT) -o
@@ -140,55 +140,16 @@ pgo: strtk_parse_test.cpp strtk_tokenizer_cmp.cpp strtk.hpp
 	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -fprofile-use -o strtk_converters_example strtk_converters_example.cpp $(LINKER_OPT)
 	$(COMPILER) $(BASE_OPTIONS) -O3 -march=native -fprofile-use -o strtk_bloom_filter_example strtk_bloom_filter_example.cpp $(LINKER_OPT)
 
-strip_bin:
-	strip -s strtk_bloom_filter_example
-	strip -s strtk_converters_example
-	strip -s strtk_combinations
-	strip -s strtk_combinator_example
-	strip -s strtk_glober
-	strip -s strtk_examples
-	strip -s strtk_hexview
-	strip -s strtk_ipv4_parser
-	strip -s strtk_keyvalue_example
-	strip -s strtk_nth_combination_example
-	strip -s strtk_numstats
-	strip -s strtk_parse_test
-	strip -s strtk_period_parser
-	strip -s strtk_randomizer
-	strip -s strtk_random_line
-	strip -s strtk_search_trie_example
-	strip -s strtk_serializer_example
-	strip -s strtk_text_parser_example01
-	strip -s strtk_text_parser_example02
-	strip -s strtk_tokengrid_example
-	strip -s strtk_tokenizer_cmp
-	strip -s strtk_tokenizer_test
-	strip -s strtk_wordfreq
+strip_bin :
+	@for f in $(BUILD_LIST); do if [ -f $$f ]; then strip -s $$f; echo $$f; fi done;
 
-valgrind_check:
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_bloom_filter_example
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_converters_example
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_combinations
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_combinator_example
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_glober
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_examples
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_hexview
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_ipv4_parser
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_keyvalue_example
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_nth_combination_example
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_numstats
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_parse_test
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_period_parser
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_randomizer
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_random_line
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_search_trie_example
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_serializer_example
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_text_parser_example01
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_text_parser_example02
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_tokengrid_example
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_tokenizer_cmp
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_tokenizer_test
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes ./strtk_wordfreq
+valgrind :
+	@for f in $(BUILD_LIST); do \
+		if [ -f $$f ]; then \
+			cmd="valgrind --leak-check=full --show-reachable=yes --track-origins=yes --log-file=$$f.log -v ./$$f"; \
+			echo $$cmd; \
+			$$cmd; \
+		fi done;
 
 clean:
 	rm -f core.* *~ *.o *.bak *stackdump gmon.out *.gcda *.gcno *.gcnor *.gch
