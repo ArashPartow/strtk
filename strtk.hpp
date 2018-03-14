@@ -18005,33 +18005,37 @@ namespace strtk
       template <typename T>
       inline bool type_to_string_converter_impl(T valuex, std::string& result, signed_type_tag)
       {
-         static const std::size_t radix = 10;
-         static const std::size_t radix_sqr   = radix * radix;
-         static const std::size_t radix_cube  = radix * radix * radix;
-         static const std::size_t buffer_size = ((strtk::details::numeric<T>::size < 16) ? 16 : 32);
+         typedef typename tsci_type<T>::type TT;
+
+         const TT radix      = 10;
+         const TT radix_sqr  = radix * radix;
+         const TT radix_cube = radix * radix * radix;
+         const std::size_t buffer_size = ((strtk::details::numeric<T>::size < 16) ? 16 : 32);
+
+         const bool negative = (valuex < 0);
+         #ifndef _MSC_VER
+         TT value = (negative) ? -TT(valuex) : valuex;
+         #else
+         TT value = (negative) ? -valuex : valuex;
+         #endif
 
          unsigned char buffer[buffer_size];
          unsigned char* itr = buffer + buffer_size;
-         bool negative = (valuex < 0);
-         typedef typename tsci_type<T>::type TT;
-         TT value = (negative) ? -valuex : valuex;
 
          if (value)
          {
-            while (value >= static_cast<T>(radix_sqr))
+            while (value >= radix_sqr)
             {
-               itr -= 3;
-               T temp_v = value / radix_cube;
-               memcpy(itr,&details::rev_3digit_lut[3 * (value - (temp_v * radix_cube))],3);
-               value = temp_v;
+               const TT v = value;
+               value /= radix_cube;
+               memcpy((itr -= 3), &details::rev_3digit_lut[3 * (v - (value * radix_cube))], 3);
             }
 
-            while (value >= static_cast<T>(radix))
+            while (value >= radix)
             {
-               itr -= 2;
-               T temp_v = value / radix_sqr;
-               memcpy(itr,&details::rev_2digit_lut[2 * (value - (temp_v * radix_sqr))],2);
-               value = temp_v;
+               const TT v = value;
+               value /= radix_sqr;
+               memcpy((itr -= 2), &details::rev_2digit_lut[2 * (v - (value * radix_sqr))], 2);
             }
 
             if (value)
@@ -18103,20 +18107,20 @@ namespace strtk
       #define strtk_register_type_name(Type) \
       template <> inline std::string type_name<Type>() { static const std::string s(#Type); return s; }
 
-      strtk_register_type_name(signed char)
-      strtk_register_type_name(unsigned char)
-      strtk_register_type_name(short)
-      strtk_register_type_name(int)
-      strtk_register_type_name(long)
-      strtk_register_type_name(long long)
-      strtk_register_type_name(unsigned short)
-      strtk_register_type_name(unsigned int)
-      strtk_register_type_name(unsigned long)
+      strtk_register_type_name(signed char           )
+      strtk_register_type_name(unsigned char         )
+      strtk_register_type_name(short                 )
+      strtk_register_type_name(int                   )
+      strtk_register_type_name(long                  )
+      strtk_register_type_name(long long             )
+      strtk_register_type_name(unsigned short        )
+      strtk_register_type_name(unsigned int          )
+      strtk_register_type_name(unsigned long         )
       strtk_register_type_name(unsigned long long int)
-      strtk_register_type_name(double)
-      strtk_register_type_name(float)
-      strtk_register_type_name(long double)
-      strtk_register_type_name(std::string)
+      strtk_register_type_name(double                )
+      strtk_register_type_name(float                 )
+      strtk_register_type_name(long double           )
+      strtk_register_type_name(std::string           )
 
       #undef strtk_register_type_name
 
@@ -24571,9 +24575,9 @@ namespace strtk
    namespace information
    {
       static const char* library = "String Toolkit";
-      static const char* version = "2.7182818284590452353602874713526"
-                                   "624977572470936999595749669676277";
-      static const char* date    = "20170101";
+      static const char* version = "2.718281828459045235360287471352662"
+                                   "49775724709369995957496696762772407";
+      static const char* date    = "20180303";
 
       static inline std::string data()
       {

@@ -871,7 +871,7 @@ bool example06(char* buffer, const unsigned int buffer_size)
    std::string s = "abc123";
 
    {
-      std::fill_n(buffer,buffer_size,0);
+      std::fill_n(buffer, buffer_size, static_cast<unsigned char>(0));
       strtk::binary::pascal_string ps;
       strtk::binary::short_string  ss;
 
@@ -911,7 +911,7 @@ bool example06(char* buffer, const unsigned int buffer_size)
    }
 
    {
-      std::fill_n(buffer,buffer_size,0);
+      std::fill_n(buffer, buffer_size, static_cast<unsigned char>(0));
       strtk::binary::pascal_string ps;
       strtk::binary::short_string  ss;
 
