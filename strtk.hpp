@@ -1879,63 +1879,46 @@ namespace strtk
       std::sort(s.begin(),s.end());
    }
 
-   template <typename Iterator1, typename Iterator2>
-   inline bool match(const Iterator1 pattern_begin,
-                     const Iterator1 pattern_end,
-                     const Iterator2 data_begin,
-                     const Iterator2 data_end,
-                     const typename std::iterator_traits<Iterator1>::value_type& zero_or_more,
-                     const typename std::iterator_traits<Iterator1>::value_type& zero_or_one)
+   template <typename Iterator>
+   inline bool match(const Iterator pattern_begin, const Iterator pattern_end,
+                     const Iterator data_begin,    const Iterator data_end,
+                     const typename std::iterator_traits<Iterator>::value_type& zero_or_more,
+                     const typename std::iterator_traits<Iterator>::value_type& zero_or_one)
    {
-      /*
-         Credits: Adapted from code by Jack Handy (2001)
-      */
-      if (0 == std::distance(data_begin,data_end)) return false;
+      Iterator d_itr = data_begin;
+      Iterator p_itr = pattern_begin;
 
-      Iterator2 d_itr = data_begin;
-      Iterator1 p_itr = pattern_begin;
-      Iterator2 c_itr = data_begin;
-      Iterator2 m_itr = data_begin;
-
-      while ((data_end != d_itr) && (zero_or_more != (*p_itr)))
+      while ((p_itr != pattern_end) && (d_itr != data_end))
       {
-         if (((*p_itr) != (*d_itr)) && (zero_or_one != (*p_itr)))
+         if (zero_or_more == *p_itr)
          {
-            return false;
-         }
-
-         ++p_itr;
-         ++d_itr;
-      }
-
-      while (data_end != d_itr)
-      {
-         if (zero_or_more == (*p_itr))
-         {
-            if (pattern_end == (++p_itr))
+            while ((p_itr != pattern_end) && (*p_itr == zero_or_more || *p_itr == zero_or_one))
             {
-               return true;
+               ++p_itr;
             }
 
-            m_itr = p_itr;
-            c_itr = d_itr;
-            ++c_itr;
-         }
-         else if (((*p_itr) == (*d_itr)) || (zero_or_one == (*p_itr)))
-         {
-            ++p_itr;
+            if (p_itr == pattern_end)
+               return true;
+
+            const typename std::iterator_traits<Iterator>::value_type c = *(p_itr++);
+
+            while ((d_itr != data_end) && (c != *d_itr))
+            {
+               ++d_itr;
+            }
+
             ++d_itr;
          }
-         else
+         else if ((*p_itr == zero_or_one) || (*p_itr == *d_itr))
          {
-            p_itr = m_itr;
-            d_itr = c_itr++;
+            ++d_itr;
+            ++p_itr;
          }
+         else
+            return false;
       }
 
-      while ((p_itr != pattern_end) && (zero_or_more == (*p_itr))) ++p_itr;
-
-      return (p_itr == pattern_end);
+      return (d_itr == data_end) && (p_itr == pattern_end);
    }
 
    inline bool match(const std::string& wild_card,
@@ -1987,7 +1970,7 @@ namespace strtk
    template <typename T>
    inline bool imatch(const range::adapter<T>& r1, const range::adapter<T>& r2)
    {
-      return imatch(r1.begin(),r1.end(),r2.begin(),r2.end());
+      return imatch(r1.begin(), r1.end(), r2.begin(), r2.end());
    }
 
    inline bool imatch(const std::string& s1, const std::string& s2)
@@ -2013,19 +1996,19 @@ namespace strtk
              template <typename,typename> class Sequence>
    inline bool imatch(const std::string& s, const Sequence<std::string,Allocator>& sequence)
    {
-      return (sequence.end() != imatch(s,sequence.begin(),sequence.end()));
+      return (sequence.end() != imatch(s, sequence.begin(), sequence.end()));
    }
 
    template <typename Comparator, typename Allocator>
    inline bool imatch(const std::string& s, const std::set<std::string,Comparator,Allocator>& set)
    {
-      return imatch(s,set.begin(),set.end());
+      return imatch(s, set.begin(), set.end());
    }
 
    template <typename Comparator, typename Allocator>
    inline bool imatch(const std::string& s, const std::multiset<std::string,Comparator,Allocator>& multiset)
    {
-      return imatch(s,multiset.begin(),multiset.end());
+      return imatch(s, multiset.begin(), multiset.end());
    }
 
    template <typename Iterator, typename OutputIterator>
@@ -2058,7 +2041,7 @@ namespace strtk
                                const Iterator end,
                                Sequence<Range,Allocator>& seq)
    {
-      return find_all(pattern_begin,pattern_end,begin,end,std::back_inserter(seq));
+      return find_all(pattern_begin, pattern_end, begin, end, std::back_inserter(seq));
    }
 
    inline std::size_t ifind(const std::string& pattern, const std::string& data)
