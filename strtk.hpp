@@ -1879,59 +1879,92 @@ namespace strtk
       std::sort(s.begin(),s.end());
    }
 
+   namespace details
+   {
+      struct cs_match
+      {
+         template <typename char_t>
+         static inline bool cmp(const char_t c0, const char_t c1)
+         {
+            return (c0 == c1);
+         }
+      };
+
+      struct cis_match
+      {
+         template <typename char_t>
+         static inline bool cmp(const char_t c0, const char_t c1)
+         {
+            return (std::tolower(c0) == std::tolower(c1));
+         }
+      };
+
+      template <typename Comparator, typename Iterator>
+      inline bool match_impl(const Iterator pattern_begin, const Iterator pattern_end,
+                             const Iterator data_begin,    const Iterator data_end,
+                             const typename std::iterator_traits<Iterator>::value_type& match_one_or_more,
+                             const typename std::iterator_traits<Iterator>::value_type& match_exactly_one)
+      {
+         Iterator d_itr = data_begin;
+         Iterator p_itr = pattern_begin;
+
+         while ((p_itr != pattern_end) && (d_itr != data_end))
+         {
+            if (match_one_or_more == *p_itr)
+            {
+               while ((p_itr != pattern_end) && (*p_itr == match_one_or_more || *p_itr == match_exactly_one))
+               {
+                  ++p_itr;
+               }
+
+               if (p_itr == pattern_end)
+                  return true;
+
+               const typename std::iterator_traits<Iterator>::value_type c = *(p_itr++);
+
+               while ((d_itr != data_end) && !Comparator::cmp(c, *d_itr))
+               {
+                  ++d_itr;
+               }
+
+               ++d_itr;
+            }
+            else if ((*p_itr == match_exactly_one) || Comparator::cmp(*p_itr, *d_itr))
+            {
+               ++d_itr;
+               ++p_itr;
+            }
+            else
+               return false;
+         }
+
+         return (d_itr == data_end) && (p_itr == pattern_end);
+      }
+   }
+
    template <typename Iterator>
    inline bool match(const Iterator pattern_begin, const Iterator pattern_end,
                      const Iterator data_begin,    const Iterator data_end,
-                     const typename std::iterator_traits<Iterator>::value_type& zero_or_more,
-                     const typename std::iterator_traits<Iterator>::value_type& zero_or_one)
+                     const typename std::iterator_traits<Iterator>::value_type& match_one_or_more,
+                     const typename std::iterator_traits<Iterator>::value_type& match_exactly_one)
    {
-      Iterator d_itr = data_begin;
-      Iterator p_itr = pattern_begin;
-
-      while ((p_itr != pattern_end) && (d_itr != data_end))
-      {
-         if (zero_or_more == *p_itr)
-         {
-            while ((p_itr != pattern_end) && (*p_itr == zero_or_more || *p_itr == zero_or_one))
-            {
-               ++p_itr;
-            }
-
-            if (p_itr == pattern_end)
-               return true;
-
-            const typename std::iterator_traits<Iterator>::value_type c = *(p_itr++);
-
-            while ((d_itr != data_end) && (c != *d_itr))
-            {
-               ++d_itr;
-            }
-
-            ++d_itr;
-         }
-         else if ((*p_itr == zero_or_one) || (*p_itr == *d_itr))
-         {
-            ++d_itr;
-            ++p_itr;
-         }
-         else
-            return false;
-      }
-
-      return (d_itr == data_end) && (p_itr == pattern_end);
+      return details::match_impl<details::cs_match>(pattern_begin, pattern_end,
+                                                    data_begin,    data_end,
+                                                    match_one_or_more,
+                                                    match_exactly_one);
    }
 
    inline bool match(const std::string& wild_card,
                      const std::string& str)
    {
       /*
-         * : Zero or more match
-         ? : Zero or one match
+         * : Match one or more character
+         ? : Match one character
       */
-      return match(to_ptr(wild_card), to_ptr(wild_card) + wild_card.size(),
-                   to_ptr(str)      , to_ptr(str)       + str      .size(),
-                   '*',
-                   '?');
+      return details::match_impl<details::cs_match>(to_ptr(wild_card), to_ptr(wild_card) + wild_card.size(),
+                                                    to_ptr(str)      , to_ptr(str)       + str      .size(),
+                                                    '*',
+                                                    '?');
    }
 
    inline bool imatch_char(const char c1, const char c2)
@@ -2160,7 +2193,7 @@ namespace strtk
 
       if (std::distance(pattern_begin,pattern_end) <= std::distance(begin,end))
       {
-         return std::equal(pattern_begin,pattern_end,begin,imatch_char);
+         return std::equal(pattern_begin, pattern_end, begin, imatch_char);
       }
       else
          return false;
@@ -2478,8 +2511,8 @@ namespace strtk
         predicate_(predicate),
         begin_(begin),
         end_(end),
-        begin_itr_(begin_,end_,predicate_,tokenize_options_),
-        end_itr_(end_,end_,predicate_,tokenize_options_)
+        begin_itr_(begin_, end_, predicate_, tokenize_options_),
+        end_itr_(end_, end_, predicate_, tokenize_options_)
       {}
 
       inline tokenizer(const std::string& s,
@@ -2489,8 +2522,8 @@ namespace strtk
         predicate_(predicate),
         begin_(to_ptr(s)),
         end_(to_ptr(s) + s.size()),
-        begin_itr_(begin_,end_,predicate_,tokenize_options_),
-        end_itr_(end_,end_,predicate_,tokenize_options_)
+        begin_itr_(begin_, end_, predicate_, tokenize_options_),
+        end_itr_(end_, end_, predicate_, tokenize_options_)
       {}
 
       inline tokenizer& operator=(const tokenizer& t)
@@ -4571,8 +4604,8 @@ namespace strtk
    inline std::size_t convert_bin_to_base64(const char* begin, const char* end, char* out)
    {
       return convert_bin_to_base64(reinterpret_cast<const unsigned char*>(begin),
-                                   reinterpret_cast<const unsigned char*>(end),
-                                   reinterpret_cast<unsigned char*>(out));
+                                   reinterpret_cast<const unsigned char*>(end  ),
+                                   reinterpret_cast<unsigned char*      >(out  ));
    }
 
    inline void convert_bin_to_base64(const std::string& binary_data, std::string& output)
@@ -5156,14 +5189,14 @@ namespace strtk
    {
    public:
 
-      typedef const unsigned char* iterator_t;
-      typedef unsigned int index_t;
+      typedef const unsigned char*             iterator_t;
+      typedef unsigned int                     index_t;
       typedef std::pair<iterator_t,iterator_t> range_t;
-      typedef std::deque<range_t> token_list_t;
-      typedef std::pair<index_t,index_t> row_index_range_t;
-      typedef std::deque<row_index_range_t> row_index_t;
-      typedef std::pair<index_t,index_t> row_range_t;
-      typedef std::pair<index_t,index_t> col_range_t;
+      typedef std::deque<range_t>              token_list_t;
+      typedef std::pair<index_t,index_t>       row_index_range_t;
+      typedef std::deque<row_index_range_t>    row_index_t;
+      typedef std::pair<index_t,index_t>       row_range_t;
+      typedef std::pair<index_t,index_t>       col_range_t;
 
    private:
 
@@ -12173,8 +12206,8 @@ namespace strtk
    }
    #endif // strtk_enable_random
 
-   template <class Iterator>
-   bool next_combination(Iterator const first, Iterator const k, Iterator const last)
+   template <typename Iterator>
+   bool next_combination(const Iterator first, const Iterator k, const Iterator last)
    {
       if (
            (first == last) ||
@@ -12323,7 +12356,9 @@ namespace strtk
                                                     typename std::iterator_traits<Iterator>::difference_type d = 0)
       {
          typedef typename std::iterator_traits<Iterator>::difference_type D;
+
          using std::swap;
+
          if (d1 == 0 || d2 == 0)
             return f();
 
@@ -12481,12 +12516,17 @@ namespace strtk
             // n-Choose-k = (n-1)-Choose-(k-1) + (n-1)-Choose-k
             if ((0 == k) || (k == n))
                return 1;
+
             value_type v1 = lookup(n - 1,k - 1);
+
             if (0 == v1)
                v1 = lookup(n - 1,k - 1) = compute(n - 1,k - 1);
+
             value_type v2 = lookup(n - 1,k);
+
             if (0 == v2)
                v2 = lookup(n - 1,k) = compute(n - 1,k);
+
             return v1 + v2;
          }
 
@@ -12775,7 +12815,7 @@ namespace strtk
       {
          if (begin_ != end_)
          {
-            if (!next_combination(begin_,middle_,end_))
+            if (!next_combination(begin_, middle_, end_))
             {
                begin_ = middle_ = end_;
             }
@@ -12895,7 +12935,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[12] - '0') < 10 &&
                       static_cast<unsigned char>(itr[13] - '0') < 10 &&
                       static_cast<unsigned char>(itr[14] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[15] - '0') < 10;
+                      static_cast<unsigned char>(itr[15] - '0') < 10 ;
             }
          };
 
@@ -12918,7 +12958,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[11] - '0') < 10 &&
                       static_cast<unsigned char>(itr[12] - '0') < 10 &&
                       static_cast<unsigned char>(itr[13] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[14] - '0') < 10;
+                      static_cast<unsigned char>(itr[14] - '0') < 10 ;
             }
          };
 
@@ -12940,7 +12980,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[10] - '0') < 10 &&
                       static_cast<unsigned char>(itr[11] - '0') < 10 &&
                       static_cast<unsigned char>(itr[12] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[13] - '0') < 10;
+                      static_cast<unsigned char>(itr[13] - '0') < 10 ;
             }
          };
 
@@ -12961,7 +13001,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[ 9] - '0') < 10 &&
                       static_cast<unsigned char>(itr[10] - '0') < 10 &&
                       static_cast<unsigned char>(itr[11] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[12] - '0') < 10;
+                      static_cast<unsigned char>(itr[12] - '0') < 10 ;
             }
          };
 
@@ -12981,7 +13021,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[ 8] - '0') < 10 &&
                       static_cast<unsigned char>(itr[ 9] - '0') < 10 &&
                       static_cast<unsigned char>(itr[10] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[11] - '0') < 10;
+                      static_cast<unsigned char>(itr[11] - '0') < 10 ;
             }
          };
 
@@ -13000,7 +13040,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[ 7] - '0') < 10 &&
                       static_cast<unsigned char>(itr[ 8] - '0') < 10 &&
                       static_cast<unsigned char>(itr[ 9] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[10] - '0') < 10;
+                      static_cast<unsigned char>(itr[10] - '0') < 10 ;
             }
          };
 
@@ -13018,7 +13058,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[6] - '0') < 10 &&
                       static_cast<unsigned char>(itr[7] - '0') < 10 &&
                       static_cast<unsigned char>(itr[8] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[9] - '0') < 10;
+                      static_cast<unsigned char>(itr[9] - '0') < 10 ;
             }
          };
 
@@ -13035,7 +13075,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[5] - '0') < 10 &&
                       static_cast<unsigned char>(itr[6] - '0') < 10 &&
                       static_cast<unsigned char>(itr[7] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[8] - '0') < 10;
+                      static_cast<unsigned char>(itr[8] - '0') < 10 ;
             }
          };
 
@@ -13051,7 +13091,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[4] - '0') < 10 &&
                       static_cast<unsigned char>(itr[5] - '0') < 10 &&
                       static_cast<unsigned char>(itr[6] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[7] - '0') < 10;
+                      static_cast<unsigned char>(itr[7] - '0') < 10 ;
             }
          };
 
@@ -13066,7 +13106,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[3] - '0') < 10 &&
                       static_cast<unsigned char>(itr[4] - '0') < 10 &&
                       static_cast<unsigned char>(itr[5] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[6] - '0') < 10;
+                      static_cast<unsigned char>(itr[6] - '0') < 10 ;
             }
          };
 
@@ -13080,7 +13120,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[2] - '0') < 10 &&
                       static_cast<unsigned char>(itr[3] - '0') < 10 &&
                       static_cast<unsigned char>(itr[4] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[5] - '0') < 10;
+                      static_cast<unsigned char>(itr[5] - '0') < 10 ;
             }
          };
 
@@ -13093,7 +13133,7 @@ namespace strtk
                       static_cast<unsigned char>(itr[1] - '0') < 10 &&
                       static_cast<unsigned char>(itr[2] - '0') < 10 &&
                       static_cast<unsigned char>(itr[3] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[4] - '0') < 10;
+                      static_cast<unsigned char>(itr[4] - '0') < 10 ;
             }
          };
 
@@ -13105,7 +13145,7 @@ namespace strtk
                return static_cast<unsigned char>(itr[0] - '0') < 10 &&
                       static_cast<unsigned char>(itr[1] - '0') < 10 &&
                       static_cast<unsigned char>(itr[2] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[3] - '0') < 10;
+                      static_cast<unsigned char>(itr[3] - '0') < 10 ;
             }
          };
 
@@ -13117,7 +13157,7 @@ namespace strtk
                return
                 static_cast<unsigned char>(itr[0] - '0') < 10 &&
                 static_cast<unsigned char>(itr[1] - '0') < 10 &&
-                static_cast<unsigned char>(itr[2] - '0') < 10;
+                static_cast<unsigned char>(itr[2] - '0') < 10 ;
            }
          };
 
@@ -13127,7 +13167,7 @@ namespace strtk
             static inline bool process(Iterator itr)
             {
                return static_cast<unsigned char>(itr[ 0] - '0') < 10 &&
-                      static_cast<unsigned char>(itr[ 1] - '0') < 10;
+                      static_cast<unsigned char>(itr[ 1] - '0') < 10 ;
            }
          };
 
@@ -17066,43 +17106,43 @@ namespace strtk
       template<> struct supported_conversion_to_type<strtk::decimal_sink<T> > { typedef decsink_type_tag type; }; \
       template<> struct supported_iterator_type<strtk::decimal_sink<T> >      { enum { value = true }; };         \
 
-      #define strtk_register_inrange_type_tag(T)                                                                             \
-      template<> struct supported_conversion_to_type<strtk::details::inrange_impl<T> >   { typedef inrange_type_tag type; }; \
-      template<> struct supported_iterator_type<strtk::details::inrange_impl<T> >        { enum { value = true }; };         \
+      #define strtk_register_inrange_type_tag(T)                                                                           \
+      template<> struct supported_conversion_to_type<strtk::details::inrange_impl<T> > { typedef inrange_type_tag type; }; \
+      template<> struct supported_iterator_type<strtk::details::inrange_impl<T> >      { enum { value = true }; };         \
 
-      #define strtk_register_trim_type_tag(T)                                                                          \
-      template<> struct supported_conversion_to_type<strtk::details::trim_impl<T> >   { typedef trim_type_tag type; }; \
-      template<> struct supported_iterator_type<strtk::details::trim_impl<T> >        { enum { value = true }; };      \
+      #define strtk_register_trim_type_tag(T)                                                                        \
+      template<> struct supported_conversion_to_type<strtk::details::trim_impl<T> > { typedef trim_type_tag type; }; \
+      template<> struct supported_iterator_type<strtk::details::trim_impl<T> >      { enum { value = true }; };      \
 
       #define strtk_register_stdstring_range_type_tag(T)                                                          \
       template<> struct supported_conversion_to_type< std::pair<T,T> >{ typedef stdstring_range_type_tag type; }; \
 
       #define strtk_register_sink_type_tag(T)                                                                                \
-      template<> struct supported_conversion_to_type<sink_type<std::vector<T> > > { typedef sink_type_tag type; };           \
-      template<> struct supported_conversion_to_type<sink_type<std::deque<T> > > { typedef sink_type_tag type; };            \
-      template<> struct supported_conversion_to_type<sink_type<std::list<T> > > { typedef sink_type_tag type; };             \
-      template<> struct supported_conversion_to_type<sink_type<std::set<T> > > { typedef sink_type_tag type; };              \
+      template<> struct supported_conversion_to_type<sink_type<std::vector<T>   > > { typedef sink_type_tag type; };         \
+      template<> struct supported_conversion_to_type<sink_type<std::deque<T>    > > { typedef sink_type_tag type; };         \
+      template<> struct supported_conversion_to_type<sink_type<std::list<T>     > > { typedef sink_type_tag type; };         \
+      template<> struct supported_conversion_to_type<sink_type<std::set<T>      > > { typedef sink_type_tag type; };         \
       template<> struct supported_conversion_to_type<sink_type<std::multiset<T> > > { typedef sink_type_tag type; };         \
-      template<> struct supported_conversion_to_type<sink_type<std::queue<T> > > { typedef sink_type_tag type; };            \
-      template<> struct supported_conversion_to_type<sink_type<std::stack<T> > > { typedef sink_type_tag type; };            \
+      template<> struct supported_conversion_to_type<sink_type<std::queue<T>    > > { typedef sink_type_tag type; };         \
+      template<> struct supported_conversion_to_type<sink_type<std::stack<T>    > > { typedef sink_type_tag type; };         \
       template<> struct supported_conversion_to_type<sink_type<std::priority_queue<T> > > { typedef sink_type_tag type; };   \
       template<> struct supported_conversion_from_type<sink_type<std::vector<T> > > { typedef sink_type_tag type; };         \
-      template<> struct supported_conversion_from_type<sink_type<std::deque<T> > > { typedef sink_type_tag type; };          \
-      template<> struct supported_conversion_from_type<sink_type<std::list<T> > > { typedef sink_type_tag type; };           \
-      template<> struct supported_conversion_from_type<sink_type<std::set<T> > > { typedef sink_type_tag type; };            \
+      template<> struct supported_conversion_from_type<sink_type<std::deque<T>  > > { typedef sink_type_tag type; };         \
+      template<> struct supported_conversion_from_type<sink_type<std::list<T>   > > { typedef sink_type_tag type; };         \
+      template<> struct supported_conversion_from_type<sink_type<std::set<T>    > > { typedef sink_type_tag type; };         \
       template<> struct supported_conversion_from_type<sink_type<std::multiset<T> > > { typedef sink_type_tag type; };       \
-      template<> struct supported_conversion_from_type<sink_type<std::queue<T> > > { typedef sink_type_tag type; };          \
-      template<> struct supported_conversion_from_type<sink_type<std::stack<T> > > { typedef sink_type_tag type; };          \
+      template<> struct supported_conversion_from_type<sink_type<std::queue<T>  > > { typedef sink_type_tag type; };         \
+      template<> struct supported_conversion_from_type<sink_type<std::stack<T>  > > { typedef sink_type_tag type; };         \
       template<> struct supported_conversion_from_type<sink_type<std::priority_queue<T> > > { typedef sink_type_tag type; }; \
 
       #define strtk_register_stl_container_to_string_conv_type_tag(T)                                               \
-      template<> struct supported_conversion_from_type<std::vector<T> > { typedef stl_seq_type_tag type; };         \
-      template<> struct supported_conversion_from_type<std::deque<T> > { typedef stl_seq_type_tag type; };          \
-      template<> struct supported_conversion_from_type<std::list<T> > { typedef stl_seq_type_tag type; };           \
-      template<> struct supported_conversion_from_type<std::set<T> > { typedef stl_seq_type_tag type; };            \
+      template<> struct supported_conversion_from_type<std::vector<T>   > { typedef stl_seq_type_tag type; };       \
+      template<> struct supported_conversion_from_type<std::deque<T>    > { typedef stl_seq_type_tag type; };       \
+      template<> struct supported_conversion_from_type<std::list<T>     > { typedef stl_seq_type_tag type; };       \
+      template<> struct supported_conversion_from_type<std::set<T>      > { typedef stl_seq_type_tag type; };       \
       template<> struct supported_conversion_from_type<std::multiset<T> > { typedef stl_seq_type_tag type; };       \
-      template<> struct supported_conversion_from_type<std::queue<T> > { typedef stl_seq_type_tag type; };          \
-      template<> struct supported_conversion_from_type<std::stack<T> > { typedef stl_seq_type_tag type; };          \
+      template<> struct supported_conversion_from_type<std::queue<T>    > { typedef stl_seq_type_tag type; };       \
+      template<> struct supported_conversion_from_type<std::stack<T>    > { typedef stl_seq_type_tag type; };       \
       template<> struct supported_conversion_from_type<std::priority_queue<T> > { typedef stl_seq_type_tag type; }; \
 
       template<> struct supported_conversion_to_type<ignore_token>{ typedef ignore_token_type_tag type; };
@@ -17113,57 +17153,57 @@ namespace strtk
       strtk_register_supported_iterator_type(sequence<unsigned char>::iterator)       \
       strtk_register_supported_iterator_type(sequence<unsigned char>::const_iterator) \
 
-      strtk_register_unsigned_type_tag(unsigned short)
-      strtk_register_unsigned_type_tag(unsigned int)
-      strtk_register_unsigned_type_tag(unsigned long)
+      strtk_register_unsigned_type_tag(unsigned short        )
+      strtk_register_unsigned_type_tag(unsigned int          )
+      strtk_register_unsigned_type_tag(unsigned long         )
       strtk_register_unsigned_type_tag(unsigned long long int)
 
-      strtk_register_signed_type_tag(short)
-      strtk_register_signed_type_tag(int)
-      strtk_register_signed_type_tag(long)
+      strtk_register_signed_type_tag(short    )
+      strtk_register_signed_type_tag(int      )
+      strtk_register_signed_type_tag(long     )
       strtk_register_signed_type_tag(long long)
 
-      strtk_register_real_type_tag(float)
-      strtk_register_real_type_tag(double)
+      strtk_register_real_type_tag(float      )
+      strtk_register_real_type_tag(double     )
       strtk_register_real_type_tag(long double)
 
       strtk_register_byte_type_tag(unsigned char)
-      strtk_register_byte_type_tag(signed char)
-      strtk_register_byte_type_tag(char)
+      strtk_register_byte_type_tag(signed char  )
+      strtk_register_byte_type_tag(char         )
 
-      strtk_register_hex_number_type_tag(hex_to_number_sink<short>)
-      strtk_register_hex_number_type_tag(hex_to_number_sink<int>)
-      strtk_register_hex_number_type_tag(hex_to_number_sink<long>)
-      strtk_register_hex_number_type_tag(hex_to_number_sink<long long>)
-      strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned short>)
-      strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned int>)
-      strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned long>)
+      strtk_register_hex_number_type_tag(hex_to_number_sink<short>                 )
+      strtk_register_hex_number_type_tag(hex_to_number_sink<int>                   )
+      strtk_register_hex_number_type_tag(hex_to_number_sink<long>                  )
+      strtk_register_hex_number_type_tag(hex_to_number_sink<long long>             )
+      strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned short>        )
+      strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned int>          )
+      strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned long>         )
       strtk_register_hex_number_type_tag(hex_to_number_sink<unsigned long long int>)
 
-      strtk_register_base64_type_tag(base64_to_number_sink<short>)
-      strtk_register_base64_type_tag(base64_to_number_sink<int>)
-      strtk_register_base64_type_tag(base64_to_number_sink<long>)
-      strtk_register_base64_type_tag(base64_to_number_sink<long long>)
-      strtk_register_base64_type_tag(base64_to_number_sink<unsigned short>)
-      strtk_register_base64_type_tag(base64_to_number_sink<unsigned int>)
-      strtk_register_base64_type_tag(base64_to_number_sink<unsigned long>)
+      strtk_register_base64_type_tag(base64_to_number_sink<short>                 )
+      strtk_register_base64_type_tag(base64_to_number_sink<int>                   )
+      strtk_register_base64_type_tag(base64_to_number_sink<long>                  )
+      strtk_register_base64_type_tag(base64_to_number_sink<long long>             )
+      strtk_register_base64_type_tag(base64_to_number_sink<unsigned short>        )
+      strtk_register_base64_type_tag(base64_to_number_sink<unsigned int>          )
+      strtk_register_base64_type_tag(base64_to_number_sink<unsigned long>         )
       strtk_register_base64_type_tag(base64_to_number_sink<unsigned long long int>)
 
-      strtk_register_stdstring_range_type_tag(std::string::iterator)
+      strtk_register_stdstring_range_type_tag(std::string::iterator      )
       strtk_register_stdstring_range_type_tag(std::string::const_iterator)
-      strtk_register_stdstring_range_type_tag(char*)
-      strtk_register_stdstring_range_type_tag(signed char*)
-      strtk_register_stdstring_range_type_tag(unsigned char*)
-      strtk_register_stdstring_range_type_tag(const char*)
-      strtk_register_stdstring_range_type_tag(const unsigned char*)
+      strtk_register_stdstring_range_type_tag(char*                      )
+      strtk_register_stdstring_range_type_tag(signed char*               )
+      strtk_register_stdstring_range_type_tag(unsigned char*             )
+      strtk_register_stdstring_range_type_tag(const char*                )
+      strtk_register_stdstring_range_type_tag(const unsigned char*       )
 
-      strtk_register_supported_iterator_type(char*)
-      strtk_register_supported_iterator_type(signed char*)
-      strtk_register_supported_iterator_type(unsigned char*)
-      strtk_register_supported_iterator_type(const char*)
-      strtk_register_supported_iterator_type(const signed char*)
-      strtk_register_supported_iterator_type(const unsigned char*)
-      strtk_register_supported_iterator_type(std::string::iterator)
+      strtk_register_supported_iterator_type(char*                      )
+      strtk_register_supported_iterator_type(signed char*               )
+      strtk_register_supported_iterator_type(unsigned char*             )
+      strtk_register_supported_iterator_type(const char*                )
+      strtk_register_supported_iterator_type(const signed char*         )
+      strtk_register_supported_iterator_type(const unsigned char*       )
+      strtk_register_supported_iterator_type(std::string::iterator      )
       strtk_register_supported_iterator_type(std::string::const_iterator)
 
       #ifndef _LIBCPP_VERSION
@@ -17171,90 +17211,90 @@ namespace strtk
       #endif
       strtk_register_sequence_iterator_type(std::deque)
 
-      strtk_register_sink_type_tag(float)
-      strtk_register_sink_type_tag(double)
-      strtk_register_sink_type_tag(long double)
-      strtk_register_sink_type_tag(signed char)
-      strtk_register_sink_type_tag(char)
-      strtk_register_sink_type_tag(short)
-      strtk_register_sink_type_tag(int)
-      strtk_register_sink_type_tag(long)
-      strtk_register_sink_type_tag(long long)
-      strtk_register_sink_type_tag(unsigned char)
-      strtk_register_sink_type_tag(unsigned short)
-      strtk_register_sink_type_tag(unsigned int)
-      strtk_register_sink_type_tag(unsigned long)
+      strtk_register_sink_type_tag(float                 )
+      strtk_register_sink_type_tag(double                )
+      strtk_register_sink_type_tag(long double           )
+      strtk_register_sink_type_tag(signed char           )
+      strtk_register_sink_type_tag(char                  )
+      strtk_register_sink_type_tag(short                 )
+      strtk_register_sink_type_tag(int                   )
+      strtk_register_sink_type_tag(long                  )
+      strtk_register_sink_type_tag(long long             )
+      strtk_register_sink_type_tag(unsigned char         )
+      strtk_register_sink_type_tag(unsigned short        )
+      strtk_register_sink_type_tag(unsigned int          )
+      strtk_register_sink_type_tag(unsigned long         )
       strtk_register_sink_type_tag(unsigned long long int)
-      strtk_register_sink_type_tag(std::string)
+      strtk_register_sink_type_tag(std::string           )
 
-      strtk_register_stl_container_to_string_conv_type_tag(float)
-      strtk_register_stl_container_to_string_conv_type_tag(double)
-      strtk_register_stl_container_to_string_conv_type_tag(long double)
-      strtk_register_stl_container_to_string_conv_type_tag(signed char)
-      strtk_register_stl_container_to_string_conv_type_tag(char)
-      strtk_register_stl_container_to_string_conv_type_tag(short)
-      strtk_register_stl_container_to_string_conv_type_tag(int)
-      strtk_register_stl_container_to_string_conv_type_tag(long)
-      strtk_register_stl_container_to_string_conv_type_tag(long long)
-      strtk_register_stl_container_to_string_conv_type_tag(unsigned char)
-      strtk_register_stl_container_to_string_conv_type_tag(unsigned short)
-      strtk_register_stl_container_to_string_conv_type_tag(unsigned int)
-      strtk_register_stl_container_to_string_conv_type_tag(unsigned long)
+      strtk_register_stl_container_to_string_conv_type_tag(float                 )
+      strtk_register_stl_container_to_string_conv_type_tag(double                )
+      strtk_register_stl_container_to_string_conv_type_tag(long double           )
+      strtk_register_stl_container_to_string_conv_type_tag(signed char           )
+      strtk_register_stl_container_to_string_conv_type_tag(char                  )
+      strtk_register_stl_container_to_string_conv_type_tag(short                 )
+      strtk_register_stl_container_to_string_conv_type_tag(int                   )
+      strtk_register_stl_container_to_string_conv_type_tag(long                  )
+      strtk_register_stl_container_to_string_conv_type_tag(long long             )
+      strtk_register_stl_container_to_string_conv_type_tag(unsigned char         )
+      strtk_register_stl_container_to_string_conv_type_tag(unsigned short        )
+      strtk_register_stl_container_to_string_conv_type_tag(unsigned int          )
+      strtk_register_stl_container_to_string_conv_type_tag(unsigned long         )
       strtk_register_stl_container_to_string_conv_type_tag(unsigned long long int)
-      strtk_register_stl_container_to_string_conv_type_tag(std::string)
+      strtk_register_stl_container_to_string_conv_type_tag(std::string           )
 
-      strtk_register_inrange_type_tag(float)
-      strtk_register_inrange_type_tag(double)
-      strtk_register_inrange_type_tag(long double)
-      strtk_register_inrange_type_tag(signed char)
-      strtk_register_inrange_type_tag(char)
-      strtk_register_inrange_type_tag(short)
-      strtk_register_inrange_type_tag(int)
-      strtk_register_inrange_type_tag(long)
-      strtk_register_inrange_type_tag(long long)
-      strtk_register_inrange_type_tag(unsigned char)
-      strtk_register_inrange_type_tag(unsigned short)
-      strtk_register_inrange_type_tag(unsigned int)
-      strtk_register_inrange_type_tag(unsigned long)
+      strtk_register_inrange_type_tag(float                 )
+      strtk_register_inrange_type_tag(double                )
+      strtk_register_inrange_type_tag(long double           )
+      strtk_register_inrange_type_tag(signed char           )
+      strtk_register_inrange_type_tag(char                  )
+      strtk_register_inrange_type_tag(short                 )
+      strtk_register_inrange_type_tag(int                   )
+      strtk_register_inrange_type_tag(long                  )
+      strtk_register_inrange_type_tag(long long             )
+      strtk_register_inrange_type_tag(unsigned char         )
+      strtk_register_inrange_type_tag(unsigned short        )
+      strtk_register_inrange_type_tag(unsigned int          )
+      strtk_register_inrange_type_tag(unsigned long         )
       strtk_register_inrange_type_tag(unsigned long long int)
-      strtk_register_inrange_type_tag(std::string)
+      strtk_register_inrange_type_tag(std::string           )
 
-      strtk_register_trim_type_tag(float)
-      strtk_register_trim_type_tag(double)
-      strtk_register_trim_type_tag(long double)
-      strtk_register_trim_type_tag(signed char)
-      strtk_register_trim_type_tag(char)
-      strtk_register_trim_type_tag(short)
-      strtk_register_trim_type_tag(int)
-      strtk_register_trim_type_tag(long)
-      strtk_register_trim_type_tag(long long)
-      strtk_register_trim_type_tag(unsigned char)
-      strtk_register_trim_type_tag(unsigned short)
-      strtk_register_trim_type_tag(unsigned int)
-      strtk_register_trim_type_tag(unsigned long)
+      strtk_register_trim_type_tag(float                 )
+      strtk_register_trim_type_tag(double                )
+      strtk_register_trim_type_tag(long double           )
+      strtk_register_trim_type_tag(signed char           )
+      strtk_register_trim_type_tag(char                  )
+      strtk_register_trim_type_tag(short                 )
+      strtk_register_trim_type_tag(int                   )
+      strtk_register_trim_type_tag(long                  )
+      strtk_register_trim_type_tag(long long             )
+      strtk_register_trim_type_tag(unsigned char         )
+      strtk_register_trim_type_tag(unsigned short        )
+      strtk_register_trim_type_tag(unsigned int          )
+      strtk_register_trim_type_tag(unsigned long         )
       strtk_register_trim_type_tag(unsigned long long int)
-      strtk_register_trim_type_tag(std::string)
+      strtk_register_trim_type_tag(std::string           )
 
-      strtk_register_trim_type_tag(truncated_int<short>)
-      strtk_register_trim_type_tag(truncated_int<int>)
-      strtk_register_trim_type_tag(truncated_int<long>)
-      strtk_register_trim_type_tag(truncated_int<long long>)
-      strtk_register_trim_type_tag(truncated_int<unsigned char>)
-      strtk_register_trim_type_tag(truncated_int<unsigned short>)
-      strtk_register_trim_type_tag(truncated_int<unsigned int>)
+      strtk_register_trim_type_tag(truncated_int<short>                 )
+      strtk_register_trim_type_tag(truncated_int<int>                   )
+      strtk_register_trim_type_tag(truncated_int<long>                  )
+      strtk_register_trim_type_tag(truncated_int<long long>             )
+      strtk_register_trim_type_tag(truncated_int<unsigned char>         )
+      strtk_register_trim_type_tag(truncated_int<unsigned short>        )
+      strtk_register_trim_type_tag(truncated_int<unsigned int>          )
       strtk_register_trim_type_tag(truncated_int<unsigned long long int>)
 
-      strtk_register_truncint_type_tag(short)
-      strtk_register_truncint_type_tag(int)
-      strtk_register_truncint_type_tag(long)
-      strtk_register_truncint_type_tag(long long)
-      strtk_register_truncint_type_tag(unsigned short)
-      strtk_register_truncint_type_tag(unsigned int)
-      strtk_register_truncint_type_tag(unsigned long)
+      strtk_register_truncint_type_tag(short                 )
+      strtk_register_truncint_type_tag(int                   )
+      strtk_register_truncint_type_tag(long                  )
+      strtk_register_truncint_type_tag(long long             )
+      strtk_register_truncint_type_tag(unsigned short        )
+      strtk_register_truncint_type_tag(unsigned int          )
+      strtk_register_truncint_type_tag(unsigned long         )
       strtk_register_truncint_type_tag(unsigned long long int)
 
-      strtk_register_decsink_type_tag(float)
-      strtk_register_decsink_type_tag(double)
+      strtk_register_decsink_type_tag(float      )
+      strtk_register_decsink_type_tag(double     )
       strtk_register_decsink_type_tag(long double)
 
       #define strtk_register_userdef_type_sink(T) \
