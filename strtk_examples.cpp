@@ -612,29 +612,29 @@ void parse_example02()
    std::string string_string = "ab,cde,fghi,jklmn,opqrst,uvwxyz1,234567890";
    std::string float_string  = "1.9f,2.8f,3.7f,4.6f,5.5f,6.4f,7.3f,8.2f,9.1f,0.0f";
 
-   std::vector<int> int_list;
-   std::deque<double> double_list;
-   std::list<std::string> string_list;
-   std::set<float> float_set;
-   std::multiset<float> float_multiset;
-   std::queue<unsigned int> uint_queue;
-   std::stack<unsigned int> uint_stack;
+   std::vector<int>                  int_list;
+   std::deque<double>                double_list;
+   std::list<std::string>            string_list;
+   std::set<float>                   float_set;
+   std::multiset<float>              float_multiset;
+   std::queue<unsigned int>          uint_queue;
+   std::stack<unsigned int>          uint_stack;
    std::priority_queue<unsigned int> uint_prique;
 
-   strtk::parse(int_string,",",int_list);
-   strtk::parse(double_string,",",double_list);
-   strtk::parse(string_string,",",string_list);
-   strtk::parse(float_string,",",float_set);
-   strtk::parse(float_string,",",float_multiset);
-   strtk::parse(uint_string,",",uint_queue);
-   strtk::parse(uint_string,",",uint_stack);
-   strtk::parse(uint_string,",",uint_prique);
+   strtk::parse(int_string   , ",", int_list       );
+   strtk::parse(double_string, ",", double_list    );
+   strtk::parse(string_string, ",", string_list    );
+   strtk::parse(float_string , ",", float_set      );
+   strtk::parse(float_string , ",", float_multiset );
+   strtk::parse(uint_string  , ",", uint_queue     );
+   strtk::parse(uint_string  , ",", uint_stack     );
+   strtk::parse(uint_string  , ",", uint_prique    );
 
-   std::cout << strtk::join("\t",int_list) << std::endl;
-   std::cout << strtk::join("\t",double_list) << std::endl;
-   std::cout << strtk::join("\t",string_list) << std::endl;
-   std::cout << strtk::join("\t",float_set) << std::endl;
-   std::cout << strtk::join("\t",float_multiset) << std::endl;
+   std::cout << strtk::join("\t", int_list      ) << std::endl;
+   std::cout << strtk::join("\t", double_list   ) << std::endl;
+   std::cout << strtk::join("\t", string_list   ) << std::endl;
+   std::cout << strtk::join("\t", float_set     ) << std::endl;
+   std::cout << strtk::join("\t", float_multiset) << std::endl;
 }
 
 void parse_example03()

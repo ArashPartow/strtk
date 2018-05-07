@@ -8611,31 +8611,53 @@ namespace strtk
       return string_to_type_converter((*itr).first,(*itr).second,t);
    }
 
-   template <typename InputIterator,
-             typename T,
-             typename Allocator,
-             template <typename,typename> class Sequence>
-   inline std::size_t parse(const InputIterator begin,
-                            const InputIterator end,
-                            const std::string& delimiters,
-                            Sequence<T,Allocator>& sequence,
-                            const split_options::type& split_option = split_options::compress_delimiters)
+   namespace details
    {
-      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
+      template <typename InputIterator, typename OutputIterator>
+      inline std::size_t parse_impl(const InputIterator begin,
+                                    const InputIterator end,
+                                    const std::string& delimiters,
+                                    OutputIterator out,
+                                    const split_options::type& split_option = split_options::compress_delimiters)
+      {
+         typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
 
-      details::convert_type_assert<itr_type>();
+         details::convert_type_assert<itr_type>();
 
-      if (1 == delimiters.size())
-         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                      begin, end,
-                      range_to_type_back_inserter(sequence),
-                      split_option);
-      else
-         return split(multiple_char_delimiter_predicate(delimiters),
-                      begin, end,
-                      range_to_type_back_inserter(sequence),
-                      split_option);
+         if (1 == delimiters.size())
+            return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
+                         begin, end,
+                         out,
+                         split_option);
+         else
+            return split(multiple_char_delimiter_predicate(delimiters),
+                         begin, end,
+                         out,
+                         split_option);
+      }
    }
+
+   #define strtk_def_parse_cont(Type)                                                                     \
+   template <typename InputIterator,                                                                      \
+             typename T,                                                                                  \
+             typename Allocator>                                                                          \
+   inline std::size_t parse(const InputIterator begin,                                                    \
+                            const InputIterator end,                                                      \
+                            const std::string& delimiters,                                                \
+                            Type<T,Allocator>& sequence,                                                  \
+                            const split_options::type& split_option = split_options::compress_delimiters) \
+   {                                                                                                      \
+      return details::parse_impl(begin, end,                                                              \
+                                 delimiters,                                                              \
+                                 range_to_type_back_inserter(sequence),                                   \
+                                 split_option);                                                           \
+   }                                                                                                      \
+
+   strtk_def_parse_cont(std::vector)
+   strtk_def_parse_cont(std::deque )
+   strtk_def_parse_cont(std::list  )
+
+   #undef strtk_def_parse_cont
 
    template <typename InputIterator,
              typename T,
@@ -8647,20 +8669,10 @@ namespace strtk
                             std::set<T,Comparator,Allocator>& set,
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
-      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
-
-      details::convert_type_assert<itr_type>();
-
-      if (1 == delimiters.size())
-         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                      begin, end,
-                      range_to_type_inserter(set),
-                      split_option);
-      else
-         return split(multiple_char_delimiter_predicate(delimiters),
-                      begin, end,
-                      range_to_type_inserter(set),
-                      split_option);
+      return details::parse_impl(begin, end,
+                                 delimiters,
+                                 range_to_type_inserter(set),
+                                 split_option);
    }
 
    template <typename InputIterator,
@@ -8673,20 +8685,10 @@ namespace strtk
                             std::multiset<T,Comparator,Allocator>& multiset,
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
-      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
-
-      details::convert_type_assert<itr_type>();
-
-      if (1 == delimiters.size())
-         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                      begin, end,
-                      range_to_type_inserter(multiset),
-                      split_option);
-      else
-         return split(multiple_char_delimiter_predicate(delimiters),
-                      begin, end,
-                      range_to_type_inserter(multiset),
-                      split_option);
+      return details::parse_impl(begin, end,
+                                 delimiters,
+                                 range_to_type_inserter(multiset),
+                                 split_option);
    }
 
    template <typename InputIterator,
@@ -8698,20 +8700,10 @@ namespace strtk
                             std::queue<T,Container>& queue,
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
-      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
-
-      details::convert_type_assert<itr_type>();
-
-      if (1 == delimiters.size())
-         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                      begin, end,
-                      range_to_type_push_inserter(queue),
-                      split_option);
-      else
-         return split(multiple_char_delimiter_predicate(delimiters),
-                      begin, end,
-                      range_to_type_push_inserter(queue),
-                      split_option);
+      return details::parse_impl(begin, end,
+                                 delimiters,
+                                 range_to_type_push_inserter(queue),
+                                 split_option);
    }
 
    template <typename InputIterator,
@@ -8723,20 +8715,10 @@ namespace strtk
                             std::stack<T,Container>& stack,
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
-      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
-
-      details::convert_type_assert<itr_type>();
-
-      if (1 == delimiters.size())
-         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                      begin, end,
-                      range_to_type_push_inserter(stack),
-                      split_option);
-      else
-         return split(multiple_char_delimiter_predicate(delimiters),
-                      begin, end,
-                      range_to_type_push_inserter(stack),
-                      split_option);
+      return details::parse_impl(begin, end,
+                                 delimiters,
+                                 range_to_type_push_inserter(stack),
+                                 split_option);
    }
 
    template <typename InputIterator,
@@ -8749,20 +8731,10 @@ namespace strtk
                             std::priority_queue<T,Container,Comparator>& priority_queue,
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
-      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
-
-      details::convert_type_assert<itr_type>();
-
-      if (1 == delimiters.size())
-         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                      begin, end,
-                      range_to_type_push_inserter(priority_queue),
-                      split_option);
-      else
-         return split(multiple_char_delimiter_predicate(delimiters),
-                      begin, end,
-                      range_to_type_push_inserter(priority_queue),
-                      split_option);
+      return details::parse_impl(begin, end,
+                                 delimiters,
+                                 range_to_type_push_inserter(priority_queue),
+                                 split_option);
    }
 
    template <typename InputIterator,
@@ -8774,20 +8746,10 @@ namespace strtk
                             Sequence<T,Allocator>& sequence,
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
-      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
-
-      details::convert_type_assert<itr_type>();
-
-      if (1 == delimiters.size())
-         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                      range.first,range.second,
-                      range_to_type_back_inserter(sequence),
-                      split_option);
-      else
-         return split(multiple_char_delimiter_predicate(delimiters),
-                      range.first,range.second,
-                      range_to_type_back_inserter(sequence),
-                      split_option);
+      return details::parse_impl(range.first,range.second,
+                                 delimiters,
+                                 range_to_type_back_inserter(sequence),
+                                 split_option);
    }
 
    template <typename InputIterator,
@@ -8799,20 +8761,10 @@ namespace strtk
                             std::set<T,Comparator,Allocator>& set,
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
-      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
-
-      details::convert_type_assert<itr_type>();
-
-      if (1 == delimiters.size())
-         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                      range.first,range.second,
-                      range_to_type_inserter(set),
-                      split_option);
-      else
-         return split(multiple_char_delimiter_predicate(delimiters),
-                      range.first,range.second,
-                      range_to_type_inserter(set),
-                      split_option);
+      return details::parse_impl(range.first, range.second,
+                                 delimiters,
+                                 range_to_type_inserter(set),
+                                 split_option);
    }
 
    template <typename InputIterator,
@@ -8824,20 +8776,10 @@ namespace strtk
                             std::multiset<T,Comparator,Allocator>& multiset,
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
-      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
-
-      details::convert_type_assert<itr_type>();
-
-      if (1 == delimiters.size())
-         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                      range.first,range.second,
-                      range_to_type_inserter(multiset),
-                      split_option);
-      else
-         return split(multiple_char_delimiter_predicate(delimiters),
-                      range.first,range.second,
-                      range_to_type_inserter(multiset),
-                      split_option);
+      return details::parse_impl(range.first, range.second,
+                                 delimiters,
+                                 range_to_type_inserter(multiset),
+                                 split_option);
    }
 
    template <typename InputIterator,
@@ -8848,20 +8790,10 @@ namespace strtk
                             std::queue<T,Container>& queue,
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
-      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
-
-      details::convert_type_assert<itr_type>();
-
-      if (1 == delimiters.size())
-         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                      range.first,range.second,
-                      range_to_type_push_inserter(queue),
-                      split_option);
-      else
-         return split(multiple_char_delimiter_predicate(delimiters),
-                      range.first,range.second,
-                      range_to_type_push_inserter(queue),
-                      split_option);
+      return details::parse_impl(range.first, range.second,
+                                 delimiters,
+                                 range_to_type_push_inserter(queue),
+                                 split_option);
    }
 
    template <typename InputIterator,
@@ -8872,20 +8804,10 @@ namespace strtk
                             std::stack<T,Container>& stack,
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
-      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
-
-      details::convert_type_assert<itr_type>();
-
-      if (1 == delimiters.size())
-         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                      range.first,range.second,
-                      range_to_type_push_inserter(stack),
-                      split_option);
-      else
-         return split(multiple_char_delimiter_predicate(delimiters),
-                      range.first,range.second,
-                      range_to_type_push_inserter(stack),
-                      split_option);
+      return details::parse_impl(range.first, range.second,
+                                 delimiters,
+                                 range_to_type_push_inserter(stack),
+                                 split_option);
    }
 
    template <typename InputIterator,
@@ -8897,20 +8819,10 @@ namespace strtk
                             std::priority_queue<T,Container,Comparator>& priority_queue,
                             const split_options::type& split_option = split_options::compress_delimiters)
    {
-      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
-
-      details::convert_type_assert<itr_type>();
-
-      if (1 == delimiters.size())
-         return split(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                      range.first,range.second,
-                      range_to_type_push_inserter(priority_queue),
-                      split_option);
-      else
-         return split(multiple_char_delimiter_predicate(delimiters),
-                      range.first,range.second,
-                      range_to_type_push_inserter(priority_queue),
-                      split_option);
+      return details::parse_impl(range.first, range.second,
+                                 delimiters,
+                                 range_to_type_push_inserter(priority_queue),
+                                 split_option);
    }
 
    namespace details
@@ -9573,37 +9485,43 @@ namespace strtk
       #undef strtk_cmpstmt
    }
 
-   template <typename InputIterator,
-             typename T,
-             typename Allocator,
-             template <typename,typename> class Sequence>
-   inline std::size_t parse_n(const InputIterator begin,
-                              const InputIterator end,
-                              const std::string& delimiters,
-                              const std::size_t& n,
-                              Sequence<T,Allocator>& sequence,
-                              const split_options::type& split_option = split_options::compress_delimiters)
-   {
-      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;
-      const std::size_t original_size = sequence.size();
+   #define strtk_def_parse_n_cont(Type)                                                                     \
+   template <typename InputIterator,                                                                        \
+             typename T,                                                                                    \
+             typename Allocator>                                                                            \
+   inline std::size_t parse_n(const InputIterator begin,                                                    \
+                              const InputIterator end,                                                      \
+                              const std::string& delimiters,                                                \
+                              const std::size_t& n,                                                         \
+                              Type<T,Allocator>& sequence,                                                  \
+                              const split_options::type& split_option = split_options::compress_delimiters) \
+   {                                                                                                        \
+      typedef typename details::is_valid_iterator<InputIterator>::type itr_type;                            \
+      const std::size_t original_size = sequence.size();                                                    \
+                                                                                                            \
+      details::convert_type_assert<itr_type>();                                                             \
+                                                                                                            \
+      if (1 == delimiters.size())                                                                           \
+         split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),                        \
+                 begin, end,                                                                                \
+                 n,                                                                                         \
+                 range_to_type_back_inserter(sequence),                                                     \
+                 split_option);                                                                             \
+      else                                                                                                  \
+         split_n(multiple_char_delimiter_predicate(delimiters),                                             \
+                 begin, end,                                                                                \
+                 n,                                                                                         \
+                 range_to_type_back_inserter(sequence),                                                     \
+                 split_option);                                                                             \
+                                                                                                            \
+      return sequence.size() - original_size;                                                               \
+   }                                                                                                        \
 
-      details::convert_type_assert<itr_type>();
+   strtk_def_parse_n_cont(std::vector)
+   strtk_def_parse_n_cont(std::deque )
+   strtk_def_parse_n_cont(std::list  )
 
-      if (1 == delimiters.size())
-         split_n(single_delimiter_predicate<std::string::value_type>(delimiters[0]),
-                 begin, end,
-                 n,
-                 range_to_type_back_inserter(sequence),
-                 split_option);
-      else
-         split_n(multiple_char_delimiter_predicate(delimiters),
-                 begin, end,
-                 n,
-                 range_to_type_back_inserter(sequence),
-                 split_option);
-
-      return sequence.size() - original_size;
-   }
+   #undef strtk_def_parse_n_cont
 
    template <typename InputIterator,
              typename T,
@@ -10092,19 +10010,24 @@ namespace strtk
                    typename details::ca_type<T,typename details::is_stl_container<T>::result_t>::type(t));
    }
 
-   template <typename T,
-             typename Allocator,
-             template <typename,typename> class Sequence>
-   inline std::size_t parse(const std::string& data,
-                            const std::string& delimiters,
-                            Sequence<T,Allocator>& sequence,
-                            const split_options::type& split_option = split_options::compress_delimiters)
-   {
-      return parse(to_ptr(data), to_ptr(data) + data.size(),
-                   delimiters,
-                   sequence,
-                   split_option);
-   }
+   #define strtk_def_parse_cont(Type)                                                                     \
+   template <typename T, typename Allocator>                                                              \
+   inline std::size_t parse(const std::string& data,                                                      \
+                            const std::string& delimiters,                                                \
+                            Type<T,Allocator>& cont,                                                      \
+                            const split_options::type& split_option = split_options::compress_delimiters) \
+   {                                                                                                      \
+      return parse(to_ptr(data), to_ptr(data) + data.size(),                                              \
+                   delimiters,                                                                            \
+                   cont,                                                                                  \
+                   split_option);                                                                         \
+   }                                                                                                      \
+
+   strtk_def_parse_cont(std::vector)
+   strtk_def_parse_cont(std::deque )
+   strtk_def_parse_cont(std::list  )
+
+   #undef strtk_def_parse_cont
 
    template <typename T,
              typename Comparator,
@@ -10363,21 +10286,27 @@ namespace strtk
    #define strtk_parse_end() \
    );}}                      \
 
-   template <typename T,
-             typename Allocator,
-             template <typename,typename> class Sequence>
-   inline std::size_t parse_n(const std::string& data,
-                              const std::string& delimiters,
-                              const std::size_t& n,
-                              Sequence<T,Allocator>& sequence,
-                              const split_options::type& split_option = split_options::compress_delimiters)
-   {
-      return parse_n(to_ptr(data), to_ptr(data) + data.size(),
-                     delimiters,
-                     n,
-                     sequence,
-                     split_option);
-   }
+   #define strtk_def_parse_n_seq(Type)                                                                      \
+   template <typename T,                                                                                    \
+             typename Allocator>                                                                            \
+   inline std::size_t parse_n(const std::string& data,                                                      \
+                              const std::string& delimiters,                                                \
+                              const std::size_t& n,                                                         \
+                              Type<T,Allocator>& sequence,                                                  \
+                              const split_options::type& split_option = split_options::compress_delimiters) \
+   {                                                                                                        \
+      return parse_n(to_ptr(data), to_ptr(data) + data.size(),                                              \
+                     delimiters,                                                                            \
+                     n,                                                                                     \
+                     sequence,                                                                              \
+                     split_option);                                                                         \
+   }                                                                                                        \
+
+   strtk_def_parse_n_seq(std::vector)
+   strtk_def_parse_n_seq(std::deque )
+   strtk_def_parse_n_seq(std::list  )
+
+   #undef strtk_def_parse_n_seq
 
    template <typename T,
              typename Comparator,
@@ -11258,17 +11187,24 @@ namespace strtk
       return output;
    }
 
-   template <typename T,
-             typename Allocator,
-             template <typename,typename> class Sequence>
-   inline std::string join(const std::string& delimiter,
-                           const Sequence<T,Allocator>& sequence)
-   {
-      if (sequence.empty())
-         return "";
-      else
-         return join(delimiter,sequence.begin(),sequence.end());
-   }
+   #define strtk_def_join_seq(Type)                                \
+   template <typename T,                                           \
+             typename Allocator>                                   \
+   inline std::string join(const std::string& delimiter,           \
+                           const Type<T,Allocator>& sequence)      \
+   {                                                               \
+      if (sequence.empty())                                        \
+         return "";                                                \
+      else                                                         \
+         return join(delimiter, sequence.begin(), sequence.end()); \
+   }                                                               \
+
+   strtk_def_join_seq(std::vector        )
+   strtk_def_join_seq(std::deque         )
+   strtk_def_join_seq(std::list          )
+   strtk_def_join_seq(std::priority_queue)
+
+   #undef strtk_def_join_seq
 
    template <typename T,
              typename Comparator,
@@ -11583,15 +11519,23 @@ namespace strtk
       return output;
    }
 
-   template <typename T,
-             typename Allocator,
-             template <typename,typename> class Sequence>
-   inline std::string bracketize(const std::string& pre,
-                                 const std::string& post,
-                                 Sequence<T,Allocator>& sequence)
-   {
-      return bracketize(pre,post,sequence.begin(),sequence.end());
-   }
+   #define strtk_def_brktz_cont(Type)                              \
+   template <typename T,                                           \
+             typename Allocator>                                   \
+   inline std::string bracketize(const std::string& pre,           \
+                                 const std::string& post,          \
+                                 Type<T,Allocator>& sequence)      \
+   {                                                               \
+      return bracketize(pre,post,sequence.begin(),sequence.end()); \
+   }                                                               \
+
+   strtk_def_brktz_cont(std::vector)
+   strtk_def_brktz_cont(std::deque )
+   strtk_def_brktz_cont(std::list  )
+   strtk_def_brktz_cont(std::queue )
+   strtk_def_brktz_cont(std::stack )
+
+   #undef strtk_def_brktz_cont
 
    template <typename T,
              typename Comparator,
@@ -12206,6 +12150,23 @@ namespace strtk
    }
    #endif // strtk_enable_random
 
+   namespace details
+   {
+      template <typename Iterator>
+      inline Iterator prev(Iterator itr, typename std::iterator_traits<Iterator>::difference_type n = 1)
+      {
+          std::advance(itr, -n);
+          return itr;
+      }
+
+      template <typename Iterator>
+      inline Iterator next(Iterator itr, typename std::iterator_traits<Iterator>::difference_type n = 1)
+      {
+          std::advance(itr, n);
+          return itr;
+      }
+   }
+
    template <typename Iterator>
    bool next_combination(const Iterator first, const Iterator k, const Iterator last)
    {
@@ -12213,12 +12174,12 @@ namespace strtk
            (first == last) ||
            (first == k   ) ||
            (last  == k   ) ||
-           (last  == std::next(first))
+           (last  == details::next(first))
          )
          return false;
 
       Iterator itr1 = k;
-      Iterator itr2 = std::prev(last);
+      Iterator itr2 = details::prev(last);
 
       while (first != itr1)
       {
@@ -12805,8 +12766,15 @@ namespace strtk
                 typename Allocator,
                 template <typename,typename> class Sequence>
       explicit inline combination_iterator(Sequence<T,Allocator>& seq)
-      : begin_(seq.end()),
-        end_(seq.end()),
+      : begin_ (seq.end()),
+        end_   (seq.end()),
+        middle_(end_     ),
+        current_combination_(end_,end_)
+      {}
+
+      explicit inline combination_iterator(std::string& s)
+      : begin_ (const_cast<iterator>(&(s.data()[0]) + s.size())),
+        end_   (const_cast<iterator>(&(s.data()[0]) + s.size())),
         middle_(end_),
         current_combination_(end_,end_)
       {}
@@ -14043,31 +14011,36 @@ namespace strtk
             return true;
          }
 
-         template <typename T,
-                   typename Allocator,
-                   template <typename,typename> class Sequence>
-         inline bool operator()(Sequence<T,Allocator>& seq)
-         {
-            uint32_t size = 0;
-            if (!read_pod(size))
-               return false;
+         #define strtk_def_rdr_opr(Type)                   \
+         template <typename T,                             \
+                   typename Allocator>                     \
+         inline bool operator()(Type<T,Allocator>& seq)    \
+         {                                                 \
+            uint32_t size = 0;                             \
+            if (!read_pod(size))                           \
+               return false;                               \
+                                                           \
+            const std::size_t raw_size = size * sizeof(T); \
+            if (!buffer_capacity_ok(raw_size))             \
+               return false;                               \
+                                                           \
+            T t = T();                                     \
+                                                           \
+            for (std::size_t i = 0; i < size; ++i)         \
+            {                                              \
+               if (operator()(t))                          \
+                  seq.push_back(t);                        \
+               else                                        \
+                  return false;                            \
+            }                                              \
+                                                           \
+            return true;                                   \
+         }                                                 \
 
-            const std::size_t raw_size = size * sizeof(T);
-            if (!buffer_capacity_ok(raw_size))
-               return false;
-
-            T t = T();
-
-            for (std::size_t i = 0; i < size; ++i)
-            {
-               if (operator()(t))
-                  seq.push_back(t);
-               else
-                  return false;
-            }
-
-            return true;
-         }
+         strtk_def_rdr_opr(std::deque)
+         strtk_def_rdr_opr(std::queue)
+         strtk_def_rdr_opr(std::list )
+         #undef strtk_def_rdr_opr
 
          template <typename T, typename Allocator>
          inline bool operator()(std::vector<T,Allocator>& vec)
@@ -14458,27 +14431,32 @@ namespace strtk
             return operator()<const char>(to_ptr(input),static_cast<uint32_t>(input.size()));
          }
 
-         template <typename T,
-                   typename Allocator,
-                   template <typename,typename> class Sequence>
-         inline bool operator()(const Sequence<T,Allocator>& seq)
-         {
-            const uint32_t size = static_cast<uint32_t>(seq.size());
-            if (!operator()(size))
-               return false;
+         #define strtk_def_wrtr_opr(Type)                                     \
+         template <typename T,                                                \
+                   typename Allocator>                                        \
+         inline bool operator()(const Type<T,Allocator>& seq)                 \
+         {                                                                    \
+            const uint32_t size = static_cast<uint32_t>(seq.size());          \
+            if (!operator()(size))                                            \
+               return false;                                                  \
+                                                                              \
+            typename Type<T,Allocator>::const_iterator itr = seq.begin();     \
+            typename Type<T,Allocator>::const_iterator end = seq.end();       \
+                                                                              \
+            while (end != itr)                                                \
+            {                                                                 \
+               if (!operator()(*itr))                                         \
+                  return false;                                               \
+               ++itr;                                                         \
+            }                                                                 \
+                                                                              \
+            return true;                                                      \
+         }                                                                    \
 
-            typename Sequence<T,Allocator>::const_iterator itr = seq.begin();
-            typename Sequence<T,Allocator>::const_iterator end = seq.end();
-
-            while (end != itr)
-            {
-               if (!operator()(*itr))
-                  return false;
-               ++itr;
-            }
-
-            return true;
-         }
+         strtk_def_wrtr_opr(std::deque )
+         strtk_def_wrtr_opr(std::list  )
+         strtk_def_wrtr_opr(std::queue )
+         #undef strtk_def_wrtr_opr
 
          template <typename T,
                    typename Allocator>
@@ -15254,19 +15232,26 @@ namespace strtk
 
    namespace details
    {
+      #define strtk_def_parse_stl_cnt_prxy(Type)                                                                                    \
+      template <typename InputIterator,                                                                                             \
+                typename T,                                                                                                         \
+                typename Allocator>                                                                                                 \
+      inline std::size_t parse_stl_container_proxy(const InputIterator begin,                                                       \
+                                                   const InputIterator end,                                                         \
+                                                   const std::string& delimiters,                                                   \
+                                                   Type<T,Allocator>& sequence,                                                     \
+                                                   const split_options::type& split_option = split_options::compress_delimiters)    \
+      {                                                                                                                             \
+         return parse(begin, end, delimiters, sequence, split_option);                                                              \
+      }                                                                                                                             \
 
-      template <typename InputIterator,
-                typename T,
-                typename Allocator,
-                template <typename,typename> class Sequence>
-      inline std::size_t parse_stl_container_proxy(const InputIterator begin,
-                                                   const InputIterator end,
-                                                   const std::string& delimiters,
-                                                   Sequence<T,Allocator>& sequence,
-                                                   const split_options::type& split_option = split_options::compress_delimiters)
-      {
-         return parse(begin, end, delimiters, sequence, split_option);
-      }
+      strtk_def_parse_stl_cnt_prxy(std::vector        )
+      strtk_def_parse_stl_cnt_prxy(std::deque         )
+      strtk_def_parse_stl_cnt_prxy(std::list          )
+      strtk_def_parse_stl_cnt_prxy(std::queue         )
+      strtk_def_parse_stl_cnt_prxy(std::stack         )
+      strtk_def_parse_stl_cnt_prxy(std::priority_queue)
+      #undef strtk_def_stl_cnt_prxy
 
       template <typename InputIterator,
                 typename T,
@@ -15294,56 +15279,27 @@ namespace strtk
          return parse(begin, end, delimiters, multiset, split_option);
       }
 
-      template <typename InputIterator,
-                typename T,
-                typename Container>
-      inline std::size_t parse_stl_container_proxy(const InputIterator begin,
-                                                   const InputIterator end,
-                                                   const std::string& delimiters,
-                                                   std::queue<T,Container>& queue,
-                                                   const split_options::type& split_option = split_options::compress_delimiters)
-      {
-         return parse(begin, end, delimiters, queue, split_option);
-      }
+      #define strtk_def_parse_n_stl_cnt_prxy(Type)                                                                                 \
+      template <typename InputIterator,                                                                                            \
+                typename T,                                                                                                        \
+                typename Allocator>                                                                                                \
+      inline std::size_t parse_n_stl_container_proxy(const InputIterator begin,                                                    \
+                                                     const InputIterator end,                                                      \
+                                                     const std::string& delimiters,                                                \
+                                                     const std::size_t& n,                                                         \
+                                                     Type<T,Allocator>& sequence,                                                  \
+                                                     const split_options::type& split_option = split_options::compress_delimiters) \
+      {                                                                                                                            \
+         return parse_n(begin, end, delimiters, n, sequence, split_option);                                                        \
+      }                                                                                                                            \
 
-      template <typename InputIterator,
-                typename T,
-                typename Container>
-      inline std::size_t parse_stl_container_proxy(const InputIterator begin,
-                                                   const InputIterator end,
-                                                   const std::string& delimiters,
-                                                   std::stack<T,Container>& stack,
-                                                   const split_options::type& split_option = split_options::compress_delimiters)
-      {
-         return parse(begin, end, delimiters, stack, split_option);
-      }
-
-      template <typename InputIterator,
-                typename T,
-                typename Container,
-                typename Comparator>
-      inline std::size_t parse_stl_container_proxy(const InputIterator begin,
-                                                   const InputIterator end,
-                                                   const std::string& delimiters,
-                                                   std::priority_queue<T,Container,Comparator>& priority_queue,
-                                                   const split_options::type& split_option = split_options::compress_delimiters)
-      {
-         return parse(begin, end, delimiters, priority_queue, split_option);
-      }
-
-      template <typename InputIterator,
-                typename T,
-                typename Allocator,
-                template <typename,typename> class Sequence>
-      inline std::size_t parse_n_stl_container_proxy(const InputIterator begin,
-                                                     const InputIterator end,
-                                                     const std::string& delimiters,
-                                                     const std::size_t& n,
-                                                     Sequence<T,Allocator>& sequence,
-                                                     const split_options::type& split_option = split_options::compress_delimiters)
-      {
-         return parse_n(begin, end, delimiters, n, sequence, split_option);
-      }
+      strtk_def_parse_n_stl_cnt_prxy(std::vector        )
+      strtk_def_parse_n_stl_cnt_prxy(std::deque         )
+      strtk_def_parse_n_stl_cnt_prxy(std::list          )
+      strtk_def_parse_n_stl_cnt_prxy(std::queue         )
+      strtk_def_parse_n_stl_cnt_prxy(std::stack         )
+      strtk_def_parse_n_stl_cnt_prxy(std::priority_queue)
+      #undef strtk_def_parse_n_stl_cnt_prxy
 
       template <typename InputIterator,
                 typename T,
@@ -15371,46 +15327,6 @@ namespace strtk
                                                      const split_options::type& split_option = split_options::compress_delimiters)
       {
          return parse_n(begin, end, delimiters, n, multiset, split_option);
-      }
-
-      template <typename InputIterator,
-                typename T,
-                typename Container>
-      inline std::size_t parse_n_stl_container_proxy(const InputIterator begin,
-                                                     const InputIterator end,
-                                                     const std::string& delimiters,
-                                                     const std::size_t& n,
-                                                     std::queue<T,Container>& queue,
-                                                     const split_options::type& split_option = split_options::compress_delimiters)
-      {
-         return parse_n(begin, end, delimiters, n, queue, split_option);
-      }
-
-      template <typename InputIterator,
-                typename T,
-                typename Container>
-      inline std::size_t parse_n_stl_container_proxy(const InputIterator begin,
-                                                     const InputIterator end,
-                                                     const std::string& delimiters,
-                                                     const std::size_t& n,
-                                                     std::stack<T,Container>& stack,
-                                                     const split_options::type& split_option = split_options::compress_delimiters)
-      {
-         return parse_n(begin, end, delimiters, n, stack, split_option);
-      }
-
-      template <typename InputIterator,
-                typename T,
-                typename Container,
-                typename Comparator>
-      inline std::size_t parse_n_stl_container_proxy(const InputIterator begin,
-                                                     const InputIterator end,
-                                                     const std::string& delimiters,
-                                                     const std::size_t& n,
-                                                     std::priority_queue<T,Container,Comparator>& priority_queue,
-                                                     const split_options::type& split_option = split_options::compress_delimiters)
-      {
-         return parse_n(begin, end, delimiters, n, priority_queue, split_option);
       }
 
    } // namespace details
@@ -21409,24 +21325,27 @@ namespace strtk
          unsigned char type_holder_buffer_[type_holder_buffer_size];
       };
 
-      template <typename Key,
-                typename T,
-                typename Comparator,
-                typename MapAllocator,
-                typename OutputIterator>
-      inline void make_key_list(const std::map<Key,T,Comparator,MapAllocator>& map,
-                                OutputIterator out)
+      namespace details
       {
-         if (map.empty()) return;
-
-         typedef typename std::map<Key,T,Comparator,MapAllocator> map_type;
-
-         typename map_type::const_iterator itr = map.begin();
-         typename map_type::const_iterator end = map.end();
-
-         while (end != itr)
+         template <typename Key,
+                   typename T,
+                   typename Comparator,
+                   typename MapAllocator,
+                   typename OutputIterator>
+         inline void make_key_list_impl(const std::map<Key,T,Comparator,MapAllocator>& map,
+                                        OutputIterator out)
          {
-            *out++ = (itr++)->first;
+            if (map.empty()) return;
+
+            typedef typename std::map<Key,T,Comparator,MapAllocator> map_type;
+
+            typename map_type::const_iterator itr = map.begin();
+            typename map_type::const_iterator end = map.end();
+
+            while (end != itr)
+            {
+               *out++ = (itr++)->first;
+            }
          }
       }
 
@@ -21438,7 +21357,7 @@ namespace strtk
       inline void make_key_list(const std::map<Key,T,Comparator,MapAllocator>& map,
                                 std::set<Key,Comparator,SetAllocator>& set)
       {
-         make_key_list(map,std::inserter(set,set.begin()));
+         details::make_key_list_impl(map,std::inserter(set,set.begin()));
       }
 
       template <typename Key,
@@ -21449,20 +21368,27 @@ namespace strtk
       inline void make_key_list(const std::map<Key,T,Comparator,MapAllocator>& map,
                                 std::multiset<Key,Comparator,SetAllocator>& multiset)
       {
-         make_key_list(map,std::inserter(multiset,multiset.begin()));
+         details::make_key_list_impl(map,std::inserter(multiset,multiset.begin()));
       }
 
-      template <typename Key,
-                typename T,
-                typename Comparator,
-                typename MapAllocator,
-                typename SequenceAllocator,
-                template <typename,typename> class Sequence>
-      inline void make_key_list(const std::map<Key,T,Comparator,MapAllocator>& map,
-                                Sequence<Key,SequenceAllocator>& sequence)
-      {
-         make_key_list(map,std::back_inserter(sequence));
-      }
+      #define strtk_def_mkky_list(Type)                                             \
+      template <typename Key,                                                       \
+                typename T,                                                         \
+                typename Comparator,                                                \
+                typename MapAllocator,                                              \
+                typename SequenceAllocator>                                         \
+      inline void make_key_list(const std::map<Key,T,Comparator,MapAllocator>& map, \
+                                Type<Key,SequenceAllocator>& sequence)              \
+      {                                                                             \
+         details::make_key_list_impl(map,std::back_inserter(sequence));             \
+      }                                                                             \
+
+      strtk_def_mkky_list(std::vector)
+      strtk_def_mkky_list(std::deque )
+      strtk_def_mkky_list(std::list  )
+      strtk_def_mkky_list(std::queue )
+
+      #undef strtk_def_mkky_list
 
       template <typename Key,
                 typename T,
@@ -22020,52 +21946,37 @@ namespace strtk
          set.insert(v1);
       }
 
-      template <typename T,
-                typename Allocator,
-                template <typename,typename> class Sequence>
-      inline void clear(Sequence<T,Allocator>& sequence)
-      {
-         sequence.clear();
-      }
+      #define strtk_def_clear_seq(Type)          \
+      template <typename T,                      \
+                typename Allocator>              \
+      inline void clear(Type<T,Allocator>& cont) \
+      {                                          \
+         Type<T,Allocator> null_cont;            \
+         std::swap(cont, null_cont);             \
+      }                                          \
 
-      template <typename T,
-                typename Comparator,
-                typename Allocator>
-      inline void clear(std::set<T,Comparator,Allocator>& set)
-      {
-         std::set<T> null_set;
-         std::swap(set,null_set);
-      }
+      strtk_def_clear_seq(std::vector        )
+      strtk_def_clear_seq(std::deque         )
+      strtk_def_clear_seq(std::list          )
+      strtk_def_clear_seq(std::priority_queue)
+      strtk_def_clear_seq(std::stack         )
+      strtk_def_clear_seq(std::queue         )
+      #undef strtk_def_clear_seq
 
-      template <typename T,
-                typename Comparator,
-                typename Allocator>
-      inline void clear(std::multiset<T,Comparator,Allocator>& multiset)
-      {
-         std::multiset<T> null_set;
-         std::swap(multiset,null_set);
-      }
+      #define strtk_def_clear_map(Type)                     \
+      template <typename T,                                 \
+                typename Comparator,                        \
+                typename Allocator>                         \
+      inline void clear(Type<T,Comparator,Allocator>& cont) \
+      {                                                     \
+         Type<T, Comparator, Allocator> null_cont;          \
+         std::swap(cont, null_cont);                        \
+      }                                                     \
 
-      template <typename T, typename Container>
-      inline void clear(std::queue<T,Container>& queue)
-      {
-         std::queue<T> null_que;
-         std::swap(queue,null_que);
-      }
-
-      template <typename T, typename Container>
-      inline void clear(std::stack<T,Container>& stack)
-      {
-         std::stack<T> null_stack;
-         std::swap(stack,null_stack);
-      }
-
-      template <typename T, typename Container, typename Comparator>
-      inline void clear(std::priority_queue<T,Container,Comparator>& priority_queue)
-      {
-         std::priority_queue<T> null_pqueue;
-         std::swap(priority_queue,null_pqueue);
-      }
+      strtk_def_clear_map(std::set     )
+      strtk_def_clear_map(std::multiset)
+      strtk_def_clear_map(std::multimap)
+      #undef strtk_def_clear_map
 
    } // namespace util
 

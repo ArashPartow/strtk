@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 
    if (r > str_lst.size()) return (usage("r > k"),1);
 
-   strtk::for_each_combination(str_lst.begin(),str_lst.end(),r,&print);
+   strtk::for_each_combination(str_lst.begin(), str_lst.end(), r, &print);
 
    return 0;
 }

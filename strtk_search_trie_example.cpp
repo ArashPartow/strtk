@@ -40,9 +40,9 @@ void trie_example00()
    std::string s[s_size] = { "a", "ab", "abc" };
    strtk::prefix_trie<std::size_t>::std_string trie;
 
-   strtk::trie::insert(trie,s[0],static_cast<std::size_t>(0));
-   strtk::trie::insert(trie,s[1],static_cast<std::size_t>(1));
-   strtk::trie::insert(trie,s[2],static_cast<std::size_t>(2));
+   strtk::trie::insert(trie, s[0], static_cast<std::size_t>(0));
+   strtk::trie::insert(trie, s[1], static_cast<std::size_t>(1));
+   strtk::trie::insert(trie, s[2], static_cast<std::size_t>(2));
 
    for (std::size_t i = 0; i < s_size; ++i)
    {
@@ -71,22 +71,22 @@ void trie_example01()
 
    strtk::trie::prefix<unsigned int*,std::string> trie;
 
-   trie.insert(i_list[0],i_list[0] + l_size, " 1,  2,  3,  4");
-   trie.insert(i_list[1],i_list[1] + l_size, " 5,  6,  7,  8");
-   trie.insert(i_list[2],i_list[2] + l_size, " 9, 10, 11, 12");
-   trie.insert(i_list[3],i_list[3] + l_size, "13, 14, 15, 16");
+   trie.insert(i_list[0], i_list[0] + l_size, " 1,  2,  3,  4");
+   trie.insert(i_list[1], i_list[1] + l_size, " 5,  6,  7,  8");
+   trie.insert(i_list[2], i_list[2] + l_size, " 9, 10, 11, 12");
+   trie.insert(i_list[3], i_list[3] + l_size, "13, 14, 15, 16");
 
    for (std::size_t i = 0; i < l_size; ++i)
    {
       if (trie.find_prefix(i_list[i],i_list[i] + l_size))
-         std::cout << "Found Prefix: " << strtk::join(",",i_list[i], i_list[i] + l_size) << std::endl;
+         std::cout << "Found Prefix: " << strtk::join(",", i_list[i], i_list[i] + l_size) << std::endl;
    }
 
    for (std::size_t i = 0; i < l_size; ++i)
    {
       std::string s = "";
       if (trie.find(i_list[i],i_list[i] + l_size,s))
-         std::cout << "Found Prefix: " << strtk::join(",",i_list[i], i_list[i] + l_size) << " = " << s << std::endl;
+         std::cout << "Found Prefix: " << strtk::join(",", i_list[i], i_list[i] + l_size) << " = " << s << std::endl;
    }
 }
 
@@ -106,7 +106,7 @@ void create_string_list(Sequence<std::string,Allocator>& str_list)
          }
       }
 
-      std::rotate(s.begin(),s.begin() + 1, s.end());
+      std::rotate(s.begin(), s.begin() + 1, s.end());
    }
 }
 

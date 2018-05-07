@@ -49,7 +49,7 @@
 #include <boost/lexical_cast.hpp>
 
 //Note: Define USE_SPIRIT to include Karma and Qi Tests (requires Boost 1.45+)
-//#define USE_SPIRIT
+#define USE_SPIRIT
 #ifdef USE_SPIRIT
  #define INCLUDE_KARMA
  #define INCLUDE_QI_S2I
@@ -190,7 +190,7 @@ void boost_split_timed_test()
           s.size() / (1048576.0 * t.time()));
 }
 
-static const int max_i2s = 80000000;
+static const int max_i2s = 120000000;
 
 void sprintf_lexical_cast_test_i2s()
 {
@@ -415,7 +415,7 @@ static const std::string strint_list[] =
 
 static const std::size_t strint_list_size = sizeof(strint_list) / sizeof(std::string);
 
-static const std::size_t s2i_rounds = 200000;
+static const std::size_t s2i_rounds = 400000;
 
 void atoi_lexical_cast_test_s2i()
 {
@@ -752,7 +752,7 @@ static const std::string v[] = {
                   };
 
 static const std::size_t v_size = sizeof(v) / sizeof(std::string);
-static const std::size_t s2d_rounds = 70000;
+static const std::size_t s2d_rounds = 80000;
 
 void atof_cast_test_s2d()
 {

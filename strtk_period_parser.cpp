@@ -45,7 +45,7 @@ public:
    {
       if (s.empty())
          return false;
-      return operator ()(const_cast<char*>(s.data()),const_cast<char*>(s.data() + s.size()),period);
+      return operator ()(const_cast<char*>(s.data()), const_cast<char*>(s.data() + s.size()), period);
    }
 
    template<typename Iterator>
@@ -53,7 +53,7 @@ public:
    {
       static const strtk::split_options::type split_options = strtk::split_options::compress_delimiters +
                                                               strtk::split_options::include_1st_delimiter;
-      std::size_t token_count = split_n(predicate_,begin,end,max_token_count,token_list,split_options);
+      std::size_t token_count = split_n(predicate_, begin, end, max_token_count, token_list, split_options);
       if (0 == token_count)
          return false;
 
@@ -63,7 +63,7 @@ public:
 
       for (std::size_t i = 0; i < token_count; ++i)
       {
-         if (!strtk::string_to_type_converter(token_list[i].first,token_list[i].second - 1,t))
+         if (!strtk::string_to_type_converter(token_list[i].first, token_list[i].second - 1, t))
             return false;
 
          switch (std::toupper(*(token_list[i].second - 1)))

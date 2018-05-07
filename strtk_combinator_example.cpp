@@ -45,14 +45,16 @@ int main()
 
    strtk::iota(uint_list,n,static_cast<unsigned int>(0));
 
-   iterator_type itr(k,uint_list.begin(),uint_list.end());
+   iterator_type itr(k, uint_list.begin(), uint_list.end());
    const iterator_type end(uint_list.end());
 
    std::size_t count = 0;
    while (end != itr)
    {
       iterator_type::range_type range = *itr;
-      std::cout << strtk::text::right_align(4,'0',count++) << "\t" << strtk::join(" ",range) << std::endl;
+
+      std::cout << strtk::text::right_align(4, '0', count++) << "\t" << strtk::join(" ", range) << std::endl;
+
       ++itr;
    }
 

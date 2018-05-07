@@ -150,29 +150,29 @@ void example01()
 
       data_store ds;
 
-      kvp.register_keyvalue(  121,ds.  c1);
-      kvp.register_keyvalue(  122,ds. uc1);
-      kvp.register_keyvalue(  123,ds.  s1);
-      kvp.register_keyvalue(  124,ds. us1);
-      kvp.register_keyvalue(  125,ds.  i1);
-      kvp.register_keyvalue(  126,ds. ui1);
-      kvp.register_keyvalue(  127,ds. ll1);
-      kvp.register_keyvalue(  128,ds.ull1);
-      kvp.register_keyvalue(  129,ds.  d1);
-      kvp.register_keyvalue(  110,ds.  f1);
-      kvp.register_keyvalue(  111,ds.str1);
+      kvp.register_keyvalue(  121, ds.  c1);
+      kvp.register_keyvalue(  122, ds. uc1);
+      kvp.register_keyvalue(  123, ds.  s1);
+      kvp.register_keyvalue(  124, ds. us1);
+      kvp.register_keyvalue(  125, ds.  i1);
+      kvp.register_keyvalue(  126, ds. ui1);
+      kvp.register_keyvalue(  127, ds. ll1);
+      kvp.register_keyvalue(  128, ds.ull1);
+      kvp.register_keyvalue(  129, ds.  d1);
+      kvp.register_keyvalue(  110, ds.  f1);
+      kvp.register_keyvalue(  111, ds.str1);
 
-      kvp.register_keyvalue(11321,ds.  c2);
-      kvp.register_keyvalue(11322,ds. uc2);
-      kvp.register_keyvalue(11323,ds.  s2);
-      kvp.register_keyvalue(11324,ds. us2);
-      kvp.register_keyvalue(11325,ds.  i2);
-      kvp.register_keyvalue(11326,ds. ui2);
-      kvp.register_keyvalue(11327,ds. ll2);
-      kvp.register_keyvalue(11328,ds.ull2);
-      kvp.register_keyvalue(11329,ds.  d2);
-      kvp.register_keyvalue(11310,ds.  f2);
-      kvp.register_keyvalue(11311,ds.str2);
+      kvp.register_keyvalue(11321, ds.  c2);
+      kvp.register_keyvalue(11322, ds. uc2);
+      kvp.register_keyvalue(11323, ds.  s2);
+      kvp.register_keyvalue(11324, ds. us2);
+      kvp.register_keyvalue(11325, ds.  i2);
+      kvp.register_keyvalue(11326, ds. ui2);
+      kvp.register_keyvalue(11327, ds. ll2);
+      kvp.register_keyvalue(11328, ds.ull2);
+      kvp.register_keyvalue(11329, ds.  d2);
+      kvp.register_keyvalue(11310, ds.  f2);
+      kvp.register_keyvalue(11311, ds.str2);
 
       unsigned int total = 0;
 
@@ -215,29 +215,29 @@ void example01()
 
       data_store ds;
 
-      kvp.register_keyvalue("121",ds.  c1);
-      kvp.register_keyvalue("122",ds. uc1);
-      kvp.register_keyvalue("123",ds.  s1);
-      kvp.register_keyvalue("124",ds. us1);
-      kvp.register_keyvalue("125",ds.  i1);
-      kvp.register_keyvalue("126",ds. ui1);
-      kvp.register_keyvalue("127",ds. ll1);
-      kvp.register_keyvalue("128",ds.ull1);
-      kvp.register_keyvalue("129",ds.  d1);
-      kvp.register_keyvalue("110",ds.  f1);
-      kvp.register_keyvalue("111",ds.str1);
+      kvp.register_keyvalue("121", ds.  c1);
+      kvp.register_keyvalue("122", ds. uc1);
+      kvp.register_keyvalue("123", ds.  s1);
+      kvp.register_keyvalue("124", ds. us1);
+      kvp.register_keyvalue("125", ds.  i1);
+      kvp.register_keyvalue("126", ds. ui1);
+      kvp.register_keyvalue("127", ds. ll1);
+      kvp.register_keyvalue("128", ds.ull1);
+      kvp.register_keyvalue("129", ds.  d1);
+      kvp.register_keyvalue("110", ds.  f1);
+      kvp.register_keyvalue("111", ds.str1);
 
-      kvp.register_keyvalue("11321",ds.  c2);
-      kvp.register_keyvalue("11322",ds. uc2);
-      kvp.register_keyvalue("11323",ds.  s2);
-      kvp.register_keyvalue("11324",ds. us2);
-      kvp.register_keyvalue("11325",ds.  i2);
-      kvp.register_keyvalue("11326",ds. ui2);
-      kvp.register_keyvalue("11327",ds. ll2);
-      kvp.register_keyvalue("11328",ds.ull2);
-      kvp.register_keyvalue("11329",ds.  d2);
-      kvp.register_keyvalue("11310",ds.  f2);
-      kvp.register_keyvalue("11311",ds.str2);
+      kvp.register_keyvalue("11321", ds.  c2);
+      kvp.register_keyvalue("11322", ds. uc2);
+      kvp.register_keyvalue("11323", ds.  s2);
+      kvp.register_keyvalue("11324", ds. us2);
+      kvp.register_keyvalue("11325", ds.  i2);
+      kvp.register_keyvalue("11326", ds. ui2);
+      kvp.register_keyvalue("11327", ds. ll2);
+      kvp.register_keyvalue("11328", ds.ull2);
+      kvp.register_keyvalue("11329", ds.  d2);
+      kvp.register_keyvalue("11310", ds.  f2);
+      kvp.register_keyvalue("11311", ds.str2);
 
       unsigned int total = 0;
 
@@ -331,7 +331,7 @@ void example02()
    {
       if (kvp(data[i]))
       {
-         std::cout << "Seq[" << strtk::text::right_align(2,'0',i) << "] "
+         std::cout << "Seq[" << strtk::text::right_align(2, '0', i) << "] "
                    << "(Key0: " << cd.v0 << ") "
                    << "(Key1: " << cd.v1 << ") "
                    << "(Key2: " << cd.v2 << ") "

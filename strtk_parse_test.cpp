@@ -203,7 +203,7 @@ void parse_test02()
    std::vector<int> vec_int;
    vec_int.reserve(100);
 
-   std::cout << strtk::text::left_align(title_length(),' ',"[integer into " + strtk::type_name(vec_int) + "]");
+   std::cout << strtk::text::left_align(title_length(), ' ', "[integer into " + strtk::type_name(vec_int) + "]");
 
    strtk::util::timer t;
    t.start();
@@ -241,7 +241,7 @@ void parse_test03()
    std::vector<double> vec_double;
    vec_double.reserve(50);
 
-   std::cout << strtk::text::left_align(title_length(),' ',"[double into " + strtk::type_name(vec_double) + "]");
+   std::cout << strtk::text::left_align(title_length(), ' ', "[double into " + strtk::type_name(vec_double) + "]");
 
    strtk::util::timer t;
    t.start();
@@ -273,14 +273,14 @@ void parse_test04()
    std::vector<int> x(64,0);
 
    {
-      std::cout << strtk::text::left_align(title_length(),' ',"[even columns into " + strtk::type_name(x) + "] ");
+      std::cout << strtk::text::left_align(title_length(), ' ', "[even columns into " + strtk::type_name(x) + "] ");
 
       strtk::util::timer timer;
       timer.start();
 
       for (std::size_t i = 0; i < rounds; ++i)
       {
-         strtk::parse_columns(data,",",strtk::column_list(0,2,4,6,8),x[0],x[1],x[2],x[3],x[4]);
+         strtk::parse_columns(data, ",", strtk::column_list(0, 2, 4, 6, 8), x[0], x[1], x[2], x[3], x[4]);
       }
 
       timer.stop();
@@ -291,14 +291,14 @@ void parse_test04()
    }
 
    {
-      std::cout << strtk::text::left_align(title_length(),' ',"[ odd columns into " + strtk::type_name(x) + "] ");
+      std::cout << strtk::text::left_align(title_length(), ' ', "[ odd columns into " + strtk::type_name(x) + "] ");
 
       strtk::util::timer timer;
       timer.start();
 
       for (std::size_t i = 0; i < rounds; ++i)
       {
-         strtk::parse_columns(data,",",strtk::column_list(1,3,5,7,9),x[0],x[1],x[2],x[3],x[4]);
+         strtk::parse_columns(data, ",", strtk::column_list(1, 3, 5, 7, 9), x[0], x[1], x[2], x[3], x[4]);
       }
 
       timer.stop();
@@ -354,7 +354,7 @@ void raw_tokenizer_mcd_speed_test()
 
 void raw_tokenizer_md_speed_test()
 {
-   std::cout << strtk::text::left_align(title_length(),' ',"[tokenizer(md) raw speed test]");
+   std::cout << strtk::text::left_align(title_length(), ' ', "[tokenizer(md) raw speed test]");
 
    std::string s;
    s.reserve(md_base.size() * md_replicate_count);
@@ -393,7 +393,7 @@ void raw_tokenizer_md_speed_test()
 
 void raw_split_mcd_speed_test()
 {
-   std::cout << strtk::text::left_align(title_length(),' ',"[split(mcd) raw speed test]");
+   std::cout << strtk::text::left_align(title_length(), ' ', "[split(mcd) raw speed test]");
    std::string s;
    s.reserve(md_base.size() * md_replicate_count);
    strtk::replicate(md_replicate_count,md_base,s);
@@ -422,7 +422,7 @@ void raw_split_mcd_speed_test()
 
 void raw_split_md_speed_test()
 {
-   std::cout << strtk::text::left_align(title_length(),' ',"[split(md) raw speed test]");
+   std::cout << strtk::text::left_align(title_length(), ' ', "[split(md) raw speed test]");
    std::string s;
    s.reserve(md_base.size() * md_replicate_count);
    strtk::replicate(md_replicate_count,md_base,s);
@@ -456,7 +456,7 @@ static const std::size_t sd_rounds = 10;
 
 void raw_tokenizer_sd_speed_test()
 {
-   std::cout << strtk::text::left_align(title_length(),' ',"[tokenizer(sd) raw speed test]");
+   std::cout << strtk::text::left_align(title_length(), ' ', "[tokenizer(sd) raw speed test]");
    std::string s;
    s.reserve(sd_base.size() * sd_replicate_count);
    strtk::replicate(sd_replicate_count,sd_base,s);
@@ -493,7 +493,7 @@ void raw_tokenizer_sd_speed_test()
 
 void raw_split_sd_speed_test()
 {
-   std::cout << strtk::text::left_align(title_length(),' ',"[split(sd) raw speed test]");
+   std::cout << strtk::text::left_align(title_length(), ' ', "[split(sd) raw speed test]");
    std::string s;
    s.reserve(sd_base.size() * sd_replicate_count);
    strtk::replicate(sd_replicate_count,sd_base,s);
@@ -553,7 +553,7 @@ void strtk_vs_stdstl_int_parse_test()
    static const std::size_t test_count = 200000;
 
    {
-      std::cout << strtk::text::left_align(title_length(),' ',"[strtk_int_parse_test]");
+      std::cout << strtk::text::left_align(title_length(), ' ', "[strtk_int_parse_test]");
       std::vector<int> int_list;
       int_list.reserve(2000);
       unsigned long long total_ints = 0;
@@ -563,7 +563,7 @@ void strtk_vs_stdstl_int_parse_test()
 
       for (std::size_t i = 0; i < test_count; ++i)
       {
-         strtk::parse(int_str," ",int_list);
+         strtk::parse(int_str, " ", int_list);
          total_ints += int_list.size();
          int_list.clear();
       }
@@ -640,7 +640,7 @@ void strtk_vs_stdstl_double_parse_test()
    static const std::size_t test_count = 200000;
 
    {
-      std::cout << strtk::text::left_align(title_length(),' ',"[strtk_double_parse_test]");
+      std::cout << strtk::text::left_align(title_length(), ' ', "[strtk_double_parse_test]");
       std::vector<double> int_list;
       int_list.reserve(2000);
       unsigned long long total_ints = 0;
@@ -650,7 +650,7 @@ void strtk_vs_stdstl_double_parse_test()
 
       for (std::size_t i = 0; i < test_count; ++i)
       {
-         strtk::parse(double_str," ",int_list);
+         strtk::parse(double_str, " ", int_list);
          total_ints += int_list.size();
          int_list.clear();
       }
@@ -664,7 +664,7 @@ void strtk_vs_stdstl_double_parse_test()
    }
 
    {
-      std::cout << strtk::text::left_align(title_length(),' ',"[stdstl_double_parse_test]");
+      std::cout << strtk::text::left_align(title_length(), ' ', "[stdstl_double_parse_test]");
       std::vector<double> double_list;
       double_list.reserve(2000);
       std::stringstream line_stream;
@@ -678,7 +678,7 @@ void strtk_vs_stdstl_double_parse_test()
          line_stream << double_str;
 
          double_list.assign((std::istream_iterator<double>(line_stream)),
-                            std::istream_iterator<double>());
+                             std::istream_iterator<double>());
 
          total_ints += double_list.size();
          double_list.clear();
@@ -701,14 +701,14 @@ int main()
    parse_test03();
    parse_test04();
 
-   raw_tokenizer_sd_speed_test();
+   raw_tokenizer_sd_speed_test ();
    raw_tokenizer_mcd_speed_test();
-   raw_tokenizer_md_speed_test();
-   raw_split_sd_speed_test();
-   raw_split_mcd_speed_test();
-   raw_split_md_speed_test();
+   raw_tokenizer_md_speed_test ();
+   raw_split_sd_speed_test     ();
+   raw_split_mcd_speed_test    ();
+   raw_split_md_speed_test     ();
 
-   strtk_vs_stdstl_int_parse_test();
+   strtk_vs_stdstl_int_parse_test   ();
    strtk_vs_stdstl_double_parse_test();
 
    return 0;

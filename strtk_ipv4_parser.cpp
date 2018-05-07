@@ -46,7 +46,7 @@ public:
       typedef std::pair<const char*,const char*> iterator_type;
       iterator_type token[4];
 
-      if (4 != strtk::split_n(predicate_,data,4,token))
+      if (4 != strtk::split_n(predicate_, data, 4, token))
          return false;
 
       if (!process_token(token[0],octet[0])) return false;
@@ -68,7 +68,7 @@ private:
    inline bool process_token(const std::pair<const char*,const char*>& token, unsigned char& octet)
    {
       unsigned int v = 0;
-      if (!strtk::fast::numeric_convert(strtk::distance(token),token.first,v,true))
+      if (!strtk::fast::numeric_convert(strtk::distance(token), token.first, v, true))
          return false;
       if (v > 255)
          return false;
@@ -86,7 +86,7 @@ void print_octet(const unsigned char octet[4])
      << (unsigned int)(octet[1]) << "."
      << (unsigned int)(octet[2]) << "."
      << (unsigned int)(octet[3]);
-   std::cout << "IP (octet) = " << strtk::text::right_align(15,' ',s.as_string());
+   std::cout << "IP (octet) = " << strtk::text::right_align(15, ' ', s.as_string());
 }
 
 int main()
@@ -99,6 +99,7 @@ int main()
                    "12.12.12.12",
                    "123.123.123.123"
                 };
+
    static const std::size_t ip_size = sizeof(ip) / sizeof(std::string);
 
    ipv4_parser parser;
@@ -109,7 +110,7 @@ int main()
          std::cout << "Failed to parse ip: " << ip[i] << std::endl;
       else
       {
-         std::cout << "IP (string):" << strtk::text::right_align(15,' ',ip[i]) << "\t";
+         std::cout << "IP (string):" << strtk::text::right_align(15, ' ', ip[i]) << "\t";
          print_octet(octet);
       }
 

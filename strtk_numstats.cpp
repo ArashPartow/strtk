@@ -63,10 +63,10 @@ void compute_stats(Sequence<double,Allocator>& value_list)
    //Format: min max sum mean median
    double min_value = 0.0;
    double max_value = 0.0;
-   strtk::min_max_of_cont(value_list,min_value,max_value);
+   strtk::min_max_of_cont(value_list, min_value, max_value);
    std::cout << min_value << "\t" << max_value << "\t";
 
-   double sum = std::accumulate(value_list.begin(),value_list.end(),0.0);
+   double sum = std::accumulate(value_list.begin(), value_list.end(), 0.0);
    std::cout << sum << "\t";
    std::cout << sum / value_list.size()  << "\t";
 

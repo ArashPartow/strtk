@@ -332,10 +332,12 @@ bool example04(char* buffer, const unsigned int buffer_size)
       // Write out and then read back in an array of floats.
       std::vector<float> lst;
       const unsigned int max_count = 2000;
+
       const float magic[] = {
                               111.111f, 333.333f, 555.555f,
                               777.777f, 135.531f, 357.753f
                             };
+
       const std::size_t magic_count = sizeof(magic) / sizeof(float);
 
       {
@@ -382,10 +384,12 @@ bool example04(char* buffer, const unsigned int buffer_size)
       // Write out and then read back in an array of doubles.
       std::list<double> lst;
       const unsigned int max_count = 1000;
+
       const double magic[] = {
                                 111.111, 333.333, 555.555,
                                 777.777, 135.531, 357.753
                              };
+
       const std::size_t magic_count = sizeof(magic) / sizeof(double);
 
       {

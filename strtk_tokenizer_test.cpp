@@ -316,13 +316,13 @@ bool test_split_and_tokenizer()
       std::string in = test_input_output1[i].input;
       std::string out = test_input_output1[i].output;
 
-      if (!test_tokenizer_split(single_predicate,in,out))
+      if (!test_tokenizer_split(single_predicate, in, out))
       {
          std::cout << "Failed Split Test01 " << i << std::endl;
          return false;
       }
 
-      if (!test_tokenizer_itr<tokenizer_type1>(single_predicate,in,out))
+      if (!test_tokenizer_itr<tokenizer_type1>(single_predicate, in, out))
       {
          std::cout << "Failed Iterator Test01 " << i << std::endl;
          return false;
@@ -331,13 +331,13 @@ bool test_split_and_tokenizer()
       in = test_input_output2[i].input;
       out = test_input_output2[i].output;
 
-      if (!test_tokenizer_split(multi_predicate,in,out))
+      if (!test_tokenizer_split(multi_predicate, in, out))
       {
          std::cout << "Failed Split Test02 " << i << std::endl;
          return false;
       }
 
-      if (!test_tokenizer_itr<tokenizer_type2>(multi_predicate,in,out))
+      if (!test_tokenizer_itr<tokenizer_type2>(multi_predicate, in, out))
       {
          std::cout << "Failed Iterator Test02 " << i << std::endl;
          return false;
@@ -346,13 +346,13 @@ bool test_split_and_tokenizer()
       in = test_input_output3[i].input;
       out = test_input_output3[i].output;
 
-      if (!test_tokenizer_split(single_predicate,in,out,true))
+      if (!test_tokenizer_split(single_predicate, in, out, true))
       {
          std::cout << "Failed Compressed Delimiter Split Test01 " << i << std::endl;
          return false;
       }
 
-      if (!test_tokenizer_itr<tokenizer_type1>(single_predicate,in,out,true))
+      if (!test_tokenizer_itr<tokenizer_type1>(single_predicate, in, out, true))
       {
          std::cout << "Failed Compressed Delimiter Iterator Test01 " << i << std::endl;
          return false;
@@ -361,13 +361,13 @@ bool test_split_and_tokenizer()
       in = test_input_output4[i].input;
       out = test_input_output4[i].output;
 
-      if (!test_tokenizer_split(multi_predicate,in,out,true))
+      if (!test_tokenizer_split(multi_predicate, in, out, true))
       {
          std::cout << "Failed Compressed Delimiter Split Test02 " << i << std::endl;
          return false;
       }
 
-      if (!test_tokenizer_itr<tokenizer_type2>(multi_predicate,in,out,true))
+      if (!test_tokenizer_itr<tokenizer_type2>(multi_predicate, in, out, true))
       {
          std::cout << "Failed Compressed Delimiter Iterator Test02 " << i << std::endl;
          return false;
@@ -557,7 +557,7 @@ bool test_split_n()
 
    for (std::size_t i = 0; i < data1.size(); ++i)
    {
-      if (i != strtk::split_n(predicate,data2,i,strtk::range_to_type_back_inserter(strlist)))
+      if (i != strtk::split_n(predicate, data2, i, strtk::range_to_type_back_inserter(strlist)))
       {
          std::cout << "test_split_n() - Failed Test: " << i << std::endl;
          return false;
@@ -575,7 +575,7 @@ bool test_empty_filter_itr()
    strtk::single_delimiter_predicate<std::string::value_type> p('|');
    strtk::std_string::tokenizer<>::type tok(s,p,true);
 
-   if (2 == for_each_token(s,tok,strtk::filter_non_empty_range< std::back_insert_iterator<str_list> >(std::back_inserter(sl))))
+   if (2 == for_each_token(s, tok, strtk::filter_non_empty_range< std::back_insert_iterator<str_list> >(std::back_inserter(sl))))
       return true;
    else
    {
@@ -651,7 +651,7 @@ bool test_fast_convert()
       int v = 0;
       for (int i = -100000000; i < +100000000; ++i)
       {
-         if (!strtk::fast::signed_numeric_convert(strtk::type_to_string(i),v,true))
+         if (!strtk::fast::signed_numeric_convert(strtk::type_to_string(i), v, true))
          {
             std::cout << "test_fast_convert() - Failed Fast convert 1  i = " << i << std::endl;
          }
@@ -670,7 +670,7 @@ bool test_fast_convert()
       unsigned int v = 0;
       for (unsigned int i = 0; i < 1000000000; ++i)
       {
-         if (!strtk::fast::numeric_convert(strtk::type_to_string(i),v,true))
+         if (!strtk::fast::numeric_convert(strtk::type_to_string(i), v, true))
          {
             std::cout << "test_fast_convert() - Failed Fast convert 1  i = " << i << std::endl;
          }
@@ -1064,12 +1064,13 @@ bool test_double_convert()
              std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
            };
 
-      std::size_t d_size = sizeof(double_str) / sizeof(std::string);
+      static const std::size_t d_size = sizeof(double_str) / sizeof(std::string);
 
       double v = 0.0;
       for (std::size_t i = 0; i < d_size; ++i)
       {
          v = 0.0;
+
          if (!strtk::string_to_type_converter(double_str[i],v))
          {
             std::cout << "test_double_convert() double convert[" << i << "]"
@@ -1159,6 +1160,7 @@ bool test_double_convert()
       while (v < +111111.11)
       {
          std_double_to_string(v,s);
+
          if (!strtk::string_to_type_converter(s,t))
          {
             std::cout << "test_double_convert() - Failed decimal to string,  t: " << t << std::endl;
@@ -1337,13 +1339,14 @@ bool test_construct_and_parse()
    i.d9  = true;
    i.d10 = 0xEE;
 
-   strtk::construct(output,"|",i.d1,i.d2,i.d3,i.d4,i.d5,i.d6,i.d7,i.d8,i.d9,i.d10);
+   strtk::construct(output, "|", i.d1, i.d2, i.d3, i.d4, i.d5, i.d6, i.d7, i.d8, i.d9, i.d10);
    data_block o = i;
 
    bool result = true;
 
    o.clear(1);
-   result = strtk::parse(output,"|",o.d1);
+   result = strtk::parse(output, "|", o.d1);
+
    if (!result || (o != i))
    {
       std::cout << "test_construct_and_parse() - parse fail 1" << std::endl;
@@ -1351,7 +1354,8 @@ bool test_construct_and_parse()
    }
 
    o.clear(2);
-   result = strtk::parse(output,"|",o.d1,o.d2);
+   result = strtk::parse(output, "|", o.d1, o.d2);
+
    if (!result || (o != i))
    {
       std::cout << "test_construct_and_parse() - parse fail 2" << std::endl;
@@ -1359,7 +1363,8 @@ bool test_construct_and_parse()
    }
 
    o.clear(3);
-   result = strtk::parse(output,"|",o.d1,o.d2,o.d3);
+   result = strtk::parse(output, "|", o.d1, o.d2, o.d3);
+
    if (!result || (o != i))
    {
       std::cout << "test_construct_and_parse() - parse fail 3" << std::endl;
@@ -1367,7 +1372,8 @@ bool test_construct_and_parse()
    }
 
    o.clear(4);
-   result = strtk::parse(output,"|",o.d1,o.d2,o.d3,o.d4);
+   result = strtk::parse(output, "|", o.d1, o.d2, o.d3, o.d4);
+
    if (!result || (o != i))
    {
       std::cout << "test_construct_and_parse() - parse fail 4" << std::endl;
@@ -1375,7 +1381,8 @@ bool test_construct_and_parse()
    }
 
    o.clear(5);
-   result = strtk::parse(output,"|",o.d1,o.d2,o.d3,o.d4,o.d5);
+   result = strtk::parse(output, "|", o.d1, o.d2, o.d3, o.d4, o.d5);
+
    if (!result || (o != i))
    {
       std::cout << "test_construct_and_parse() - parse fail 5" << std::endl;
@@ -1383,7 +1390,8 @@ bool test_construct_and_parse()
    }
 
    o.clear(6);
-   result = strtk::parse(output,"|",o.d1,o.d2,o.d3,o.d4,o.d5,o.d6);
+   result = strtk::parse(output, "|", o.d1, o.d2, o.d3, o.d4, o.d5, o.d6);
+
    if (!result || (o != i))
    {
       std::cout << "test_construct_and_parse() - parse fail 6" << std::endl;
@@ -1391,7 +1399,8 @@ bool test_construct_and_parse()
    }
 
    o.clear(7);
-   result = strtk::parse(output,"|",o.d1,o.d2,o.d3,o.d4,o.d5,o.d6,o.d7);
+   result = strtk::parse(output, "|", o.d1, o.d2, o.d3, o.d4, o.d5, o.d6, o.d7);
+
    if (!result || (o != i))
    {
       std::cout << "test_construct_and_parse() - parse fail 7" << std::endl;
@@ -1399,7 +1408,8 @@ bool test_construct_and_parse()
    }
 
    o.clear(8);
-   result = strtk::parse(output,"|",o.d1,o.d2,o.d3,o.d4,o.d5,o.d6,o.d7,o.d8);
+   result = strtk::parse(output, "|", o.d1, o.d2, o.d3, o.d4, o.d5, o.d6, o.d7, o.d8);
+
    if (!result || (o != i))
    {
       std::cout << "test_construct_and_parse() - parse fail 8" << std::endl;
@@ -1407,7 +1417,8 @@ bool test_construct_and_parse()
    }
 
    o.clear(9);
-   result = strtk::parse(output,"|",o.d1,o.d2,o.d3,o.d4,o.d5,o.d6,o.d7,o.d8,o.d9);
+   result = strtk::parse(output, "|", o.d1, o.d2, o.d3, o.d4, o.d5, o.d6, o.d7, o.d8, o.d9);
+
    if (!result || (o != i))
    {
       std::cout << "test_construct_and_parse() - parse fail 9" << std::endl;
@@ -1415,7 +1426,8 @@ bool test_construct_and_parse()
    }
 
    o.clear(10);
-   result = strtk::parse(output,"|",o.d1,o.d2,o.d3,o.d4,o.d5,o.d6,o.d7,o.d8,o.d9,o.d10);
+   result = strtk::parse(output, "|", o.d1, o.d2, o.d3, o.d4, o.d5, o.d6, o.d7, o.d8, o.d9, o.d10);
+
    if (!result || (o != i))
    {
       std::cout << "test_construct_and_parse() - parse fail 10" << std::endl;
@@ -1503,6 +1515,7 @@ bool test_int_uint_convert()
 
    {
       int t = 0;
+
       for (int i = -static_cast<int>(count); i < static_cast<int>(count); ++i)
       {
          if (!strtk::type_to_string(i,s))
@@ -1529,6 +1542,7 @@ bool test_int_uint_convert()
 
    {
       unsigned int t = 0;
+
       for (unsigned int i = 0; i < (2 * count); ++i)
       {
          if (!strtk::type_to_string(i,s))
@@ -1601,6 +1615,7 @@ bool test_int_uint_convert()
 
    {
       unsigned int t = 0;
+
       for (std::size_t i = 0; i < bad_list_size; ++i)
       {
          if (strtk::string_to_type_converter(bad_list[i],t))
@@ -1615,6 +1630,7 @@ bool test_int_uint_convert()
 
    {
       short t = 0;
+
       for (std::size_t i = 0; i < bad_list_size; ++i)
       {
          if (strtk::string_to_type_converter(bad_list[i],t))
@@ -1629,6 +1645,7 @@ bool test_int_uint_convert()
 
    {
       unsigned short t = 0;
+
       for (std::size_t i = 0; i < bad_list_size; ++i)
       {
          if (strtk::string_to_type_converter(bad_list[i],t))
@@ -1922,6 +1939,7 @@ bool test_int_uint_convert()
       std::string s2 = "+0009223372036854775808";
       std::string s3 =  "0009223372036854775808";
       std::string s4 =  "0009999999999999999999";
+
       long long t = 0;
 
       if (strtk::string_to_type_converter(s1,t))
@@ -1992,7 +2010,7 @@ bool test_parse1()
    double d = 0;
    std::string s;
 
-   if (!strtk::parse(data,",|\t ",i,d,s))
+   if (!strtk::parse(data, ",|\t ", i, d, s))
    {
       std::cout << "test_parse() - parse fail 1" << std::endl;
       return false;
@@ -2013,41 +2031,41 @@ bool test_parse2()
 
    double d[10] = { 0.0 };
 
-   if (!strtk::parse(data,",|\t ",d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9]))
+   if (!strtk::parse(data, ",|\t ", d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9]))
    {
       std::cout << "test_parse2() - parse double fail" << std::endl;
       return false;
    }
 
-   if (not_equal(d[0],     1.0)) { std::cout << "test_parse2() double check0 " << std::endl; return false; }
-   if (not_equal(d[1],     2.0)) { std::cout << "test_parse2() double check1 " << std::endl; return false; }
-   if (not_equal(d[2],     3.3)) { std::cout << "test_parse2() double check2 " << std::endl; return false; }
-   if (not_equal(d[3],     0.4)) { std::cout << "test_parse2() double check3 " << std::endl; return false; }
-   if (not_equal(d[4], 123.456)) { std::cout << "test_parse2() double check4 " << std::endl; return false; }
-   if (not_equal(d[5],     3.3)) { std::cout << "test_parse2() double check5 " << std::endl; return false; }
-   if (not_equal(d[6],1.0e+010)) { std::cout << "test_parse2() double check6 " << std::endl; return false; }
-   if (not_equal(d[7],2.2e+011)) { std::cout << "test_parse2() double check7 " << std::endl; return false; }
-   if (not_equal(d[8],3.0e+012)) { std::cout << "test_parse2() double check8 " << std::endl; return false; }
-   if (not_equal(d[9],4.4e+013)) { std::cout << "test_parse2() double check9 " << std::endl; return false; }
+   if (not_equal(d[0],      1.0)) { std::cout << "test_parse2() double check0 " << std::endl; return false; }
+   if (not_equal(d[1],      2.0)) { std::cout << "test_parse2() double check1 " << std::endl; return false; }
+   if (not_equal(d[2],      3.3)) { std::cout << "test_parse2() double check2 " << std::endl; return false; }
+   if (not_equal(d[3],      0.4)) { std::cout << "test_parse2() double check3 " << std::endl; return false; }
+   if (not_equal(d[4],  123.456)) { std::cout << "test_parse2() double check4 " << std::endl; return false; }
+   if (not_equal(d[5],      3.3)) { std::cout << "test_parse2() double check5 " << std::endl; return false; }
+   if (not_equal(d[6], 1.0e+010)) { std::cout << "test_parse2() double check6 " << std::endl; return false; }
+   if (not_equal(d[7], 2.2e+011)) { std::cout << "test_parse2() double check7 " << std::endl; return false; }
+   if (not_equal(d[8], 3.0e+012)) { std::cout << "test_parse2() double check8 " << std::endl; return false; }
+   if (not_equal(d[9], 4.4e+013)) { std::cout << "test_parse2() double check9 " << std::endl; return false; }
 
    float f[10]  = { 0.0 };
 
-   if (!strtk::parse(data,",|\t ",f[0],f[1],f[2],f[3],f[4],f[5],f[6],f[7],f[8],f[9]))
+   if (!strtk::parse(data, ",|\t ", f[0], f[1], f[2], f[3], f[4], f[5], f[6], f[7], f[8], f[9]))
    {
       std::cout << "test_parse2() - parse float fail" << std::endl;
       return false;
    }
 
-   if (not_equal(f[0],     1.0f)) { std::cout << "test_parse2() float check0 " << std::endl; return false; }
-   if (not_equal(f[1],     2.0f)) { std::cout << "test_parse2() float check1 " << std::endl; return false; }
-   if (not_equal(f[2],     3.3f)) { std::cout << "test_parse2() float check2 " << std::endl; return false; }
-   if (not_equal(f[3],     0.4f)) { std::cout << "test_parse2() float check3 " << std::endl; return false; }
-   if (not_equal(f[4], 123.456f)) { std::cout << "test_parse2() float check4 " << std::endl; return false; }
-   if (not_equal(f[5],     3.3f)) { std::cout << "test_parse2() float check5 " << std::endl; return false; }
-   if (not_equal(f[6],1.0e+010f)) { std::cout << "test_parse2() float check6 " << std::endl; return false; }
-   if (not_equal(f[7],2.2e+011f)) { std::cout << "test_parse2() float check7 " << std::endl; return false; }
-   if (not_equal(f[8],3.0e+012f)) { std::cout << "test_parse2() float check8 " << std::endl; return false; }
-   if (not_equal(f[9],4.4e+013f)) { std::cout << "test_parse2() float check9 " << std::endl; return false; }
+   if (not_equal(f[0],      1.0f)) { std::cout << "test_parse2() float check0 " << std::endl; return false; }
+   if (not_equal(f[1],      2.0f)) { std::cout << "test_parse2() float check1 " << std::endl; return false; }
+   if (not_equal(f[2],      3.3f)) { std::cout << "test_parse2() float check2 " << std::endl; return false; }
+   if (not_equal(f[3],      0.4f)) { std::cout << "test_parse2() float check3 " << std::endl; return false; }
+   if (not_equal(f[4],  123.456f)) { std::cout << "test_parse2() float check4 " << std::endl; return false; }
+   if (not_equal(f[5],      3.3f)) { std::cout << "test_parse2() float check5 " << std::endl; return false; }
+   if (not_equal(f[6], 1.0e+010f)) { std::cout << "test_parse2() float check6 " << std::endl; return false; }
+   if (not_equal(f[7], 2.2e+011f)) { std::cout << "test_parse2() float check7 " << std::endl; return false; }
+   if (not_equal(f[8], 3.0e+012f)) { std::cout << "test_parse2() float check8 " << std::endl; return false; }
+   if (not_equal(f[9], 4.4e+013f)) { std::cout << "test_parse2() float check9 " << std::endl; return false; }
 
    return true;
 }
@@ -2200,7 +2218,7 @@ bool test_parse4()
 
       for (int i = 0; i <= 3; ++i)
       {
-         double expected_value = i +  (i / 10.0);
+         const double expected_value = i + (i / 10.0);
 
          if (not_equal(double_vec[i],expected_value))
          {

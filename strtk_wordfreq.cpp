@@ -104,11 +104,11 @@ int main(int argc, char* argv[])
    switch (argc)
    {
                 // Consume input from stdin
-      case 1  : strtk::for_each_line(std::cin,lp_t(word_count,word_list,predicate));
+      case 1  : strtk::for_each_line(std::cin, lp_t(word_count, word_list, predicate));
                 break;
 
                 // Consume input from user specified file
-      case 2  : strtk::for_each_line(argv[1],lp_t(word_count,word_list,predicate));
+      case 2  : strtk::for_each_line(argv[1], lp_t(word_count, word_list, predicate));
                 break;
 
       default :
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
    while (word_list.end() != itr)
    {
       printf("%s %10d %10.9f\n",
-             strtk::text::right_align(15,' ',itr->first).c_str(),
+             strtk::text::right_align(15, ' ', itr->first).c_str(),
              itr->second,
              (1.0 * itr->second) / word_count);
       ++itr;
