@@ -1902,17 +1902,17 @@ namespace strtk
       template <typename Comparator, typename Iterator>
       inline bool match_impl(const Iterator pattern_begin, const Iterator pattern_end,
                              const Iterator data_begin,    const Iterator data_end,
-                             const typename std::iterator_traits<Iterator>::value_type& match_one_or_more,
-                             const typename std::iterator_traits<Iterator>::value_type& match_exactly_one)
+                             const typename std::iterator_traits<Iterator>::value_type& match_zero_or_more,
+                             const typename std::iterator_traits<Iterator>::value_type& match_zero_or_one)
       {
          Iterator d_itr = data_begin;
          Iterator p_itr = pattern_begin;
 
          while ((p_itr != pattern_end) && (d_itr != data_end))
          {
-            if (match_one_or_more == *p_itr)
+            if (match_zero_or_more == *p_itr)
             {
-               while ((p_itr != pattern_end) && (*p_itr == match_one_or_more || *p_itr == match_exactly_one))
+               while ((p_itr != pattern_end) && (*p_itr == match_zero_or_more || *p_itr == match_zero_or_one))
                {
                   ++p_itr;
                }
@@ -1929,7 +1929,7 @@ namespace strtk
 
                ++d_itr;
             }
-            else if ((*p_itr == match_exactly_one) || Comparator::cmp(*p_itr, *d_itr))
+            else if ((*p_itr == match_zero_or_one) || Comparator::cmp(*p_itr, *d_itr))
             {
                ++d_itr;
                ++p_itr;
@@ -1938,28 +1938,35 @@ namespace strtk
                return false;
          }
 
-         return (d_itr == data_end) && (p_itr == pattern_end);
+         if (d_itr != data_end)
+            return false;
+         else if (p_itr == pattern_end)
+            return true;
+         else if ((match_zero_or_more == *p_itr) || (match_zero_or_one == *p_itr))
+            ++p_itr;
+
+         return pattern_end == p_itr;
       }
    }
 
    template <typename Iterator>
    inline bool match(const Iterator pattern_begin, const Iterator pattern_end,
                      const Iterator data_begin,    const Iterator data_end,
-                     const typename std::iterator_traits<Iterator>::value_type& match_one_or_more,
-                     const typename std::iterator_traits<Iterator>::value_type& match_exactly_one)
+                     const typename std::iterator_traits<Iterator>::value_type& match_zero_or_more,
+                     const typename std::iterator_traits<Iterator>::value_type& match_zero_or_one)
    {
       return details::match_impl<details::cs_match>(pattern_begin, pattern_end,
                                                     data_begin,    data_end,
-                                                    match_one_or_more,
-                                                    match_exactly_one);
+                                                    match_zero_or_more,
+                                                    match_zero_or_one);
    }
 
    inline bool match(const std::string& wild_card,
                      const std::string& str)
    {
       /*
-         * : Match one or more character
-         ? : Match one character
+         * : Match zero or more character
+         ? : Match zero or one character
       */
       return details::match_impl<details::cs_match>(to_ptr(wild_card), to_ptr(wild_card) + wild_card.size(),
                                                     to_ptr(str)      , to_ptr(str)       + str      .size(),
