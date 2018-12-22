@@ -1,8 +1,16 @@
+dist: xenial
+
 language: cpp
 
 sudo: required
 
-dist: trusty
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-7
+      - g++-7
 
 before_install:
   - sudo add-apt-repository -y ppa:edd/misc
@@ -10,8 +18,8 @@ before_install:
 install:
   - sudo apt-get install libboost-all-dev
 
-compiler:
-  - gcc
-
 script:
+  - export CC=gcc-7
+  - export CXX=g++-7
   - make clean all
+  - make all -j 4
