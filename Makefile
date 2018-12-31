@@ -2,7 +2,7 @@
 # *****************************************************************
 # *                     String Toolkit Library                    *
 # *                                                               *
-# * Author: Arash Partow (2002-2018)                              *
+# * Author: Arash Partow (2002-2019)                              *
 # * URL: http://www.partow.net/programming/strtk/index.html       *
 # *                                                               *
 # * Copyright notice:                                             *
@@ -16,7 +16,7 @@
 
 
 COMPILER         = -c++
-#COMPILER        = -clang
+#COMPILER        = -clang++
 OPTIMIZATION_OPT = -O2
 NO_EXTRA_LIBS    = -Dstrtk_no_tr1_or_boost
 BASE_OPTIONS     = -ansi -pedantic-errors -Wall -Wextra -Werror -Wno-long-long

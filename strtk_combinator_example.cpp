@@ -3,7 +3,7 @@
  *                     String Toolkit Library                    *
  *                                                               *
  * Combination Iterator                                          *
- * Author: Arash Partow (2002-2018)                              *
+ * Author: Arash Partow (2002-2019)                              *
  * URL: http://www.partow.net/programming/strtk/index.html       *
  *                                                               *
  * Copyright notice:                                             *
